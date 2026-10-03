@@ -6,7 +6,8 @@ import { PostImage } from '@/components/cards/PostImage'
 import { PostCard } from '@/components/cards/PostCard'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { SectionHeading } from '@/components/ui/SectionHeading'
-import { PdfLink, RichText, YouTubeEmbed } from '@/components/richtext/RichText'
+import { PdfLink, RichText } from '@/components/richtext/RichText'
+import { YouTubeVideo } from '@/components/richtext/YouTubeVideo'
 import { listPosts } from '@/features/posts/queries'
 import { formatDate, readingLabel } from '@/lib/format'
 import { categoryHref, postHref } from '@/lib/links'
@@ -128,7 +129,20 @@ export function PostArticle({ post, siteName }: { post: Post; siteName: string }
 
           {videoUrl ? (
             <div className="mx-auto mt-8 max-w-5xl">
-              <YouTubeEmbed url={videoUrl} caption={null} />
+              <YouTubeVideo
+                url={videoUrl}
+                poster={
+                  post.featuredImage ? (
+                    // No YouTube-thumbnail fallback here: a removed video has none.
+                    <PostImage
+                      post={{ ...post, video: undefined, categoryName: category?.name }}
+                      size="large"
+                      sizes="(min-width: 1024px) 1024px, 100vw"
+                      cover
+                    />
+                  ) : null
+                }
+              />
             </div>
           ) : post.featuredImage ? (
             <PostImage

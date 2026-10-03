@@ -5,9 +5,10 @@ import {
   type JSXConvertersFunction,
 } from '@payloadcms/richtext-lexical/react'
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
-import { isSafeHref, youtubeId } from '@/lib/security/url'
+import { isSafeHref } from '@/lib/security/url'
 import { categoryHref, pageHref, postHref } from '@/lib/links'
 import { mediaSrc } from '@/lib/media'
+import { YouTubeVideo } from '@/components/richtext/YouTubeVideo'
 import type { Category, Media, Page, Post } from '@/payload-types'
 
 /**
@@ -56,27 +57,6 @@ export function PdfLink({ media, label }: { media: Media; label?: string | null 
         <span className="text-xs text-muted">PDF · {formatBytes(media.filesize)}</span>
       </span>
     </a>
-  )
-}
-
-export function YouTubeEmbed({ url, caption }: { url: string; caption?: string | null }) {
-  const id = youtubeId(url)
-  if (!id) return null
-  return (
-    <figure>
-      <div className="relative aspect-video overflow-hidden rounded-card bg-black shadow-card">
-        <iframe
-          src={`https://www.youtube-nocookie.com/embed/${id}`}
-          title={caption || 'YouTube video'}
-          loading="lazy"
-          allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-          referrerPolicy="strict-origin-when-cross-origin"
-          sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
-          className="absolute inset-0 size-full"
-        />
-      </div>
-      {caption ? <figcaption className="mt-2 text-sm text-muted">{caption}</figcaption> : null}
-    </figure>
   )
 }
 
@@ -140,7 +120,7 @@ const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
   },
   blocks: {
     youtube: ({ node }: { node: { fields: { url?: string; caption?: string } } }) =>
-      node.fields.url ? <YouTubeEmbed url={node.fields.url} caption={node.fields.caption} /> : null,
+      node.fields.url ? <YouTubeVideo url={node.fields.url} caption={node.fields.caption} /> : null,
     pdfAttachment: ({ node }: { node: { fields: { file?: unknown; label?: string } } }) =>
       node.fields.file && typeof node.fields.file === 'object' ? (
         <PdfLink media={node.fields.file as Media} label={node.fields.label} />
