@@ -21,8 +21,8 @@ export function mediaDir(env: NodeJS.ProcessEnv = process.env): string {
 
 /**
  * Media library. Every file passes the media guard (magic bytes, re-encode, PDF scan) before
- * Payload stores it. Locally files live in ./media; in production the S3 adapter (DO Spaces) is
- * enabled from payload.config.ts. The original keeps its (re-encoded) format; four WebP renditions
+ * Payload stores it. With DO_SPACES_* set (locally and in production) the S3 adapter stores them in
+ * DO Spaces (payload.config.ts); without, files live in ./media. The original keeps its (re-encoded) format; four WebP renditions
  * are generated — the WordPress site had 20+ theme sizes per image, none of which are needed.
  */
 export const Media: CollectionConfig = {

@@ -21,10 +21,10 @@ npm run migrate -- target=local concurrency=4   # parallel media downloads (1–
 - **Editors' changes win.** A record saved in the CMS after the migration wrote it is left alone
   and reported. The word `overwrite-edited` replaces such records; use it only deliberately.
 
-| Target            | Writes to                                                                                                                                                                                    |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `local` (default) | the local MongoDB server from `DATABASE_URL`, database `islammalayalam_migration`, files in `./media-migration/`. The dev database and E2E data are untouched.                               |
-| `production`      | `MONGODB_URI` + DigitalOcean Spaces (`DO_SPACES_*`). Refused unless the extra word `confirm=i-understand-this-writes-to-production` is given. Only after the local report has been approved. |
+| Target            | Writes to                                                                                                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `local` (default) | the local MongoDB server (`mongodb://127.0.0.1:27017`), database `islammalayalam_migration`, files in `./media-migration/`. The live `MONGODB_URI` / `DO_SPACES_*` are switched off. |
+| `production`      | `MONGODB_URI` + DigitalOcean Spaces (`DO_SPACES_*`) — the same settings the app uses. Refused unless the extra word `confirm=i-understand-this-writes-to-production` is given.       |
 
 The target settings are applied before the Payload config loads. Credentials are never printed.
 Error output is redacted (`lib/redact.ts`).

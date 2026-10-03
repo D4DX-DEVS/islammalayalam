@@ -8,7 +8,7 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import sharp from 'sharp'
 import { payloadTotp } from 'payload-totp'
 import { totpGuard } from '@/payload/plugins/totpGuard'
-import { getEnv, spacesEnabled } from '@/lib/env'
+import { getEnv, spacesConfig } from '@/lib/env'
 import { MAX_PDF_BYTES } from '@/lib/media/file-policy'
 import { PREVIEW_COLLECTIONS, PREVIEW_GLOBALS, previewTargetFor, previewUrl } from '@/lib/preview'
 import { articleEditor } from '@/payload/editor'
@@ -32,26 +32,27 @@ const dirname = path.dirname(filename)
 const env = getEnv()
 const SITE_NAME = 'Islam Malayalam'
 
-/** DigitalOcean Spaces — only when fully configured AND allowed (see src/lib/env.ts rails). */
+/** DigitalOcean Spaces (DO_SPACES_* in .env) — only when fully configured (see src/lib/env.ts). */
 function storagePlugins(): Plugin[] {
-  if (!spacesEnabled(env)) return []
-  const cdn = env.MEDIA_CDN_URL?.replace(/\/$/, '')
+  const spaces = spacesConfig(env)
+  if (!spaces) return []
+  const cdn = spaces.cdnUrl
   return [
     s3Storage({
-      bucket: env.S3_BUCKET!,
+      bucket: spaces.bucket,
       acl: 'public-read',
       config: {
-        endpoint: env.S3_ENDPOINT,
-        region: env.S3_REGION,
+        endpoint: spaces.endpoint,
+        region: spaces.region,
         forcePathStyle: false,
         credentials: {
-          accessKeyId: env.S3_ACCESS_KEY_ID!,
-          secretAccessKey: env.S3_SECRET_ACCESS_KEY!,
+          accessKeyId: spaces.accessKeyId,
+          secretAccessKey: spaces.secretAccessKey,
         },
       },
       collections: {
         media: {
-          prefix: [env.S3_PREFIX, 'media'].filter(Boolean).join('/'),
+          prefix: [spaces.prefix, 'media'].filter(Boolean).join('/'),
           ...(cdn
             ? {
                 disablePayloadAccessControl: true,
@@ -117,7 +118,7 @@ export default buildConfig({
     },
   },
   editor: articleEditor,
-  db: mongooseAdapter({ url: env.DATABASE_URL }),
+  db: mongooseAdapter({ url: env.MONGODB_URI }),
   collections: [
     Posts,
     Pages,

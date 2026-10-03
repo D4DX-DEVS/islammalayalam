@@ -10,6 +10,7 @@ import { PdfLink, RichText, YouTubeEmbed } from '@/components/richtext/RichText'
 import { listPosts } from '@/features/posts/queries'
 import { formatDate, readingLabel } from '@/lib/format'
 import { categoryHref, postHref } from '@/lib/links'
+import { cdnUrl } from '@/lib/spaces'
 import type { Author, Category, Media, Post } from '@/payload-types'
 
 const asObj = <T,>(v: unknown): T | null => (v && typeof v === 'object' ? (v as T) : null)
@@ -20,7 +21,8 @@ function AudioPlayer({ url }: { url: string }) {
   // Self-hosted/CDN audio plays inline; anything else opens on its host (CSP media-src stays strict).
   if (
     SELF_AUDIO.test(url) &&
-    (url.startsWith('/') || url.startsWith(process.env.MEDIA_CDN_URL ?? '\0'))
+    (url.startsWith('/') ||
+      url.startsWith(`${cdnUrl(process.env.DO_SPACES_CDN_ENDPOINT) ?? '\0'}/`))
   ) {
     return <audio controls preload="none" src={url} className="w-full" />
   }

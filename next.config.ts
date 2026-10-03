@@ -3,20 +3,15 @@ import type { NextConfig } from 'next'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { PREVIEW_COOKIE } from './src/lib/preview'
+import { cdnUrl } from './src/lib/spaces'
 
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 const isProd = process.env.NODE_ENV === 'production'
 
 function cdnPattern(): { protocol: 'https'; hostname: string; pathname: string }[] {
-  try {
-    const url = new URL(process.env.MEDIA_CDN_URL ?? '')
-    return url.protocol === 'https:'
-      ? [{ protocol: 'https', hostname: url.hostname, pathname: '/**' }]
-      : []
-  } catch {
-    return []
-  }
+  const cdn = cdnUrl(process.env.DO_SPACES_CDN_ENDPOINT)
+  return cdn ? [{ protocol: 'https', hostname: new URL(cdn).hostname, pathname: '/**' }] : []
 }
 
 /** Static security headers for every response (the per-request CSP is set in src/proxy.ts). */

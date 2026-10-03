@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { spacesEndpoint } from '@/lib/spaces'
 import { parseArgs } from '../../migration/lib/args'
 import { redact } from '../../migration/lib/redact'
 import { retryOnce } from '../../migration/lib/retry'
@@ -7,13 +8,9 @@ import {
   LOCAL_MIGRATION_DB,
   PRODUCTION_CONFIRM_FLAG,
   resolveTarget,
-  spacesEndpoint,
-  withDatabase,
 } from '../../migration/lib/target'
 
-const LOCAL = { DATABASE_URL: 'mongodb://127.0.0.1:27017/islammalayalam_dev' }
 const PROD = {
-  ...LOCAL,
   MONGODB_URI:
     'mongodb+srv://user:secret@cluster0.example.mongodb.net/islammalayalam?retryWrites=true',
   DO_SPACES_BUCKET: 'bucket',
@@ -25,18 +22,20 @@ const PROD = {
 }
 
 describe('migration target', () => {
-  it('local: same local server, its own database and media folder, Spaces switched off', () => {
-    const t = resolveTarget('local', LOCAL)
-    expect(t.overrides.DATABASE_URL).toBe(`mongodb://127.0.0.1:27017/${LOCAL_MIGRATION_DB}`)
+  it('local: local server, its own database and media folder, Spaces switched off', () => {
+    // The live MONGODB_URI / DO_SPACES_* in .env are replaced, never used.
+    const t = resolveTarget('local', PROD)
+    expect(t.overrides.MONGODB_URI).toBe(`mongodb://127.0.0.1:27017/${LOCAL_MIGRATION_DB}`)
     expect(t.overrides.MEDIA_DIR).toBe('media-migration')
-    expect(t.overrides.S3_BUCKET).toBe('')
-    expect(t.overrides.ALLOW_REMOTE_DB).toBe('false')
-  })
-
-  it('local refuses a remote DATABASE_URL', () => {
-    expect(() => resolveTarget('local', { DATABASE_URL: PROD.MONGODB_URI })).toThrow(
-      /local MongoDB/,
-    )
+    for (const k of [
+      'DO_SPACES_BUCKET',
+      'DO_SPACES_ENDPOINT',
+      'DO_SPACES_KEY',
+      'DO_SPACES_SECRET',
+      'DO_SPACES_CDN_ENDPOINT',
+      'DO_SPACES_FOLDER',
+    ])
+      expect(t.overrides[k]).toBe('')
   })
 
   it('production needs the explicit confirmation flag and all keys', () => {
@@ -53,29 +52,20 @@ describe('migration target', () => {
     ).toThrow(/no database name/)
   })
 
-  it('production maps the owner’s key names onto the app settings, never into the description', () => {
+  it('production uses the owner’s .env names as they are (the app reads the same names)', () => {
     const t = resolveTarget('production', PROD, [PRODUCTION_CONFIRM_FLAG])
-    expect(t.overrides).toMatchObject({
-      DATABASE_URL: PROD.MONGODB_URI,
-      S3_BUCKET: 'bucket',
-      S3_REGION: 'blr1',
-      S3_ENDPOINT: 'https://blr1.digitaloceanspaces.com',
-      S3_PREFIX: 'islammalayalam',
-      MEDIA_CDN_URL: 'https://bucket.blr1.cdn.digitaloceanspaces.com',
-      ALLOW_REMOTE_DB: 'true',
-    })
+    expect(t.overrides).toEqual({ MEDIA_DIR: '' })
+    expect(t.description).toContain('"islammalayalam"')
+    expect(t.description).toContain('blr1, folder "islammalayalam"')
     expect(t.description).not.toMatch(/secret|user|cluster0|key/i)
   })
 
-  it('helpers: database swap keeps options; Spaces endpoint forms', () => {
-    expect(withDatabase('mongodb://h:1/a?x=1', 'b')).toBe('mongodb://h:1/b?x=1')
-    expect(withDatabase('mongodb://h:1', 'b')).toBe('mongodb://h:1/b')
-    expect(spacesEndpoint('https://bucket.sgp1.digitaloceanspaces.com/')).toEqual({
-      endpoint: 'https://sgp1.digitaloceanspaces.com',
-      region: 'sgp1',
-    })
-    expect(() => spacesEndpoint('http://blr1.digitaloceanspaces.com')).toThrow(/https/)
-    expect(() => spacesEndpoint('s3.amazonaws.com')).toThrow(/Spaces/)
+  it('production refuses a localhost database and bad Spaces settings', () => {
+    const run = (over: Record<string, string>) => () =>
+      resolveTarget('production', { ...PROD, ...over }, [PRODUCTION_CONFIRM_FLAG])
+    expect(run({ MONGODB_URI: 'mongodb://127.0.0.1:27017/islammalayalam' })).toThrow(/localhost/)
+    expect(run({ DO_SPACES_ENDPOINT: 's3.amazonaws.com' })).toThrow(/Spaces endpoint/)
+    expect(run({ DO_SPACES_CDN_ENDPOINT: 'http://cdn.example.com' })).toThrow(/https/)
   })
 
   it('redact removes secret values and connection-string credentials from error text', () => {

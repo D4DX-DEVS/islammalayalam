@@ -76,8 +76,8 @@ docs/                 audit, plan, architecture, phase reports
 
 | | Local dev (now) | Staging / production (later, on your go-ahead) |
 |---|---|---|
-| Database | `mongodb://127.0.0.1/islammalayalam_dev` (local service, own DB) | DO Managed MongoDB (private network, TLS, least-privilege users) |
-| Media | Local `./media` folder (git-ignored) | DO Spaces `blr1` + CDN (`@payloadcms/storage-s3`, enabled only when its env vars exist) |
+| Database | `MONGODB_URI` from `.env` — the production DO Managed MongoDB (owner decision 2026-10-03); tests use local databases (`docs/ENVIRONMENT.md`) | DO Managed MongoDB via `MONGODB_URI` (private network, TLS, least-privilege users) |
+| Media | DO Spaces via `DO_SPACES_*`, same as production | DO Spaces `blr1` + CDN (`@payloadcms/storage-s3`, enabled only when `DO_SPACES_*` exist) |
 | Secrets | `.env` (git-ignored, generated locally) | App Platform encrypted env vars; never in the repo or chat |
 | TOTP | Enabled (can be disabled only in `NODE_ENV=test`) | Enabled + forced setup |
 

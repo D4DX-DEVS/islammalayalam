@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { buildCsp, createNonce, originOf } from '@/lib/security/csp'
 import { PREVIEW_COOKIE } from '@/lib/preview'
 import { isAdminPath, needsTrailingSlash } from '@/lib/routing'
+import { cdnUrl } from '@/lib/spaces'
 
 /**
  * Per-request Content-Security-Policy with a fresh nonce (audit §13: the legacy site was
@@ -10,7 +11,7 @@ import { isAdminPath, needsTrailingSlash } from '@/lib/routing'
  * if it ever reached a page). Separate policies for the public site and the Payload admin.
  * Also forwards the pathname for payload-totp (x-pathname), always overwriting client input.
  */
-const MEDIA_ORIGIN = originOf(process.env.MEDIA_CDN_URL)
+const MEDIA_ORIGIN = originOf(cdnUrl(process.env.DO_SPACES_CDN_ENDPOINT))
 const MODE = {
   dev: process.env.NODE_ENV === 'development',
   prod: process.env.NODE_ENV === 'production',
