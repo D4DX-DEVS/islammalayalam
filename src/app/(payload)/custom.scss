@@ -1,0 +1,311 @@
+// Admin branding. Payload's own styles sit in `@layer payload-default`, so these unlayered rules win
+// without !important. Colours mirror the site tokens in app/(frontend)/globals.css.
+
+:root {
+  --im-brand: #1a6bc4;
+  --im-brand-strong: #13549e;
+  --im-brand-soft: #e8f1fc;
+  --im-accent: #d97706;
+  --im-on-brand: #fff;
+  // Same typefaces as the site (variables set on <html> by app/(payload)/layout.tsx).
+  --font-body: var(--font-poppins), var(--font-malayalam), sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-poppins), var(--font-display-ml), sans-serif;
+}
+
+html[data-theme='dark'] {
+  --im-brand: #60a5fa;
+  --im-brand-strong: #93c5fd;
+  --im-brand-soft: rgb(96 165 250 / 0.14);
+  --im-accent: #fbbf24;
+  --im-on-brand: #06142b;
+}
+
+// ---- Buttons, links, focus ---------------------------------------------------------------------
+.btn--style-primary:not(.btn--disabled) {
+  --bg-color: var(--im-brand);
+  --hover-bg: var(--im-brand-strong);
+  --color: var(--im-on-brand);
+  --hover-color: var(--im-on-brand);
+}
+
+:focus-visible {
+  outline-color: var(--im-brand);
+}
+
+// ---- Logo (login / TOTP screens) and nav icon --------------------------------------------------
+// The site's own logo: blue lettering on the light theme, white lettering on the dark theme.
+.im-logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.im-logo__img {
+  display: block;
+  width: auto;
+  height: 4.5rem;
+}
+
+.im-logo__img--dark,
+html[data-theme='dark'] .im-logo__img--light {
+  display: none;
+}
+
+html[data-theme='dark'] .im-logo__img--dark {
+  display: block;
+}
+
+.im-logo__sub {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--im-accent);
+}
+
+.im-icon {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+// ---- Editorial dashboard ------------------------------------------------------------------------
+.im-dash {
+  display: grid;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+  }
+}
+
+.im-dash__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.im-dash__eyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--im-accent);
+}
+
+.im-dash__title {
+  margin: 0.25rem 0 0;
+  font-size: 1.6rem;
+  line-height: 1.2;
+}
+
+.im-dash__site {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 999px;
+  color: var(--theme-text);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--im-brand);
+    color: var(--im-brand);
+  }
+}
+
+.im-dash__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.im-dash__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  background: var(--im-brand-soft);
+  color: var(--im-brand);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+
+  &:hover {
+    background: var(--im-brand);
+    color: var(--im-on-brand);
+  }
+}
+
+.im-dash__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.im-dash__stat {
+  display: grid;
+  gap: 0.2rem;
+  height: 100%;
+  padding: 1rem;
+  border: 1px solid var(--theme-elevation-100);
+  border-radius: 0.75rem;
+  background: var(--theme-elevation-0);
+  color: var(--theme-text);
+  text-decoration: none;
+  transition: border-color 0.15s;
+
+  svg {
+    color: var(--im-brand);
+  }
+
+  &:hover {
+    border-color: var(--im-brand);
+  }
+}
+
+.im-dash__stat-value {
+  margin-top: 0.35rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.im-dash__stat-label {
+  overflow: hidden;
+  font-size: 0.85rem;
+  color: var(--theme-elevation-500);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-dash__lists {
+  display: grid;
+  gap: 1rem;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.im-dash__panel {
+  min-width: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--theme-elevation-100);
+  border-radius: 0.75rem;
+  background: var(--theme-elevation-0);
+}
+
+.im-dash__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+
+  h3 {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1.05rem;
+
+    svg {
+      color: var(--im-brand);
+    }
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--im-brand);
+    font-weight: 600;
+    text-decoration: none;
+  }
+}
+
+.im-dash__rows li + li {
+  border-top: 1px solid var(--theme-elevation-100);
+}
+
+.im-dash__row {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.7rem 0.4rem;
+  border-radius: 0.5rem;
+  color: var(--theme-text);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--theme-elevation-50);
+  }
+}
+
+.im-dash__row-title {
+  display: -webkit-box;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.im-dash__row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--theme-elevation-500);
+}
+
+.im-dash__badge {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-weight: 600;
+
+  &--draft {
+    background: rgb(217 119 6 / 0.14);
+    color: var(--im-accent);
+  }
+
+  &--published {
+    background: var(--im-brand-soft);
+    color: var(--im-brand);
+  }
+}
+
+.im-dash__empty {
+  margin: 0;
+  padding: 1rem 0.4rem;
+  color: var(--theme-elevation-500);
+}

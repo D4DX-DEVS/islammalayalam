@@ -1,0 +1,53 @@
+# dependencies
+node_modules/
+
+# next.js / build
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets — never commit (production credentials live only in DigitalOcean env vars)
+.env
+.env.*
+!.env.example
+
+# local media uploads (dev only; production media lives in DigitalOcean Spaces)
+/media/
+
+# migration working data (staging records, quarantine reports, run logs)
+/migration/.staging/
+/migration/.reports/
+
+# audit evidence (sanitized snapshots of the legacy site; kept locally, not in git)
+/audit/data/
+/audit/screens/
+/audit/*.log
+
+# testing
+/coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+
+# local dev server logs
+/.logs/
+
+# Playwright MCP scratch output (screenshots, snapshots)
+/.playwright-mcp/
+
+# integration-test uploads
+/.test-media/
+
+# local migration preview (islammalayalam_migration database)
+/media-migration/
+
+# Migration run reports for production (ids and counts only, but kept out of the repository)
+/docs/migration/production-run-latest.md

@@ -1,0 +1,195 @@
+@import 'tailwindcss';
+
+/* `dark:` = an explicit dark choice (<html data-theme="dark">), or the OS preference when none was made. */
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme]), :root:not([data-theme]) *) {
+      @slot;
+    }
+  }
+}
+
+/*
+ * Design tokens — "modern news magazine" refresh of the original Soledad palette (#1e73be blue,
+ * amber Malayalam wordmark). Colours are semantic CSS variables: dark mode only swaps values.
+ */
+@theme {
+  --color-brand: #1a6bc4;
+  --color-brand-strong: #13549e;
+  --color-brand-soft: #e8f1fc;
+  --color-brand-deep: #0b2447;
+  --color-accent: #d97706;
+  --color-ink: #0f172a;
+  --color-body: #334155;
+  --color-muted: #64748b;
+  --color-line: #e2e8f0;
+  --color-surface: #f3f6fa;
+  --color-canvas: #ffffff;
+  --color-card: #ffffff;
+
+  /* English: Poppins. Malayalam: Noto Sans Malayalam, titles Anek Malayalam (src/lib/fonts.ts).
+     No system fonts in between; `sans-serif` only if a font file itself fails to load. */
+  --font-sans: var(--font-poppins), var(--font-malayalam), sans-serif;
+  --font-display: var(--font-poppins), var(--font-display-ml), sans-serif;
+
+  --container-site: 100rem;
+  --radius-card: 0.875rem;
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.05), 0 10px 28px -14px rgb(15 23 42 / 0.18);
+  --shadow-lift: 0 2px 6px rgb(15 23 42 / 0.08), 0 22px 44px -18px rgb(15 23 42 / 0.3);
+
+  --animate-shimmer: shimmer 1.4s ease-in-out infinite;
+  @keyframes shimmer {
+    0% {
+      background-position: 100% 0;
+    }
+    100% {
+      background-position: -100% 0;
+    }
+  }
+}
+
+@layer base {
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --color-brand: #60a5fa;
+    --color-brand-strong: #93c5fd;
+    --color-brand-soft: #132b4d;
+    --color-brand-deep: #06142b;
+    --color-accent: #fbbf24;
+    --color-ink: #f1f5f9;
+    --color-body: #cbd5e1;
+    --color-muted: #94a3b8;
+    --color-line: #24344d;
+    --color-surface: #0f1c31;
+    --color-canvas: #0a1426;
+    --color-card: #101d33;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 28px -14px rgb(0 0 0 / 0.6);
+    --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.35), 0 22px 44px -18px rgb(0 0 0 / 0.7);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      color-scheme: dark;
+      --color-brand: #60a5fa;
+      --color-brand-strong: #93c5fd;
+      --color-brand-soft: #132b4d;
+      --color-brand-deep: #06142b;
+      --color-accent: #fbbf24;
+      --color-ink: #f1f5f9;
+      --color-body: #cbd5e1;
+      --color-muted: #94a3b8;
+      --color-line: #24344d;
+      --color-surface: #0f1c31;
+      --color-canvas: #0a1426;
+      --color-card: #101d33;
+      --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 28px -14px rgb(0 0 0 / 0.6);
+      --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.35), 0 22px 44px -18px rgb(0 0 0 / 0.7);
+    }
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply bg-canvas font-sans text-body antialiased;
+    line-height: 1.7;
+    text-rendering: optimizeLegibility;
+  }
+  /* Malayalam glyphs need vertical room: headings stay at ~1.35, never the Latin 1.1. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display text-ink;
+    line-height: 1.38;
+    letter-spacing: -0.005em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: var(--color-brand-soft);
+    color: var(--color-ink);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Long-form article typography (rendered Lexical content). */
+  .prose-ml {
+    @apply text-[1.075rem] leading-[1.95] text-body sm:text-[1.125rem];
+  }
+  .prose-ml > * + * {
+    margin-top: 1.15em;
+  }
+  .prose-ml h2 {
+    @apply mt-10 text-2xl font-bold sm:text-[1.7rem];
+  }
+  .prose-ml h3 {
+    @apply mt-8 text-xl font-bold sm:text-[1.35rem];
+  }
+  .prose-ml h4 {
+    @apply mt-6 text-lg font-bold;
+  }
+  .prose-ml a {
+    @apply font-medium text-brand underline decoration-brand/40 decoration-2 underline-offset-4 hover:decoration-brand;
+  }
+  .prose-ml strong {
+    @apply font-semibold text-ink;
+  }
+  .prose-ml ul {
+    @apply list-disc ps-6 marker:text-brand;
+  }
+  .prose-ml ol {
+    @apply list-decimal ps-6 marker:font-semibold marker:text-brand;
+  }
+  .prose-ml li + li {
+    margin-top: 0.4em;
+  }
+  .prose-ml blockquote {
+    @apply rounded-e-xl border-s-4 border-brand bg-brand-soft/60 px-5 py-4 text-ink;
+  }
+  .prose-ml hr {
+    @apply my-10 border-line;
+  }
+  .prose-ml img {
+    @apply h-auto max-w-full rounded-xl;
+  }
+
+  /* Eight-point-star lattice (generic Islamic geometry) for designed image fallbacks and bands. */
+  .bg-star-lattice {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cg fill='none' stroke='white' stroke-width='1.2'%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Crect x='16' y='16' width='24' height='24' transform='rotate%2845 28 28%29'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 56px 56px;
+  }
+
+  /* Same lattice as a mask, so it takes any colour (e.g. `bg-brand`) in both themes. */
+  .mask-star-lattice {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cg fill='none' stroke='white' stroke-width='1.2'%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Crect x='16' y='16' width='24' height='24' transform='rotate%2845 28 28%29'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cg fill='none' stroke='white' stroke-width='1.2'%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Crect x='16' y='16' width='24' height='24' transform='rotate%2845 28 28%29'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E");
+    -webkit-mask-size: 56px 56px;
+    mask-size: 56px 56px;
+  }
+
+  /* Horizontal scrollers (chips, mobile shelves) without a visible scrollbar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

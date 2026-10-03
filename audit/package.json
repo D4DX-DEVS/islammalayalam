@@ -1,0 +1,12 @@
+{
+  "name": "islammalayalam-audit",
+  "private": true,
+  "type": "module",
+  "description": "Read-only audit tooling for the legacy WordPress site (sanitizes malware before persisting anything).",
+  "scripts": {
+    "dump": "node scripts/dump-wp.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}
