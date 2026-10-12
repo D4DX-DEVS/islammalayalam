@@ -1,9 +1,9 @@
-import { MessageCircle, Send } from 'lucide-react'
+import { MessageCircle, Podcast, Send } from 'lucide-react'
 import type { SiteSetting } from '@/payload-types'
 
 /**
  * Brand marks are not part of lucide-react 1.x, so the four logos are minimal inline SVGs
- * (Simple Icons geometry, CC0). WhatsApp/Telegram use generic lucide icons.
+ * (Simple Icons geometry, CC0). WhatsApp/Telegram/Spotify use generic lucide icons.
  */
 const PATHS: Record<'facebook' | 'x' | 'youtube', string> = {
   facebook:
@@ -19,6 +19,7 @@ const LABELS = {
   youtube: 'YouTube',
   whatsapp: 'WhatsApp',
   telegram: 'Telegram',
+  spotify: 'Spotify',
 } as const
 export type Network = keyof typeof LABELS
 
@@ -26,6 +27,7 @@ export type Network = keyof typeof LABELS
 export function SocialIcon({ network, className }: { network: Network; className: string }) {
   if (network === 'whatsapp') return <MessageCircle className={className} aria-hidden="true" />
   if (network === 'telegram') return <Send className={className} aria-hidden="true" />
+  if (network === 'spotify') return <Podcast className={className} aria-hidden="true" />
   if (network === 'instagram') {
     return (
       <svg

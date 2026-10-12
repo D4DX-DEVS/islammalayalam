@@ -20,6 +20,13 @@ const MODE = {
 
 export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl
+  // Payload's open sign-up form for an empty DB. Never served: the first admin is created with
+  // `npm run create-admin` (first-register is also refused by blockRemoteFirstUser).
+  if (/^\/admin\/create-first-user\/?$/.test(pathname))
+    return new NextResponse(
+      'Admin is not set up yet. On the server, set ADMIN_EMAIL / ADMIN_PASSWORD in .env and run `npm run create-admin`, then open /admin to log in.',
+      { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } },
+    )
   if (needsTrailingSlash(pathname)) {
     // Plain URL on purpose: NextURL re-applies the `trailingSlash: false` formatting and would strip
     // the slash again, producing a redirect loop.

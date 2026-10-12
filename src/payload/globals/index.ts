@@ -43,7 +43,7 @@ export const SiteSettings: GlobalConfig = {
     {
       name: 'social',
       type: 'group',
-      fields: ['facebook', 'x', 'instagram', 'youtube', 'whatsapp', 'telegram'].map(
+      fields: ['facebook', 'x', 'instagram', 'youtube', 'whatsapp', 'telegram', 'spotify'].map(
         (name): Field => ({ name, type: 'text', validate: httpsOnly }),
       ),
     },
@@ -78,7 +78,14 @@ export const Header: GlobalConfig = {
         description:
           'Small links beside the logo on desktop and at the bottom of the mobile menu (e.g. About Us · Postal Library).',
       },
-      fields: [linkGroup('link')],
+      fields: [
+        linkGroup('link'),
+        {
+          name: 'highlight',
+          type: 'checkbox',
+          label: 'Show as a highlighted button (e.g. Postal Library, Order the Quran)',
+        },
+      ],
     },
     {
       name: 'showSocialInTopBar',

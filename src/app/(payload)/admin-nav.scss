@@ -1,0 +1,256 @@
+// Sidebar (payload/admin/nav/AdminNavClient.tsx). Payload's NavWrapper still provides `.nav`,
+// `.nav__scroll` (scroll + padding) and the open/close behaviour; this styles the contents.
+
+.nav {
+  border-right: 1px solid var(--im-border);
+  background: var(--im-surface);
+}
+
+.nav__scroll {
+  --nav-padding-inline-start: 0.85rem;
+  --nav-padding-inline-end: 0.85rem;
+  --nav-padding-block-end: 0.85rem;
+}
+
+.im-nav {
+  gap: 0.15rem;
+  align-items: stretch;
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+  }
+}
+
+// Brand row sits beside Payload's collapse button (which lives in the absolute `.nav__header`).
+.im-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: var(--app-header-height);
+  margin: calc(-1 * var(--app-header-height)) 0 0.75rem;
+  padding-left: 2.6rem;
+  color: var(--theme-text);
+  text-decoration: none;
+
+  img {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.6rem;
+  }
+
+  > span {
+    display: grid;
+    line-height: 1.2;
+  }
+}
+
+.im-nav__brand-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.im-nav__brand-sub {
+  font-size: 0.75rem;
+  color: var(--im-muted);
+}
+
+.im-nav__list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.im-nav__link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border-radius: var(--style-radius-s);
+  color: var(--theme-elevation-800);
+  font-weight: 500;
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+
+  svg {
+    color: var(--im-muted);
+    transition: color 0.15s;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover {
+    background: var(--theme-elevation-50);
+    color: var(--theme-text);
+    text-decoration: none;
+
+    svg {
+      color: var(--theme-text);
+    }
+  }
+
+  &[aria-current='page'] {
+    background: var(--im-brand-soft);
+    color: var(--im-brand);
+    font-weight: 600;
+
+    svg {
+      color: var(--im-brand);
+    }
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.im-nav__group {
+  margin-top: 0.85rem;
+}
+
+.im-nav__group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 2rem;
+  margin-bottom: 0.15rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: var(--style-radius-s);
+  background: none;
+  color: var(--im-muted);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    transition: transform 0.15s;
+
+    &[data-open='false'] {
+      transform: rotate(-90deg);
+    }
+  }
+
+  &:hover {
+    color: var(--theme-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.im-nav__footer {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--im-border);
+}
+
+.im-nav__user {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--style-radius-m);
+  background: var(--im-canvas);
+}
+
+.im-nav__user-link {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.25rem;
+  border-radius: var(--style-radius-s);
+  color: var(--theme-text);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--theme-elevation-50);
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.im-nav__avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  background: var(--im-brand);
+  color: var(--im-on-brand);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.im-nav__user-text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.im-nav__user-name {
+  overflow: hidden;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-nav__user-role {
+  font-size: 0.72rem;
+  color: var(--im-muted);
+}
+
+.im-nav__user-icon {
+  display: none;
+}
+
+.im-nav__logout {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--style-radius-s);
+  color: var(--im-muted);
+
+  &:hover {
+    background: rgb(220 38 38 / 0.08);
+    color: #dc2626;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}

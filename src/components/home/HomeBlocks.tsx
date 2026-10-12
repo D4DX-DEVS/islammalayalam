@@ -9,6 +9,12 @@ import {
 } from '@/components/home/CategorySections'
 import { MediaShelf } from '@/components/home/MediaShelf'
 import {
+  CallToActionSection,
+  FaqSection,
+  QuoteOfDaySection,
+  ReelsSection,
+} from '@/components/home/EngageSections'
+import {
   BannerSection,
   FollowUsSection,
   QuickContactSection,
@@ -55,6 +61,14 @@ function renderBlock(
       return <FollowUsSection block={block} settings={settings} />
     case 'quickContact':
       return <QuickContactSection block={block} settings={settings} />
+    case 'quoteOfDay':
+      return <QuoteOfDaySection block={block} />
+    case 'reels':
+      return <ReelsSection block={block} compact={opts.sidebar || opts.half} />
+    case 'faq':
+      return <FaqSection block={block} />
+    case 'callToAction':
+      return <CallToActionSection block={block} compact={opts.sidebar || opts.half} />
     default:
       return null
   }

@@ -81,7 +81,11 @@ export function SiteHeader({
                     href={l.href}
                     external={l.external}
                     newTab={l.newTab}
-                    className="text-sm font-medium text-muted transition-colors hover:text-brand"
+                    className={
+                      l.highlight
+                        ? 'inline-flex min-h-10 items-center rounded-full bg-accent-strong px-4 text-sm font-semibold text-on-accent shadow-card transition-opacity hover:opacity-90'
+                        : 'text-sm font-medium text-muted transition-colors hover:text-brand'
+                    }
                   >
                     {l.label}
                   </SmartLink>

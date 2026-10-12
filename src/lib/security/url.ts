@@ -41,3 +41,26 @@ export function youtubeId(input: string): string | null {
   }
   return id && YOUTUBE_ID.test(id) ? id : null
 }
+
+const SPOTIFY_TYPES = new Set(['episode', 'show', 'track', 'playlist', 'album'])
+const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/
+
+/**
+ * Spotify share link (open.spotify.com/[intl-xx/]{episode|show|track|playlist|album}/<id>) →
+ * its official embed URL; null for anything else, so only Spotify's own player is ever framed.
+ */
+export function spotifyEmbedUrl(input: string): string | null {
+  let url: URL
+  try {
+    url = new URL(input.trim())
+  } catch {
+    return null
+  }
+  if (url.protocol !== 'https:' || url.hostname !== 'open.spotify.com') return null
+  const parts = url.pathname.split('/').filter(Boolean)
+  if (parts[0]?.startsWith('intl-')) parts.shift()
+  if (parts[0] === 'embed') parts.shift()
+  const [type, id] = parts
+  if (!type || !id || !SPOTIFY_TYPES.has(type) || !SPOTIFY_ID.test(id)) return null
+  return `https://open.spotify.com/embed/${type}/${id}`
+}

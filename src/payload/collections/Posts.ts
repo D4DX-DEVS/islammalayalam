@@ -136,7 +136,7 @@ export const Posts: CollectionConfig = {
               admin: {
                 condition: (data) => data?.format === 'audio',
                 description:
-                  'Link to the hosted audio (https only). Audio uploads are not accepted.',
+                  'Spotify link (episode, show or playlist) — plays on the page — or a link to hosted audio (https only). Audio uploads are not accepted.',
               },
               fields: [{ name: 'url', type: 'text', validate: validateHttps }],
             },

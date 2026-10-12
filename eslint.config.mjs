@@ -33,6 +33,7 @@ export default defineConfig([
   },
   globalIgnores([
     '.next/**',
+    '.playwright-mcp/**',
     '.logs/**',
     'media/**',
     '.test-media/**',

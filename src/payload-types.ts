@@ -178,7 +178,7 @@ export interface Post {
     youtubeId?: string | null;
   };
   /**
-   * Link to the hosted audio (https only). Audio uploads are not accepted.
+   * Spotify link (episode, show or playlist) — plays on the page — or a link to hosted audio (https only). Audio uploads are not accepted.
    */
   audio?: {
     url?: string | null;
@@ -1162,6 +1162,7 @@ export interface SiteSetting {
     youtube?: string | null;
     whatsapp?: string | null;
     telegram?: string | null;
+    spotify?: string | null;
   };
   contact?: {
     email?: string | null;
@@ -1201,6 +1202,7 @@ export interface Header {
               } | null);
           url?: string | null;
         };
+        highlight?: boolean | null;
         id?: string | null;
       }[]
     | null;
@@ -1301,13 +1303,28 @@ export interface Homepage {
         | MediaShelfBlock
         | RichTextBlock
         | BannerBlock
+        | CallToActionBlock
+        | FaqBlock
+        | QuoteOfDayBlock
+        | ReelsBlock
       )[]
     | null;
   /**
    * Right sidebar on desktop; shown after the main column on mobile
    */
   sidebar?:
-    | (CategoryListBlock | QuickLinksBlock | QuickContactBlock | FollowUsBlock | BannerBlock | RichTextBlock)[]
+    | (
+        | CategoryListBlock
+        | QuickLinksBlock
+        | QuickContactBlock
+        | FollowUsBlock
+        | BannerBlock
+        | RichTextBlock
+        | QuoteOfDayBlock
+        | ReelsBlock
+        | CallToActionBlock
+        | FaqBlock
+      )[]
     | null;
   meta?: {
     title?: string | null;
@@ -1467,6 +1484,165 @@ export interface BannerBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock".
+ */
+export interface CallToActionBlock {
+  width?: ('full' | 'half') | null;
+  tone: 'brand' | 'gold' | 'navy' | 'light';
+  /**
+   * Small label above the heading, e.g. "Online course"
+   */
+  eyebrow?: string | null;
+  heading: string;
+  text?: string | null;
+  /**
+   * Optional banner / cover image shown beside the text.
+   */
+  image?: (string | null) | Media;
+  /**
+   * Optional facts, e.g. Duration · 8 weeks, Mode · Online, Fee · Free
+   */
+  details?:
+    | {
+        label: string;
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  buttons?:
+    | {
+        link: {
+          type?: ('reference' | 'custom' | 'none') | null;
+          newTab?: boolean | null;
+          label: string;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: string | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: string | Post;
+              } | null)
+            | ({
+                relationTo: 'categories';
+                value: string | Category;
+              } | null);
+          url?: string | null;
+        };
+        style?: ('primary' | 'secondary') | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'callToAction';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqBlock".
+ */
+export interface FaqBlock {
+  width?: ('full' | 'half') | null;
+  title?: string | null;
+  items?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  moreLink?: {
+    type?: ('reference' | 'custom' | 'none') | null;
+    newTab?: boolean | null;
+    label?: string | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: string | Page;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: string | Post;
+        } | null)
+      | ({
+          relationTo: 'categories';
+          value: string | Category;
+        } | null);
+    url?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'faq';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "QuoteOfDayBlock".
+ */
+export interface QuoteOfDayBlock {
+  title?: string | null;
+  /**
+   * One is shown per day (India time), cycling through the list. Add a flyer image, a text quote, or both.
+   */
+  quotes?:
+    | {
+        text?: string | null;
+        /**
+         * e.g. ഖുര്‍ആന്‍ 2:286
+         */
+        source?: string | null;
+        /**
+         * Optional flyer image (square or portrait works best).
+         */
+        flyer?: (string | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'quoteOfDay';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ReelsBlock".
+ */
+export interface ReelsBlock {
+  title?: string | null;
+  videos?:
+    | {
+        /**
+         * YouTube Shorts or video link
+         */
+        url: string;
+        title: string;
+        id?: string | null;
+      }[]
+    | null;
+  moreLink?: {
+    type?: ('reference' | 'custom' | 'none') | null;
+    newTab?: boolean | null;
+    label?: string | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: string | Page;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: string | Post;
+        } | null)
+      | ({
+          relationTo: 'categories';
+          value: string | Category;
+        } | null);
+    url?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'reels';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "QuickLinksBlock".
  */
 export interface QuickLinksBlock {
@@ -1619,6 +1795,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         youtube?: T;
         whatsapp?: T;
         telegram?: T;
+        spotify?: T;
       };
   contact?:
     | T
@@ -1648,6 +1825,7 @@ export interface HeaderSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
             };
+        highlight?: T;
         id?: T;
       };
   showSocialInTopBar?: T;
@@ -1712,6 +1890,10 @@ export interface HomepageSelect<T extends boolean = true> {
         mediaShelf?: T | MediaShelfBlockSelect<T>;
         richText?: T | RichTextBlockSelect<T>;
         banner?: T | BannerBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
+        quoteOfDay?: T | QuoteOfDayBlockSelect<T>;
+        reels?: T | ReelsBlockSelect<T>;
       };
   sidebar?:
     | T
@@ -1722,6 +1904,10 @@ export interface HomepageSelect<T extends boolean = true> {
         followUs?: T | FollowUsBlockSelect<T>;
         banner?: T | BannerBlockSelect<T>;
         richText?: T | RichTextBlockSelect<T>;
+        quoteOfDay?: T | QuoteOfDayBlockSelect<T>;
+        reels?: T | ReelsBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
       };
   meta?:
     | T
@@ -1819,6 +2005,110 @@ export interface BannerBlockSelect<T extends boolean = true> {
   width?: T;
   image?: T;
   link?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        label?: T;
+        reference?: T;
+        url?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock_select".
+ */
+export interface CallToActionBlockSelect<T extends boolean = true> {
+  width?: T;
+  tone?: T;
+  eyebrow?: T;
+  heading?: T;
+  text?: T;
+  image?: T;
+  details?:
+    | T
+    | {
+        label?: T;
+        value?: T;
+        id?: T;
+      };
+  buttons?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              label?: T;
+              reference?: T;
+              url?: T;
+            };
+        style?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqBlock_select".
+ */
+export interface FaqBlockSelect<T extends boolean = true> {
+  width?: T;
+  title?: T;
+  items?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  moreLink?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        label?: T;
+        reference?: T;
+        url?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "QuoteOfDayBlock_select".
+ */
+export interface QuoteOfDayBlockSelect<T extends boolean = true> {
+  title?: T;
+  quotes?:
+    | T
+    | {
+        text?: T;
+        source?: T;
+        flyer?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ReelsBlock_select".
+ */
+export interface ReelsBlockSelect<T extends boolean = true> {
+  title?: T;
+  videos?:
+    | T
+    | {
+        url?: T;
+        title?: T;
+        id?: T;
+      };
+  moreLink?:
     | T
     | {
         type?: T;

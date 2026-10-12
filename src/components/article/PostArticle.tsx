@@ -11,6 +11,7 @@ import { YouTubeVideo } from '@/components/richtext/YouTubeVideo'
 import { listPosts } from '@/features/posts/queries'
 import { formatDate, readingLabel } from '@/lib/format'
 import { categoryHref, postHref } from '@/lib/links'
+import { spotifyEmbedUrl } from '@/lib/security/url'
 import { cdnUrl } from '@/lib/spaces'
 import type { Author, Category, Media, Post } from '@/payload-types'
 
@@ -19,6 +20,20 @@ const SELF_AUDIO = /\.(mp3|m4a|ogg|wav)(\?.*)?$/i
 const SITE_URL = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3444'
 
 function AudioPlayer({ url }: { url: string }) {
+  const spotify = spotifyEmbedUrl(url)
+  if (spotify) {
+    const tall = /\/(show|playlist|album)\//.test(spotify)
+    return (
+      <iframe
+        src={spotify}
+        title="Spotify"
+        loading="lazy"
+        allow="encrypted-media; clipboard-write"
+        sandbox="allow-scripts allow-same-origin allow-popups"
+        className={`w-full rounded-xl border-0 ${tall ? 'h-[352px]' : 'h-[152px]'}`}
+      />
+    )
+  }
   // Self-hosted/CDN audio plays inline; anything else opens on its host (CSP media-src stays strict).
   if (
     SELF_AUDIO.test(url) &&

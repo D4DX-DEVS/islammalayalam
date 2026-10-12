@@ -142,7 +142,8 @@ export function linkGroup(name = 'link', opts: { required?: boolean } = {}): Fie
           {
             name: 'type',
             type: 'radio',
-            defaultValue: 'reference',
+            // Optional links (banner, "more" links) start as "no link" so an untouched one is valid.
+            defaultValue: opts.required === false ? 'none' : 'reference',
             options: [
               { label: 'Page / post / category', value: 'reference' },
               { label: 'URL', value: 'custom' },

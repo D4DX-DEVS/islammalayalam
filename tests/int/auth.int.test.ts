@@ -161,7 +161,7 @@ describe('first account', () => {
     blockRemoteFirstUser({
       args: {},
       operation: 'create',
-      req: { payloadAPI, payload: { count: async () => ({ totalDocs: users }) } },
+      req: { payloadAPI, payload: { find: async () => ({ docs: Array(users).fill({}) }) } },
     } as never)
 
   it('cannot be created over HTTP on an empty database (first-register takeover)', async () => {

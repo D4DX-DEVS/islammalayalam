@@ -18,6 +18,7 @@
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "seed:dev": "cross-env NODE_OPTIONS=--no-deprecation MONGODB_URI=mongodb://127.0.0.1:27017/islammalayalam_dev DO_SPACES_BUCKET= DO_SPACES_ENDPOINT= DO_SPACES_KEY= DO_SPACES_SECRET= DO_SPACES_CDN_ENDPOINT= DO_SPACES_FOLDER= payload run scripts/dev/seed.ts",
+    "create-admin": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/create-admin.ts",
     "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload run migration/run.ts",
     "dev:migration": "tsx scripts/dev/dev-migration.ts",
     "test:unit": "vitest run --config ./vitest.config.mts --project unit",

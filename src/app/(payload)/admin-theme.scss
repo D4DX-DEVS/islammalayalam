@@ -1,0 +1,425 @@
+// Modern admin theme on top of Payload's stock UI. Payload's styles live in
+// `@layer payload-default`, so these unlayered rules win without !important.
+// Brand tokens (--im-*) are defined in custom.scss.
+
+:root {
+  --style-radius-s: 8px;
+  --style-radius-m: 10px;
+  --style-radius-l: 14px;
+  --im-surface: #fff;
+  --im-canvas: #f6f8fb;
+  --im-border: #e3e8ef;
+  --im-muted: #64748b;
+  --im-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
+  --im-shadow-md: 0 4px 16px rgb(15 23 42 / 0.08), 0 1px 3px rgb(15 23 42 / 0.06);
+  --im-shadow-lg: 0 24px 48px -12px rgb(15 23 42 / 0.22);
+  --im-ring: 0 0 0 3px rgb(26 107 196 / 0.22);
+  --theme-bg: var(--im-canvas);
+  --theme-input-bg: var(--im-surface);
+  --theme-border-color: var(--im-border);
+}
+
+html[data-theme='dark'] {
+  --im-surface: #111a2b;
+  --im-canvas: #0b1220;
+  --im-border: #1f2a3d;
+  --im-muted: #94a3b8;
+  --im-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --im-shadow-md: 0 4px 16px rgb(0 0 0 / 0.45);
+  --im-shadow-lg: 0 24px 48px -12px rgb(0 0 0 / 0.6);
+  --im-ring: 0 0 0 3px rgb(96 165 250 / 0.3);
+  --theme-bg: var(--im-canvas);
+  --theme-input-bg: var(--im-surface);
+  --theme-border-color: var(--im-border);
+}
+
+body {
+  background: var(--im-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+// ---- Buttons ------------------------------------------------------------------------------------
+.btn {
+  border-radius: var(--style-radius-s);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.05s;
+
+  &:active:not(.btn--disabled) {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.btn--style-primary:not(.btn--disabled) {
+  box-shadow: var(--im-shadow-sm);
+}
+
+.btn--style-secondary:not(.btn--disabled) {
+  --bg-color: var(--im-surface);
+  --hover-bg: var(--im-brand-soft);
+  --color: var(--theme-text);
+  --hover-color: var(--im-brand);
+  --box-shadow: inset 0 0 0 1px var(--im-border);
+  --hover-box-shadow: inset 0 0 0 1px var(--im-brand);
+}
+
+// ---- Inputs -------------------------------------------------------------------------------------
+.field-type input:not([type='checkbox']):not([type='radio']),
+.field-type textarea,
+.react-select .rs__control {
+  border-radius: var(--style-radius-s);
+  border-color: var(--im-border);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-sm);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+
+  &:hover {
+    border-color: var(--theme-elevation-250);
+  }
+}
+
+.field-type input:not([type='checkbox']):not([type='radio']):focus,
+.field-type textarea:focus,
+.react-select .rs__control--is-focused {
+  border-color: var(--im-brand);
+  box-shadow: var(--im-ring);
+  outline: none;
+}
+
+.field-label {
+  font-weight: 600;
+}
+
+.field-description {
+  color: var(--im-muted);
+}
+
+// ---- Password show/hide (PasswordToggles.tsx) ----------------------------------------------------
+.im-pwd-wrap {
+  position: relative;
+
+  input {
+    padding-right: 3rem;
+  }
+}
+
+.im-pwd-toggle-host {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  transform: translateY(-50%);
+}
+
+.im-pwd-toggle {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--style-radius-s);
+  background: transparent;
+  color: var(--im-muted);
+  cursor: pointer;
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  &:hover,
+  &[aria-pressed='true'] {
+    color: var(--im-brand);
+    background: var(--im-brand-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+// ---- Document edit screen ----------------------------------------------------------------------
+.doc-header__title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.doc-controls {
+  background: color-mix(in srgb, var(--im-canvas) 85%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--im-border);
+}
+
+.document-fields__main,
+.collection-edit__main,
+.global-edit__main {
+  background: transparent;
+}
+
+// Field groups / auth box (the grey panel on the account screen) become cards.
+.auth-fields,
+.field-type.group-field,
+.field-type.collapsible-field,
+.field-type.array-field .array-field__row {
+  border: 1px solid var(--im-border);
+  border-radius: var(--style-radius-l);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-sm);
+}
+
+.document-fields__sidebar {
+  border-left: 1px solid var(--im-border);
+  background: var(--im-surface);
+}
+
+// ---- Lists --------------------------------------------------------------------------------------
+.list-header h1 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.collection-list__tables,
+.table {
+  border-radius: var(--style-radius-l);
+}
+
+.table {
+  overflow: auto;
+  border: 1px solid var(--im-border);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-sm);
+
+  thead th {
+    background: var(--theme-elevation-50);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--im-muted);
+  }
+
+  tbody tr {
+    transition: background-color 0.12s;
+
+    &:nth-child(even) {
+      background: transparent;
+    }
+
+    &:hover {
+      background: var(--im-brand-soft);
+    }
+  }
+
+  td,
+  th {
+    border-bottom: 1px solid var(--im-border);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+// Pagination: a sticky footer bar so it is always reachable on long lists.
+.page-controls {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--style-radius-l);
+  background: color-mix(in srgb, var(--im-surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--im-shadow-md);
+}
+
+.paginator__page {
+  min-width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--style-radius-s);
+  font-weight: 600;
+
+  &:hover:not(.paginator__page--is-current) {
+    background: var(--theme-elevation-50);
+  }
+
+  &--is-current {
+    background: var(--im-brand);
+    color: var(--im-on-brand);
+  }
+}
+
+.page-controls__page-info {
+  color: var(--im-muted);
+  font-size: 0.85rem;
+}
+
+.per-page button {
+  border-radius: var(--style-radius-s);
+}
+
+// ---- Cards (dashboard collection tiles) --------------------------------------------------------
+.card {
+  border: 1px solid var(--im-border);
+  border-radius: var(--style-radius-l);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-sm);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
+
+  &:hover {
+    border-color: var(--im-brand);
+    box-shadow: var(--im-shadow-md);
+    transform: translateY(-1px);
+  }
+}
+
+// ---- Login / TOTP / reset (minimal template) ---------------------------------------------------
+.template-minimal {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, var(--im-brand-soft), transparent 60%),
+    radial-gradient(900px 500px at 110% 110%, rgb(217 119 6 / 0.08), transparent 60%),
+    var(--im-canvas);
+}
+
+.template-minimal__wrap {
+  width: 100%;
+  max-width: 26rem;
+  padding: 2rem 1.75rem;
+  border: 1px solid var(--im-border);
+  border-radius: 1.25rem;
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-lg);
+
+  @media (max-width: 480px) {
+    padding: 1.5rem 1.1rem;
+    border-radius: 1rem;
+  }
+
+  .btn {
+    width: 100%;
+    min-height: 2.9rem;
+  }
+}
+
+// ---- Modals and toasts -------------------------------------------------------------------------
+.confirmation-modal__wrapper {
+  max-width: 30rem;
+  padding: 1.75rem;
+  border: 1px solid var(--im-border);
+  border-radius: 1rem;
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-lg);
+
+  h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  p {
+    color: var(--im-muted);
+    line-height: 1.55;
+  }
+}
+
+.payload__modal-item {
+  backdrop-filter: blur(4px);
+}
+
+.payload-toast-item {
+  border-radius: var(--style-radius-m);
+  box-shadow: var(--im-shadow-md);
+}
+
+// ---- Row actions column (RowActions.tsx) -------------------------------------------------------
+.im-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.im-row-actions__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--style-radius-s);
+  background: var(--im-surface);
+  color: var(--theme-text);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+
+  svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  &:hover {
+    border-color: var(--im-brand);
+    background: var(--im-brand-soft);
+    color: var(--im-brand);
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: wait;
+  }
+
+  &--danger:hover {
+    border-color: #dc2626;
+    background: rgb(220 38 38 / 0.08);
+    color: #dc2626;
+  }
+
+  // Icon-only on small screens; the aria-label keeps the name.
+  @media (max-width: 767px) {
+    padding: 0 0.55rem;
+
+    span {
+      display: none;
+    }
+  }
+}
+
+// Destructive confirmations (RowActions delete): red confirm button.
+.im-confirm--danger .btn--style-primary:not(.btn--disabled) {
+  --bg-color: #dc2626;
+  --hover-bg: #b91c1c;
+  --color: #fff;
+  --hover-color: #fff;
+}

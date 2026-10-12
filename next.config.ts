@@ -32,6 +32,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Keep the dev-only Next badge clear of the admin sidebar's account card (bottom-left).
+  devIndicators: { position: 'bottom-right' },
   // WordPress URLs end in "/" (/1234/, /category/news/). Next would 308 them to no-slash; instead
   // src/proxy.ts adds the slash for public pages only (API/admin paths are left untouched).
   skipTrailingSlashRedirect: true,

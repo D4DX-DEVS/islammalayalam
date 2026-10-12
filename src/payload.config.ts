@@ -1,7 +1,7 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { buildConfig } from 'payload'
-import type { Plugin } from 'payload'
+import type { CollectionConfig, Field, Plugin } from 'payload'
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -31,6 +31,41 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const env = getEnv()
 const SITE_NAME = 'Islam Malayalam'
+
+/** Every admin list: 20 rows by default and a 10/20/50/100 rows-per-page picker. */
+const LIST_PAGINATION = { defaultLimit: 20, limits: [10, 20, 50, 100] }
+/** Lists that get an "Actions" column (Edit + Delete with confirmation). Logs stay read-only. */
+const ROW_ACTIONS = new Set([
+  'posts',
+  'pages',
+  'categories',
+  'authors',
+  'media',
+  'redirects',
+  'contact-messages',
+  'users',
+])
+const rowActionsField: Field = {
+  name: 'rowActions',
+  type: 'ui',
+  label: 'Actions',
+  admin: {
+    disableBulkEdit: true,
+    components: { Cell: '/payload/admin/RowActions#RowActions' },
+  },
+}
+const withListDefaults = (collection: CollectionConfig): CollectionConfig => {
+  const admin = { pagination: LIST_PAGINATION, ...collection.admin }
+  if (!ROW_ACTIONS.has(collection.slug)) return { ...collection, admin }
+  return {
+    ...collection,
+    fields: [...collection.fields, rowActionsField],
+    admin: {
+      ...admin,
+      defaultColumns: admin.defaultColumns && [...admin.defaultColumns, 'rowActions'],
+    },
+  }
+}
 
 /** DigitalOcean Spaces (DO_SPACES_* in .env) — only when fully configured (see src/lib/env.ts). */
 function storagePlugins(): Plugin[] {
@@ -95,7 +130,10 @@ export default buildConfig({
         Logo: '/payload/admin/graphics#AdminLogo',
         Icon: '/payload/admin/graphics#AdminIcon',
       },
-      beforeDashboard: ['/payload/admin/Dashboard#EditorialDashboard'],
+      Nav: '/payload/admin/nav/AdminNav#AdminNav',
+      views: { dashboard: { Component: '/payload/admin/dashboard/DashboardView#DashboardView' } },
+      // Confirmations on Publish/Save/Force Unlock + show/hide on password fields.
+      providers: ['/payload/admin/enhancements/AdminEnhancements#AdminEnhancements'],
     },
     // Side-by-side preview while editing. The iframe goes through /next/preview/, which re-checks
     // the staff session (password + TOTP) before showing anything unpublished.
@@ -131,7 +169,7 @@ export default buildConfig({
     AuditLogs,
     MigrationRuns,
     MigrationIssues,
-  ],
+  ].map(withListDefaults),
   globals,
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   sharp,

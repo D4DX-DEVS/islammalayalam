@@ -8,16 +8,25 @@ export type NavItem = {
   href: string | null
   newTab: boolean
   external: boolean
+  /** Header links only: render as a highlighted button (Postal Library, Order the Quran…). */
+  highlight: boolean
   children: NavItem[]
 }
-type MenuNode = { id?: string | null; link: CmsLink; children?: MenuNode[] | null }
+type MenuNode = {
+  id?: string | null
+  link: CmsLink
+  highlight?: boolean | null
+  children?: MenuNode[] | null
+}
 
 export function toNavTree(nodes: MenuNode[] | null | undefined, prefix = 'n'): NavItem[] {
   return (nodes ?? []).flatMap((node, i) => {
     const link = resolveLink(node.link)
     if (!link) return []
     const id = `${prefix}-${node.id ?? i}`
-    return [{ id, ...link, children: toNavTree(node.children, id) }]
+    return [
+      { id, ...link, highlight: Boolean(node.highlight), children: toNavTree(node.children, id) },
+    ]
   })
 }
 

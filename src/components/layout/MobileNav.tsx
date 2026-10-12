@@ -164,7 +164,11 @@ export function MobileNav({ items, pathname: initialPath, topLinks, social }: Mo
                             href={l.href}
                             external={l.external}
                             newTab={l.newTab}
-                            className="inline-flex min-h-11 items-center text-sm font-medium text-muted hover:text-brand"
+                            className={
+                              l.highlight
+                                ? 'inline-flex min-h-11 items-center rounded-full bg-accent-strong px-4 text-sm font-semibold text-on-accent hover:opacity-90'
+                                : 'inline-flex min-h-11 items-center text-sm font-medium text-muted hover:text-brand'
+                            }
                           >
                             {l.label}
                           </SmartLink>

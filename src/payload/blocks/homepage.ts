@@ -1,6 +1,7 @@
 import type { Block, Field } from 'payload'
 import { linkGroup } from '@/payload/fields'
 import { simpleEditor } from '@/payload/editor'
+import { CallToActionBlock, FaqBlock, QuoteOfDayBlock, ReelsBlock } from './homepage-engage'
 
 /**
  * Homepage / sidebar layout blocks. Editors compose the homepage from these in the Homepage
@@ -212,6 +213,10 @@ export const mainColumnBlocks: Block[] = [
   MediaShelfBlock,
   RichTextBlock,
   BannerBlock,
+  CallToActionBlock,
+  FaqBlock,
+  QuoteOfDayBlock,
+  ReelsBlock,
 ]
 export const sidebarBlocks: Block[] = [
   CategoryListBlock,
@@ -220,4 +225,8 @@ export const sidebarBlocks: Block[] = [
   FollowUsBlock,
   BannerBlock,
   RichTextBlock,
+  QuoteOfDayBlock,
+  ReelsBlock,
+  CallToActionBlock,
+  FaqBlock,
 ]

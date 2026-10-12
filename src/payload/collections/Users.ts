@@ -1,11 +1,24 @@
 import { APIError } from 'payload'
-import type { CollectionBeforeOperationHook, CollectionConfig } from 'payload'
+import type { CollectionBeforeOperationHook, CollectionConfig, PayloadRequest } from 'payload'
 import { adminFieldOnly, adminOrSelf, isAdmin, ROLES } from '@/payload/access'
 import { auditCollectionChange, auditCollectionDelete, auditLogin } from '@/payload/hooks/auditLog'
 
 const MIN_PASSWORD = 12
 const MAX_PASSWORD = 256
 const isProd = process.env.NODE_ENV === 'production'
+
+/** `count` is not allowed inside a MongoDB transaction (the create runs in one), `find` is. */
+async function hasAnyUser(req: PayloadRequest): Promise<boolean> {
+  const { docs } = await req.payload.find({
+    collection: 'users',
+    limit: 1,
+    depth: 0,
+    pagination: false,
+    overrideAccess: true,
+    req,
+  })
+  return docs.length > 0
+}
 
 /** Runs for create, update and resetPassword (the reset flow skips field validation). */
 const enforcePasswordPolicy: CollectionBeforeOperationHook = ({ args, operation }) => {
@@ -34,8 +47,7 @@ export const blockRemoteFirstUser: CollectionBeforeOperationHook = async ({
   req,
 }) => {
   if (operation !== 'create' || req.payloadAPI === 'local') return args
-  const { totalDocs } = await req.payload.count({ collection: 'users', overrideAccess: true, req })
-  if (totalDocs === 0)
+  if (!(await hasAnyUser(req)))
     throw new APIError(
       'The first admin account must be created from the server CLI',
       403,
@@ -80,12 +92,7 @@ export const Users: CollectionConfig = {
       // The very first account (created via CLI/first-register on an empty DB) must be an admin.
       async ({ data, operation, req }) => {
         if (operation !== 'create') return data
-        const { totalDocs } = await req.payload.count({
-          collection: 'users',
-          overrideAccess: true,
-          req,
-        })
-        return totalDocs === 0 ? { ...data, role: 'admin' } : data
+        return (await hasAnyUser(req)) ? data : { ...data, role: 'admin' }
       },
     ],
     afterLogin: [auditLogin],

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { resolveLink } from '@/lib/links'
 import { isActive, isCurrent, toNavTree } from '@/lib/nav'
+import { quoteIndexForDate } from '@/lib/quote'
 import { formatDate, parsePage } from '@/lib/format'
 import { mediaSrc } from '@/lib/media'
 import { pageWindow } from '@/lib/pagination'
@@ -66,6 +67,35 @@ describe('navigation state', () => {
     expect(isActive(tree[0]!, encoded)).toBe(false)
     expect(isActive(tree[0]!, '/')).toBe(true)
     expect(isCurrent(tree[1]!.children[0]!, `/${encodeURIComponent('ആദർശം')}/`)).toBe(true)
+  })
+})
+
+describe('header highlight links', () => {
+  it('carries the highlight flag only where an editor set it', () => {
+    const [plain, button] = toNavTree([
+      { link: { type: 'custom', label: 'About', url: '/about/' } },
+      { link: { type: 'custom', label: 'Postal Library', url: '/library/' }, highlight: true },
+    ])
+    expect(plain!.highlight).toBe(false)
+    expect(button!.highlight).toBe(true)
+  })
+})
+
+describe('quote of the day', () => {
+  it('is stable for an India day and moves on at IST midnight', () => {
+    const lateEvening = new Date('2026-10-12T18:20:00Z') // 23:50 IST, 12 Oct
+    const sameDay = new Date('2026-10-11T19:00:00Z') // 00:30 IST, 12 Oct
+    const nextDay = new Date('2026-10-12T18:40:00Z') // 00:10 IST, 13 Oct
+    expect(quoteIndexForDate(7, lateEvening)).toBe(quoteIndexForDate(7, sameDay))
+    expect(quoteIndexForDate(7, nextDay)).toBe((quoteIndexForDate(7, sameDay) + 1) % 7)
+  })
+  it('cycles through every quote and handles empty lists', () => {
+    const seen = new Set<number>()
+    for (let d = 0; d < 5; d++)
+      seen.add(quoteIndexForDate(5, new Date(Date.UTC(2026, 0, 1 + d, 6))))
+    expect([...seen].sort()).toEqual([0, 1, 2, 3, 4])
+    expect(quoteIndexForDate(0)).toBe(-1)
+    expect(quoteIndexForDate(1)).toBe(0)
   })
 })
 

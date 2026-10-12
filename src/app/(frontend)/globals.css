@@ -22,6 +22,9 @@
   --color-brand-soft: #e8f1fc;
   --color-brand-deep: #0b2447;
   --color-accent: #d97706;
+  /* Filled gold buttons (header highlights, promo cards): AA contrast with --color-on-accent. */
+  --color-accent-strong: #b45309;
+  --color-on-accent: #ffffff;
   --color-ink: #0f172a;
   --color-body: #334155;
   --color-muted: #64748b;
@@ -59,6 +62,8 @@
     --color-brand-soft: #132b4d;
     --color-brand-deep: #06142b;
     --color-accent: #fbbf24;
+    --color-accent-strong: #fbbf24;
+    --color-on-accent: #1c1206;
     --color-ink: #f1f5f9;
     --color-body: #cbd5e1;
     --color-muted: #94a3b8;
@@ -77,6 +82,10 @@
       --color-brand-soft: #132b4d;
       --color-brand-deep: #06142b;
       --color-accent: #fbbf24;
+      --color-accent-strong: #fbbf24;
+      --color-on-accent: #1c1206;
+    --color-accent-strong: #fbbf24;
+    --color-on-accent: #1c1206;
       --color-ink: #f1f5f9;
       --color-body: #cbd5e1;
       --color-muted: #94a3b8;

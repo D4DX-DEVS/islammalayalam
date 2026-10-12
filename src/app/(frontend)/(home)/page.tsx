@@ -24,10 +24,10 @@ export default async function HomePage() {
           description="Admin → Settings → Homepage-ൽ വിഭാഗങ്ങൾ ചേർക്കുക."
         />
       ) : (
-        <div className={sidebar.length ? 'grid gap-12 lg:grid-cols-[minmax(0,1fr)_21rem]' : ''}>
+        <div className={sidebar.length ? 'grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_21rem]' : ''}>
           <HomeBlocks blocks={layout} settings={settings} />
           {sidebar.length ? (
-            <aside aria-label="സൈഡ്ബാർ">
+            <aside aria-label="സൈഡ്ബാർ" className="min-w-0">
               <HomeBlocks blocks={sidebar} settings={settings} sidebar />
             </aside>
           ) : null}

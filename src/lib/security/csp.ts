@@ -63,6 +63,7 @@ export function buildCsp(
     ...common,
     'img-src': ["'self'", 'data:', 'blob:', media, 'https://i.ytimg.com'],
     'media-src': ["'self'", media],
-    'frame-src': ['https://www.youtube-nocookie.com'],
+    // Only the two players we embed: YouTube (privacy mode) and Spotify (audio posts).
+    'frame-src': ['https://www.youtube-nocookie.com', 'https://open.spotify.com'],
   })
 }
