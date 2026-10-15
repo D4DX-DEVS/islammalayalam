@@ -11,7 +11,7 @@ interface ShareButtonsProps {
 }
 
 const BUTTON =
-  'inline-flex size-10 items-center justify-center rounded-full border border-line text-body transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand'
+  'inline-flex size-10 items-center justify-center rounded-full bg-card text-body ring-1 ring-line transition hover:-translate-y-0.5 hover:bg-brand hover:text-white hover:ring-brand'
 
 /** Plain share links (no third-party scripts or trackers) + copy-link. */
 export function ShareButtons({ url, title, className = '' }: ShareButtonsProps) {

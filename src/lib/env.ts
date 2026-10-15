@@ -44,6 +44,14 @@ const schema = z
     DO_SPACES_CDN_ENDPOINT: optional(z.string()),
     /** Folder inside the bucket; files go to `<folder>/media/…`. */
     DO_SPACES_FOLDER: optional(z.string()),
+    /** Turns on AI search (“AI ഉത്തരം”). Without it the AI buttons stay hidden and search works as before. */
+    ANTHROPIC_API_KEY: optional(z.string().min(20, 'ANTHROPIC_API_KEY looks too short')),
+    /** Claude model that writes AI search answers (default: claude-opus-5-5). */
+    AI_SEARCH_MODEL: optional(
+      z.string().regex(/^claude-[a-z0-9.-]+$/, 'AI_SEARCH_MODEL must be a Claude model id'),
+    ),
+    /** Most AI answers per day for the whole site: the cost cap (default 300). */
+    AI_SEARCH_DAILY_LIMIT: optional(z.coerce.number().int().min(1).max(100_000)),
   })
   .superRefine((env, ctx) => {
     const issue = (path: string, message: string) =>

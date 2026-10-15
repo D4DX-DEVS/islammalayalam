@@ -20,17 +20,19 @@ export function ArchiveHeader({
   children,
 }: ArchiveHeaderProps) {
   return (
-    <header className="relative isolate mb-10 overflow-hidden rounded-[1.75rem] bg-surface px-5 py-7 sm:px-10 sm:py-10">
-      <div
-        className="mask-star-lattice pointer-events-none absolute inset-y-0 end-0 -z-10 w-2/3 bg-brand opacity-[0.07]"
-        aria-hidden="true"
-      />
+    <header className="relative isolate mb-12 overflow-hidden rounded-panel bg-gradient-to-br from-brand-soft via-surface to-surface px-6 py-8 ring-1 ring-line/60 sm:px-12 sm:py-12">
       <Breadcrumbs items={crumbs} className="mb-6" />
-      <p className="text-sm font-semibold text-brand">{kicker}</p>
-      <h1 className="mt-1 text-3xl font-bold sm:text-[2.6rem]">{title}</h1>
+      <p className="inline-flex items-center gap-2 rounded-full bg-card/80 px-3.5 py-1 text-sm font-semibold text-brand ring-1 ring-line/70 backdrop-blur">
+        <span
+          className="size-2 rotate-45 rounded-[2px] bg-gradient-to-br from-accent to-brand-glow"
+          aria-hidden="true"
+        />
+        {kicker}
+      </p>
+      <h1 className="mt-4 text-3xl font-bold sm:text-5xl">{title}</h1>
       {description ? <div className="mt-3 max-w-3xl text-body">{description}</div> : null}
       {typeof count === 'number' ? (
-        <p className="mt-4 text-sm font-medium text-muted">{count} ലേഖനങ്ങൾ</p>
+        <p className="mt-5 text-sm font-medium text-muted">{count} ലേഖനങ്ങൾ</p>
       ) : null}
       {children ? <div className="mt-6">{children}</div> : null}
     </header>

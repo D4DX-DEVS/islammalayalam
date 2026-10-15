@@ -17,19 +17,20 @@ function pageHref(basePath: string, page: number, query: Record<string, string> 
 }
 
 const ITEM =
-  'inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-3 text-sm font-semibold transition-colors'
+  'inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-3 text-sm font-semibold transition'
 const IDLE = `${ITEM} text-body hover:bg-brand-soft hover:text-brand`
+const EDGE = `${IDLE} bg-card ring-1 ring-line shadow-card`
 
 /** Server-rendered pagination (?page=N). Works without JavaScript; crawlable. */
 export function Pagination({ basePath, page, totalPages, query }: PaginationProps) {
   if (totalPages <= 1) return null
   return (
-    <nav aria-label="പേജുകൾ" className="mt-12 flex flex-wrap items-center justify-center gap-1.5">
+    <nav aria-label="പേജുകൾ" className="mt-14 flex flex-wrap items-center justify-center gap-2">
       {page > 1 ? (
         <Link
           href={pageHref(basePath, page - 1, query)}
           rel="prev"
-          className={`${IDLE} border border-line`}
+          className={EDGE}
           aria-label="മുൻ പേജ്"
         >
           <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
@@ -45,7 +46,7 @@ export function Pagination({ basePath, page, totalPages, query }: PaginationProp
             key={n}
             href={pageHref(basePath, n, query)}
             aria-current={n === page ? 'page' : undefined}
-            className={n === page ? `${ITEM} bg-brand text-white shadow-card` : IDLE}
+            className={n === page ? `${ITEM} bg-brand-gradient text-white shadow-lift` : IDLE}
           >
             {n}
           </Link>
@@ -55,7 +56,7 @@ export function Pagination({ basePath, page, totalPages, query }: PaginationProp
         <Link
           href={pageHref(basePath, page + 1, query)}
           rel="next"
-          className={`${IDLE} border border-line`}
+          className={EDGE}
           aria-label="അടുത്ത പേജ്"
         >
           <ChevronRight className="size-4 rtl:rotate-180" aria-hidden="true" />

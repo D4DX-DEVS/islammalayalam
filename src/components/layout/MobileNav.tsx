@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { usePathname } from 'next/navigation'
-import { ChevronDown, Menu, X } from 'lucide-react'
+import { ChevronDown, Menu, X, House } from 'lucide-react'
 import { SmartLink } from '@/components/ui/SmartLink'
 import { SearchForm } from '@/components/layout/SearchForm'
 import { SocialLinks } from '@/components/layout/SocialLinks'
@@ -15,6 +15,7 @@ interface MobileNavProps {
   pathname: string
   topLinks: NavItem[]
   social: SiteSetting['social']
+  aiSearch?: boolean
 }
 
 function Branch({ item, depth, pathname }: { item: NavItem; depth: number; pathname: string }) {
@@ -33,6 +34,9 @@ function Branch({ item, depth, pathname }: { item: NavItem; depth: number; pathn
             aria-current={current ? 'page' : undefined}
             className={`${row} hover:text-brand`}
           >
+            {depth === 0 && item.href === '/' ? (
+              <House className="me-2.5 size-5 shrink-0" aria-hidden="true" />
+            ) : null}
             {item.label}
           </SmartLink>
         ) : (
@@ -76,7 +80,13 @@ function Branch({ item, depth, pathname }: { item: NavItem; depth: number; pathn
  * The drawer is portalled to <body>: the sticky header uses backdrop-blur, and a backdrop-filter ancestor
  * becomes the containing block for `position: fixed`, which squeezed the drawer into the header's 64px.
  */
-export function MobileNav({ items, pathname: initialPath, topLinks, social }: MobileNavProps) {
+export function MobileNav({
+  items,
+  pathname: initialPath,
+  topLinks,
+  social,
+  aiSearch = false,
+}: MobileNavProps) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname() ?? initialPath
   const toggleRef = useRef<HTMLButtonElement>(null)
@@ -122,7 +132,7 @@ export function MobileNav({ items, pathname: initialPath, topLinks, social }: Mo
         ? createPortal(
             <div className="fixed inset-0 z-50" id="mobile-menu">
               <div
-                className="absolute inset-0 bg-slate-950/55 backdrop-blur-[2px]"
+                className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
                 aria-hidden="true"
                 onClick={() => setOpen(false)}
               />
@@ -131,7 +141,7 @@ export function MobileNav({ items, pathname: initialPath, topLinks, social }: Mo
                 role="dialog"
                 aria-modal="true"
                 aria-label="മെനു"
-                className="absolute inset-y-0 start-0 flex w-[88%] max-w-sm flex-col rounded-e-3xl bg-card shadow-lift"
+                className="absolute inset-y-0 start-0 flex w-[88%] max-w-sm flex-col rounded-e-[2rem] bg-card shadow-lift"
               >
                 <div className="flex min-h-16 items-center justify-between px-5">
                   <span className="font-display text-lg font-bold text-ink">മെനു</span>
@@ -144,7 +154,7 @@ export function MobileNav({ items, pathname: initialPath, topLinks, social }: Mo
                     <X className="size-6" aria-hidden="true" />
                   </button>
                 </div>
-                <SearchForm className="px-4 pb-3" />
+                <SearchForm ai={aiSearch} className="px-4 pb-3" />
                 <nav
                   aria-label="മൊബൈൽ മെനു"
                   className="flex-1 overflow-y-auto overscroll-contain px-2 pb-4"
@@ -166,7 +176,7 @@ export function MobileNav({ items, pathname: initialPath, topLinks, social }: Mo
                             newTab={l.newTab}
                             className={
                               l.highlight
-                                ? 'inline-flex min-h-11 items-center rounded-full bg-accent-strong px-4 text-sm font-semibold text-on-accent hover:opacity-90'
+                                ? 'inline-flex min-h-11 items-center rounded-full bg-accent-strong px-5 text-sm font-semibold text-on-accent shadow-card hover:opacity-90'
                                 : 'inline-flex min-h-11 items-center text-sm font-medium text-muted hover:text-brand'
                             }
                           >

@@ -24,6 +24,7 @@ import {
   MigrationRuns,
   Redirects,
 } from '@/payload/collections/system'
+import { PostalRequests } from '@/payload/collections/PostalRequests'
 import { Users } from '@/payload/collections/Users'
 import { globals } from '@/payload/globals'
 
@@ -131,7 +132,20 @@ export default buildConfig({
         Icon: '/payload/admin/graphics#AdminIcon',
       },
       Nav: '/payload/admin/nav/AdminNav#AdminNav',
-      views: { dashboard: { Component: '/payload/admin/dashboard/DashboardView#DashboardView' } },
+      // Right side of the header: dark-mode switch, then the account dropdown card.
+      actions: [
+        '/payload/admin/header/ThemeSwitch#ThemeSwitch',
+        '/payload/admin/header/AccountMenu#AccountMenu',
+      ],
+      views: {
+        dashboard: { Component: '/payload/admin/dashboard/DashboardView#DashboardView' },
+        // Admin → Website manager: every page and section of the site, with where to edit it.
+        website: {
+          Component: '/payload/admin/website/WebsiteView#WebsiteView',
+          path: '/website',
+          exact: true,
+        },
+      },
       // Confirmations on Publish/Save/Force Unlock + show/hide on password fields.
       providers: ['/payload/admin/enhancements/AdminEnhancements#AdminEnhancements'],
     },
@@ -165,6 +179,7 @@ export default buildConfig({
     Media,
     Redirects,
     ContactMessages,
+    PostalRequests,
     Users,
     AuditLogs,
     MigrationRuns,

@@ -45,6 +45,9 @@ const KNOWN = {
   DO_SPACES_ENDPOINT: () => hostKind('DO_SPACES_ENDPOINT'),
   DO_SPACES_CDN_ENDPOINT: () => hostKind('DO_SPACES_CDN_ENDPOINT'),
   DO_SPACES_FOLDER: () => isSet('DO_SPACES_FOLDER'),
+  ANTHROPIC_API_KEY: () => isSet('ANTHROPIC_API_KEY'),
+  AI_SEARCH_MODEL: () => (process.env.AI_SEARCH_MODEL ? 'set' : 'default'),
+  AI_SEARCH_DAILY_LIMIT: () => (process.env.AI_SEARCH_DAILY_LIMIT ? 'set' : 'default (300)'),
   DO_SPACES_KEY: () => isSet('DO_SPACES_KEY'),
   DO_SPACES_SECRET: () => isSet('DO_SPACES_SECRET'),
 }

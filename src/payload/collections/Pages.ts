@@ -54,6 +54,20 @@ export const Pages: CollectionConfig = {
       ],
       admin: { position: 'sidebar' },
     },
+    {
+      name: 'template',
+      type: 'select',
+      defaultValue: 'default',
+      options: [
+        { label: 'Standard', value: 'default' },
+        { label: 'Postal library request form', value: 'postal-request' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description:
+          'Standard shows the body as an article. The request form adds the membership form: Content is the introduction, Sections are the conditions.',
+      },
+    },
     { name: 'intro', type: 'richText', editor: simpleEditor },
     { name: 'content', type: 'richText', editor: articleEditor },
     {

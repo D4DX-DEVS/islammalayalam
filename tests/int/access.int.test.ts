@@ -54,6 +54,7 @@ describe('anonymous visitors', () => {
       'audit-logs',
       'redirects',
       'contact-messages',
+      'postal-requests',
       'migration-runs',
       'migration-issues',
     ] as const) {
@@ -62,6 +63,54 @@ describe('anonymous visitors', () => {
         collection,
       ).toBe(403)
     }
+  })
+
+  it('cannot create postal-library requests through the API (only the form action can)', async () => {
+    const data = {
+      name: 'Anyone',
+      age: 30,
+      gender: 'male',
+      address: 'Somewhere',
+      pincode: '673004',
+      phone: '9876543210',
+      email: 'anyone@example.com',
+      education: 'Degree',
+      religion: 'Any',
+      readBefore: 'x',
+      difficulties: 'x',
+      favouriteAspect: 'x',
+      wantsToLearn: 'x',
+      status: 'new',
+    } as const
+    expect(
+      await statusOf(() =>
+        payload.create({ collection: 'postal-requests', data, overrideAccess: false }),
+      ),
+    ).toBe(403)
+    // The form's own path (Local API, trusted) does work.
+    const saved = await payload.create({
+      collection: 'postal-requests',
+      data,
+      overrideAccess: true,
+    })
+    expect(saved.status).toBe('new')
+    // Editors may triage but not rewrite what the reader wrote.
+    const editorView = await payload.findByID({
+      collection: 'postal-requests',
+      id: saved.id,
+      user: editor,
+      overrideAccess: false,
+    })
+    expect(editorView.name).toBe('Anyone')
+    const updated = await payload.update({
+      collection: 'postal-requests',
+      id: saved.id,
+      data: { status: 'member', name: 'Changed' } as never,
+      user: editor,
+      overrideAccess: false,
+    })
+    expect(updated.status).toBe('member')
+    expect(updated.name).toBe('Anyone')
   })
 
   it('see published posts only — also when asking for drafts', async () => {

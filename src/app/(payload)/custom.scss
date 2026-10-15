@@ -3,11 +3,13 @@
 @use './admin-theme';
 @use './admin-nav';
 @use './admin-dashboard';
+@use './admin-website';
+@use './admin-header';
 
 :root {
-  --im-brand: #1a6bc4;
-  --im-brand-strong: #13549e;
-  --im-brand-soft: #e8f1fc;
+  --im-brand: #0b6bd3;
+  --im-brand-strong: #0a53a8;
+  --im-brand-soft: #e6f0fc;
   --im-accent: #d97706;
   --im-on-brand: #fff;
   // Same typefaces as the site (variables set on <html> by app/(payload)/layout.tsx).
@@ -18,7 +20,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-poppins), var(--font-display-ml), sans-serif;
+  font-family: var(--font-poppins), var(--font-malayalam), sans-serif;
 }
 
 html[data-theme='dark'] {

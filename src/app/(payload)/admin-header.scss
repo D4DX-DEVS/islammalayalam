@@ -1,0 +1,449 @@
+// Admin header tools (payload/admin/header/*): a dark-mode switch and the account dropdown card.
+// They live in Payload's `admin.components.actions` slot, on the right of the header.
+
+// The default avatar link to the Account page is replaced by the dropdown card below.
+.app-header .app-header__account {
+  display: none;
+}
+
+// "Admin Theme" now lives in the header switch; the Account page keeps its other settings.
+.payload-settings .radio-group {
+  display: none;
+}
+
+// ---- Dark-mode switch ---------------------------------------------------------------------------
+.im-theme-switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  width: 3.6rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--im-border);
+  border-radius: 999px;
+  background: var(--im-surface);
+  color: var(--im-muted);
+  cursor: pointer;
+  box-shadow: var(--im-shadow-sm);
+  transition:
+    background-color 0.25s,
+    border-color 0.25s;
+
+  &:hover {
+    border-color: var(--im-brand);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+
+  &__icon {
+    position: relative;
+    z-index: 1;
+    width: 0.95rem;
+    height: 0.95rem;
+    opacity: 0.55;
+    transition:
+      color 0.25s,
+      opacity 0.25s;
+  }
+
+  &__thumb {
+    position: absolute;
+    top: 50%;
+    left: 0.2rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: var(--im-canvas);
+    box-shadow:
+      0 0 0 1px var(--im-border),
+      0 1px 3px rgb(15 23 42 / 0.25);
+    transform: translateY(-50%);
+    transition: transform 0.28s cubic-bezier(0.3, 0.7, 0.3, 1.15);
+  }
+
+  // The icon under the thumb is the active mode.
+  &:not(.is-dark) &__icon--sun {
+    color: #d97706;
+    opacity: 1;
+  }
+
+  &.is-dark {
+    border-color: var(--im-brand);
+    background: var(--im-brand-soft);
+  }
+
+  &.is-dark &__thumb {
+    transform: translate(1.6rem, -50%);
+  }
+
+  &.is-dark &__icon--moon {
+    color: var(--im-brand);
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &,
+    &__icon,
+    &__thumb {
+      transition: none;
+    }
+  }
+}
+
+// ---- Account dropdown ---------------------------------------------------------------------------
+.im-account {
+  position: relative;
+  flex-shrink: 0;
+
+  svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
+  }
+}
+
+.im-account__trigger {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.15s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+
+  &[aria-expanded='true'] .im-account__avatar {
+    box-shadow: 0 0 0 3px var(--im-brand-soft);
+  }
+}
+
+.im-account__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--im-brand), var(--im-brand-strong));
+  color: var(--im-on-brand);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: box-shadow 0.2s;
+
+  &--lg {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1rem;
+  }
+}
+
+// Fixed under the header (not absolute) so no ancestor's overflow can clip it.
+.im-account__card {
+  position: fixed;
+  top: calc(var(--app-header-height, 3.75rem) - 0.1rem);
+  right: var(--gutter-h, 1.5rem);
+  z-index: 60;
+  width: min(22.5rem, calc(100vw - 1.5rem));
+  max-height: calc(100dvh - var(--app-header-height, 3.75rem) - 1rem);
+  overflow-y: auto;
+  padding: 1rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--style-radius-l);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-lg);
+  color: var(--theme-text);
+  white-space: normal;
+  animation: im-account-pop 0.16s ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes im-account-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.im-account__head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--im-border);
+}
+
+.im-account__who {
+  min-width: 0;
+}
+
+.im-account__name,
+.im-account__email {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-account__name {
+  font-weight: 700;
+}
+
+.im-account__email {
+  font-size: 0.82rem;
+  color: var(--im-muted);
+}
+
+.im-account__role {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--im-brand-soft);
+  color: var(--im-brand);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.im-account__done {
+  margin: 0.7rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--style-radius-s);
+  background: rgb(12 163 12 / 0.12);
+  color: #0a7a0a;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  html[data-theme='dark'] & {
+    color: #4ade80;
+  }
+}
+
+.im-account__list {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.im-account__item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.6rem 0.6rem;
+  border: 0;
+  border-radius: var(--style-radius-m);
+  background: none;
+  color: var(--theme-text);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  > svg:first-child {
+    color: var(--im-brand);
+  }
+
+  > span:not(.im-account__badge) {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+
+    strong {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    small {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.78rem;
+      color: var(--im-muted);
+    }
+  }
+
+  &:hover {
+    background: var(--im-canvas);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.im-account__chev {
+  color: var(--im-muted);
+  transition: transform 0.15s;
+
+  .im-account__item:hover & {
+    transform: translateX(2px);
+  }
+}
+
+.im-account__badge {
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+
+  &.is-on {
+    background: rgb(12 163 12 / 0.14);
+    color: #0a7a0a;
+
+    html[data-theme='dark'] & {
+      color: #4ade80;
+    }
+  }
+
+  &.is-off {
+    background: rgb(236 131 90 / 0.18);
+    color: #b4531f;
+
+    html[data-theme='dark'] & {
+      color: #f4a07a;
+    }
+  }
+}
+
+.im-account__form {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  label {
+    display: grid;
+    gap: 0.3rem;
+
+    span {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--im-muted);
+    }
+  }
+
+  input {
+    width: 100%;
+    min-height: 2.6rem;
+    padding: 0 0.8rem;
+    border: 1px solid var(--im-border);
+    border-radius: var(--style-radius-s);
+    background: var(--im-canvas);
+    color: var(--theme-text);
+    font: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--im-brand);
+      box-shadow: var(--im-ring);
+    }
+  }
+}
+
+.im-account__row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.im-account__error {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--style-radius-s);
+  background: rgb(208 59 59 / 0.12);
+  color: #b42323;
+  font-size: 0.85rem;
+
+  html[data-theme='dark'] & {
+    color: #f28b8b;
+  }
+}
+
+.im-account__btn {
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--style-radius-s);
+  background: var(--im-surface);
+  color: var(--theme-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+
+  &:hover {
+    border-color: var(--im-brand);
+  }
+
+  &--primary {
+    border-color: var(--im-brand);
+    background: var(--im-brand);
+    color: var(--im-on-brand);
+
+    &:hover {
+      background: var(--im-brand-strong);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+}
+
+.im-account__foot {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--im-border);
+}
+
+.im-account__signout {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem;
+  border-radius: var(--style-radius-m);
+  color: #b42323;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    background: rgb(208 59 59 / 0.1);
+  }
+
+  html[data-theme='dark'] & {
+    color: #f28b8b;
+  }
+}

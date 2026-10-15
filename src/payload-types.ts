@@ -74,6 +74,7 @@ export interface Config {
     media: Media;
     redirects: Redirect;
     'contact-messages': ContactMessage;
+    'postal-requests': PostalRequest;
     users: User;
     'audit-logs': AuditLog;
     'migration-runs': MigrationRun;
@@ -92,6 +93,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'contact-messages': ContactMessagesSelect<false> | ContactMessagesSelect<true>;
+    'postal-requests': PostalRequestsSelect<false> | PostalRequestsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
     'migration-runs': MigrationRunsSelect<false> | MigrationRunsSelect<true>;
@@ -175,6 +177,10 @@ export interface Post {
   format: 'standard' | 'video' | 'audio' | 'ebook';
   video?: {
     url?: string | null;
+    /**
+     * Optional length, e.g. 18:24 — shown on the video tile and next to audio tracks.
+     */
+    duration?: string | null;
     youtubeId?: string | null;
   };
   /**
@@ -182,6 +188,10 @@ export interface Post {
    */
   audio?: {
     url?: string | null;
+    /**
+     * Optional length, e.g. 18:24 — shown on the video tile and next to audio tracks.
+     */
+    duration?: string | null;
   };
   attachments?:
     | {
@@ -337,6 +347,31 @@ export interface Category {
   description?: string | null;
   image?: (string | null) | Media;
   /**
+   * Icon on the round shortcut tile under the homepage hero. Leave empty to pick one automatically from the name.
+   */
+  icon?:
+    | (
+        | 'newspaper'
+        | 'messages'
+        | 'file-text'
+        | 'eye'
+        | 'video'
+        | 'headphones'
+        | 'book-open'
+        | 'library'
+        | 'landmark'
+        | 'users'
+        | 'heart'
+        | 'lightbulb'
+        | 'scale'
+        | 'star'
+        | 'gift'
+        | 'sparkles'
+        | 'compass'
+      )
+    | null;
+  showInStrip?: boolean | null;
+  /**
    * Lower numbers first
    */
   order?: number | null;
@@ -444,6 +479,10 @@ export interface Page {
   id: string;
   title: string;
   kind: 'kb' | 'static';
+  /**
+   * Standard shows the body as an article. The request form adds the membership form: Content is the introduction, Sections are the conditions.
+   */
+  template?: ('default' | 'postal-request') | null;
   intro?: {
     root: {
       type: string;
@@ -577,6 +616,36 @@ export interface ContactMessage {
   createdAt: string;
 }
 /**
+ * Requests to join the postal library. Readers cannot be edited, only triaged.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "postal-requests".
+ */
+export interface PostalRequest {
+  id: string;
+  status: 'new' | 'in-progress' | 'member' | 'closed' | 'spam';
+  /**
+   * Internal. For example the ledger number or which books were sent.
+   */
+  notes?: string | null;
+  name: string;
+  age: number;
+  gender: 'male' | 'female';
+  address: string;
+  pincode: string;
+  phone: string;
+  email: string;
+  education: string;
+  religion: string;
+  orgMember?: ('yes' | 'no') | null;
+  readBefore: string;
+  difficulties: string;
+  favouriteAspect: string;
+  wantsToLearn: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "audit-logs".
  */
@@ -687,6 +756,10 @@ export interface PayloadLockedDocument {
         value: string | ContactMessage;
       } | null)
     | ({
+        relationTo: 'postal-requests';
+        value: string | PostalRequest;
+      } | null)
+    | ({
         relationTo: 'users';
         value: string | User;
       } | null)
@@ -758,12 +831,14 @@ export interface PostsSelect<T extends boolean = true> {
     | T
     | {
         url?: T;
+        duration?: T;
         youtubeId?: T;
       };
   audio?:
     | T
     | {
         url?: T;
+        duration?: T;
       };
   attachments?:
     | T
@@ -817,6 +892,7 @@ export interface PostsSelect<T extends boolean = true> {
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
   kind?: T;
+  template?: T;
   intro?: T;
   content?: T;
   sections?:
@@ -870,6 +946,8 @@ export interface CategoriesSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   image?: T;
+  icon?: T;
+  showInStrip?: T;
   order?: T;
   hidden?: T;
   legacy?:
@@ -1022,6 +1100,30 @@ export interface ContactMessagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "postal-requests_select".
+ */
+export interface PostalRequestsSelect<T extends boolean = true> {
+  status?: T;
+  notes?: T;
+  name?: T;
+  age?: T;
+  gender?: T;
+  address?: T;
+  pincode?: T;
+  phone?: T;
+  email?: T;
+  education?: T;
+  religion?: T;
+  orgMember?: T;
+  readBefore?: T;
+  difficulties?: T;
+  favouriteAspect?: T;
+  wantsToLearn?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -1167,6 +1269,14 @@ export interface SiteSetting {
   contact?: {
     email?: string | null;
     phone?: string | null;
+    /**
+     * Shows a green “chat on WhatsApp” button at the bottom right of every page. Leave empty to hide it.
+     */
+    whatsappNumber?: string | null;
+    /**
+     * The message that is ready in the chat box when a visitor taps the button.
+     */
+    whatsappMessage?: string | null;
     address?: string | null;
   };
   updatedAt?: string | null;
@@ -1298,6 +1408,7 @@ export interface Homepage {
     | (
         | FeaturedSliderBlock
         | CategoryFeatureBlock
+        | TopicGridBlock
         | CategoryGridBlock
         | CategoryListBlock
         | MediaShelfBlock
@@ -1342,9 +1453,17 @@ export interface Homepage {
  * via the `definition` "FeaturedSliderBlock".
  */
 export interface FeaturedSliderBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   source?: ('featured' | 'category') | null;
   category?: (string | null) | Category;
   limit: number;
+  /**
+   * Heading of the newest-stories column beside the slider.
+   */
+  sideTitle?: string | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'featuredSlider';
@@ -1354,6 +1473,10 @@ export interface FeaturedSliderBlock {
  * via the `definition` "CategoryFeatureBlock".
  */
 export interface CategoryFeatureBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   category: string | Category;
   /**
@@ -1369,9 +1492,36 @@ export interface CategoryFeatureBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TopicGridBlock".
+ */
+export interface TopicGridBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  width?: ('full' | 'half') | null;
+  /**
+   * Section heading.
+   */
+  title?: string | null;
+  /**
+   * Tiles show the category image, or its latest post image, and the article count. Leave empty to use the first topics automatically (video, audio and e-book shelves are skipped).
+   */
+  categories?: (string | Category)[] | null;
+  limit: number;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'topicGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "CategoryGridBlock".
  */
 export interface CategoryGridBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   category: string | Category;
   /**
@@ -1390,6 +1540,10 @@ export interface CategoryGridBlock {
  * via the `definition` "CategoryListBlock".
  */
 export interface CategoryListBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   category: string | Category;
   /**
@@ -1408,6 +1562,10 @@ export interface CategoryListBlock {
  * via the `definition` "MediaShelfBlock".
  */
 export interface MediaShelfBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   format: 'video' | 'audio' | 'ebook';
   /**
@@ -1428,6 +1586,10 @@ export interface MediaShelfBlock {
  * via the `definition` "RichTextBlock".
  */
 export interface RichTextBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   /**
    * Section heading. Defaults to the category name.
@@ -1457,6 +1619,10 @@ export interface RichTextBlock {
  * via the `definition` "BannerBlock".
  */
 export interface BannerBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   image: string | Media;
   link?: {
@@ -1487,6 +1653,10 @@ export interface BannerBlock {
  * via the `definition` "CallToActionBlock".
  */
 export interface CallToActionBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   tone: 'brand' | 'gold' | 'navy' | 'light';
   /**
@@ -1543,6 +1713,10 @@ export interface CallToActionBlock {
  * via the `definition` "FaqBlock".
  */
 export interface FaqBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   title?: string | null;
   items?:
@@ -1580,6 +1754,10 @@ export interface FaqBlock {
  * via the `definition` "QuoteOfDayBlock".
  */
 export interface QuoteOfDayBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   title?: string | null;
   /**
    * One is shown per day (India time), cycling through the list. Add a flyer image, a text quote, or both.
@@ -1607,6 +1785,10 @@ export interface QuoteOfDayBlock {
  * via the `definition` "ReelsBlock".
  */
 export interface ReelsBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   title?: string | null;
   videos?:
     | {
@@ -1647,6 +1829,10 @@ export interface ReelsBlock {
  */
 export interface QuickLinksBlock {
   /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  /**
    * Section heading. Defaults to the category name.
    */
   title?: string | null;
@@ -1684,6 +1870,10 @@ export interface QuickLinksBlock {
  */
 export interface QuickContactBlock {
   /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  /**
    * Section heading. Defaults to the category name.
    */
   title?: string | null;
@@ -1697,6 +1887,10 @@ export interface QuickContactBlock {
  * via the `definition` "FollowUsBlock".
  */
 export interface FollowUsBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   /**
    * Links come from Site settings → Social.
    */
@@ -1802,6 +1996,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | {
         email?: T;
         phone?: T;
+        whatsappNumber?: T;
+        whatsappMessage?: T;
         address?: T;
       };
   updatedAt?: T;
@@ -1885,6 +2081,7 @@ export interface HomepageSelect<T extends boolean = true> {
     | {
         featuredSlider?: T | FeaturedSliderBlockSelect<T>;
         categoryFeature?: T | CategoryFeatureBlockSelect<T>;
+        topicGrid?: T | TopicGridBlockSelect<T>;
         categoryGrid?: T | CategoryGridBlockSelect<T>;
         categoryList?: T | CategoryListBlockSelect<T>;
         mediaShelf?: T | MediaShelfBlockSelect<T>;
@@ -1925,9 +2122,11 @@ export interface HomepageSelect<T extends boolean = true> {
  * via the `definition` "FeaturedSliderBlock_select".
  */
 export interface FeaturedSliderBlockSelect<T extends boolean = true> {
+  hidden?: T;
   source?: T;
   category?: T;
   limit?: T;
+  sideTitle?: T;
   id?: T;
   blockName?: T;
 }
@@ -1936,6 +2135,7 @@ export interface FeaturedSliderBlockSelect<T extends boolean = true> {
  * via the `definition` "CategoryFeatureBlock_select".
  */
 export interface CategoryFeatureBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   category?: T;
   title?: T;
@@ -1947,9 +2147,23 @@ export interface CategoryFeatureBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TopicGridBlock_select".
+ */
+export interface TopicGridBlockSelect<T extends boolean = true> {
+  hidden?: T;
+  width?: T;
+  title?: T;
+  categories?: T;
+  limit?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "CategoryGridBlock_select".
  */
 export interface CategoryGridBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   category?: T;
   title?: T;
@@ -1964,6 +2178,7 @@ export interface CategoryGridBlockSelect<T extends boolean = true> {
  * via the `definition` "CategoryListBlock_select".
  */
 export interface CategoryListBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   category?: T;
   title?: T;
@@ -1978,6 +2193,7 @@ export interface CategoryListBlockSelect<T extends boolean = true> {
  * via the `definition` "MediaShelfBlock_select".
  */
 export interface MediaShelfBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   format?: T;
   category?: T;
@@ -1991,6 +2207,7 @@ export interface MediaShelfBlockSelect<T extends boolean = true> {
  * via the `definition` "RichTextBlock_select".
  */
 export interface RichTextBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   title?: T;
   content?: T;
@@ -2002,6 +2219,7 @@ export interface RichTextBlockSelect<T extends boolean = true> {
  * via the `definition` "BannerBlock_select".
  */
 export interface BannerBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   image?: T;
   link?:
@@ -2021,6 +2239,7 @@ export interface BannerBlockSelect<T extends boolean = true> {
  * via the `definition` "CallToActionBlock_select".
  */
 export interface CallToActionBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   tone?: T;
   eyebrow?: T;
@@ -2057,6 +2276,7 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
  * via the `definition` "FaqBlock_select".
  */
 export interface FaqBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   title?: T;
   items?:
@@ -2083,6 +2303,7 @@ export interface FaqBlockSelect<T extends boolean = true> {
  * via the `definition` "QuoteOfDayBlock_select".
  */
 export interface QuoteOfDayBlockSelect<T extends boolean = true> {
+  hidden?: T;
   title?: T;
   quotes?:
     | T
@@ -2100,6 +2321,7 @@ export interface QuoteOfDayBlockSelect<T extends boolean = true> {
  * via the `definition` "ReelsBlock_select".
  */
 export interface ReelsBlockSelect<T extends boolean = true> {
+  hidden?: T;
   title?: T;
   videos?:
     | T
@@ -2125,6 +2347,7 @@ export interface ReelsBlockSelect<T extends boolean = true> {
  * via the `definition` "QuickLinksBlock_select".
  */
 export interface QuickLinksBlockSelect<T extends boolean = true> {
+  hidden?: T;
   title?: T;
   links?:
     | T
@@ -2148,6 +2371,7 @@ export interface QuickLinksBlockSelect<T extends boolean = true> {
  * via the `definition` "QuickContactBlock_select".
  */
 export interface QuickContactBlockSelect<T extends boolean = true> {
+  hidden?: T;
   title?: T;
   intro?: T;
   id?: T;
@@ -2158,6 +2382,7 @@ export interface QuickContactBlockSelect<T extends boolean = true> {
  * via the `definition` "FollowUsBlock_select".
  */
 export interface FollowUsBlockSelect<T extends boolean = true> {
+  hidden?: T;
   title?: T;
   id?: T;
   blockName?: T;

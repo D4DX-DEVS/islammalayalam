@@ -1,7 +1,10 @@
-import { PostCard } from '@/components/cards/PostCard'
+import Link from 'next/link'
+import { PostCard, CardMeta, categoryName } from '@/components/cards/PostCard'
+import { PostImage } from '@/components/cards/PostImage'
+import { HeroSlider } from '@/components/home/HeroSlider'
 import { SectionHeading } from '@/components/ui/SectionHeading'
-import { listPosts } from '@/features/posts/queries'
-import { categoryHref } from '@/lib/links'
+import { listPosts, type PostCardData } from '@/features/posts/queries'
+import { categoryHref, postHref } from '@/lib/links'
 import type {
   Category,
   CategoryFeatureBlock,
@@ -13,10 +16,53 @@ import type {
 const asCategory = (value: unknown): Category | null =>
   value && typeof value === 'object' ? (value as Category) : null
 const GRID_COLS = { '2': 'lg:grid-cols-2', '3': 'lg:grid-cols-3', '4': 'lg:grid-cols-4' } as const
+const HERO_SLIDES_MAX = 5
 const HERO_SIDE_MAX = 4
-export const PANEL = 'h-full rounded-[1.75rem] bg-surface p-5 sm:p-7'
+export const PANEL = 'h-full rounded-card bg-card p-4 shadow-card ring-1 ring-line/60 sm:p-6'
 
-/** Hero: the lead story as a large overlay card, the next stories in a side column (stacked on mobile). */
+/** One hero slide: full-bleed image with the story on a blue gradient. */
+function HeroSlide({ post, priority }: { post: PostCardData; priority: boolean }) {
+  return (
+    <Link
+      href={postHref(post.postNumber) ?? '#'}
+      className="group relative flex h-full flex-col justify-end"
+    >
+      <PostImage
+        post={{ ...post, categoryName: categoryName(post) }}
+        size="large"
+        sizes="(min-width: 1280px) 860px, (min-width: 1024px) 62vw, 100vw"
+        priority={priority}
+        cover
+        className="motion-safe:[[data-active]_&]:animate-kenburns"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#041d4d]/95 via-[#082f70]/45 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#041d4d]/55 via-transparent to-transparent" />
+      <div className="relative space-y-3.5 p-6 pb-[4.5rem] sm:p-8 sm:pb-8 sm:pe-44 lg:p-10 lg:pb-9">
+        <div className="space-y-3.5 motion-safe:[[data-active]_&]:animate-[enter-up_0.8s_0.15s_both]">
+          {categoryName(post) ? (
+            <span className="inline-flex rounded-full bg-brand px-3.5 py-1 text-xs font-semibold text-white shadow-sm">
+              {categoryName(post)}
+            </span>
+          ) : null}
+          <h2 className="line-clamp-4 max-w-3xl text-2xl font-bold leading-snug text-white sm:text-3xl lg:text-[2.3rem] lg:leading-[1.3]">
+            {post.title}
+          </h2>
+          {post.excerpt ? (
+            <p className="hidden max-w-2xl text-[0.95rem] text-white/85 sm:line-clamp-2">
+              {post.excerpt}
+            </p>
+          ) : null}
+          <CardMeta post={post} light />
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+/**
+ * Hero: a crossfading slider of the featured stories on the left, the newest stories in a column on
+ * the right (stacked under the slider on mobile).
+ */
 export async function FeaturedSlider({
   block,
   priority,
@@ -31,24 +77,33 @@ export async function FeaturedSlider({
       : { featured: true, limit: block.limit },
   )
   if (!docs.length) return null
-  const [lead, ...rest] = docs
-  const side = rest.slice(0, HERO_SIDE_MAX)
+  const slides = docs.slice(0, HERO_SLIDES_MAX)
+  const shown = new Set(slides.map((p) => p.id))
+  const latest = await listPosts({ limit: HERO_SIDE_MAX + slides.length })
+  const side = latest.docs.filter((p) => !shown.has(p.id)).slice(0, HERO_SIDE_MAX)
   return (
     <section
       aria-label="പ്രധാന വാർത്തകൾ"
-      className={`grid grid-cols-1 gap-6 ${side.length ? 'lg:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)] lg:gap-8' : ''}`}
+      className={`grid grid-cols-1 gap-6 ${side.length ? 'lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] lg:gap-7' : ''}`}
     >
-      <PostCard post={lead!} variant="hero" priority={priority} headingLevel="h2" />
+      <HeroSlider
+        label="പ്രധാന വാർത്തകൾ"
+        className="min-h-[26rem] lg:min-h-[30rem]"
+        slides={slides.map((post, i) => (
+          <HeroSlide key={post.id} post={post} priority={Boolean(priority) && i === 0} />
+        ))}
+      />
       {side.length ? (
-        <div>
-          <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-ink">
-            <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
-            ശ്രദ്ധേയം
-          </h2>
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="flex flex-col">
+          <SectionHeading
+            title={block.sideTitle || 'പുതിയ വാർത്തകൾ'}
+            href={category && block.source === 'category' ? categoryHref(category.slug) : null}
+            className="enter"
+          />
+          <ul className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:auto-rows-fr lg:grid-cols-1">
             {side.map((post) => (
-              <li key={post.id}>
-                <PostCard post={post} variant="side" />
+              <li key={post.id} className="[&>a]:h-full">
+                <PostCard post={post} variant="side" hideCategory />
               </li>
             ))}
           </ul>
@@ -58,13 +113,20 @@ export async function FeaturedSlider({
   )
 }
 
-/** Category lead + list: side-by-side (സമകാലികം) or a horizontal feature over a two-column list (ലേഖനം). */
+/**
+ * Category lead + list.
+ * - split (സമകാലികം): navy lead card beside a list of news rows ("പ്രധാന ലേഖനങ്ങൾ").
+ * - stacked (ലേഖനം): horizontal feature card beside rows with arrows ("അറിവിന്റെ വഴികൾ").
+ * `half` = it shares the row with another block, so the lead and list get narrower columns.
+ */
 export async function CategoryFeature({
   block,
   priority,
+  half = false,
 }: {
   block: CategoryFeatureBlock
   priority?: boolean
+  half?: boolean
 }) {
   const category = asCategory(block.category)
   if (!category) return null
@@ -72,29 +134,34 @@ export async function CategoryFeature({
   if (!docs.length) return null
   const [lead, ...rest] = docs
   const more = block.showMoreLink ? categoryHref(category.slug) : null
+  const stacked = block.layout === 'stacked'
   return (
     <section>
       <SectionHeading title={block.title || category.name} href={more} />
-      {block.layout === 'stacked' ? (
-        <div className="space-y-8">
-          <PostCard post={lead!} variant="feature" priority={priority} hideCategory />
+      {stacked ? (
+        <div
+          className={`grid grid-cols-1 gap-4 ${half ? '' : 'lg:grid-cols-[minmax(0,1.12fr)_minmax(0,1fr)] lg:gap-6'}`}
+        >
+          <PostCard post={lead!} variant="feature" priority={priority} />
           {rest.length ? (
-            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {rest.map((post) => (
-                <li key={post.id}>
-                  <PostCard post={post} variant="list" hideCategory />
+            <ul className="grid grid-cols-1 gap-3 lg:auto-rows-fr">
+              {rest.slice(0, 4).map((post) => (
+                <li key={post.id} className="[&>a]:h-full">
+                  <PostCard post={post} variant="list" hideCategory chevron />
                 </li>
               ))}
             </ul>
           ) : null}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-10">
-          <PostCard post={lead!} variant="lead" priority={priority} hideCategory />
+        <div
+          className={`grid grid-cols-1 gap-4 ${half ? 'md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:gap-4' : 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] lg:gap-6'}`}
+        >
+          <PostCard post={lead!} variant="lead" priority={priority} />
           {rest.length ? (
-            <ul className="flex flex-col gap-4">
-              {rest.map((post) => (
-                <li key={post.id}>
+            <ul className="grid grid-cols-1 gap-3 lg:auto-rows-fr">
+              {rest.slice(0, 4).map((post) => (
+                <li key={post.id} className="[&>a]:h-full">
                   <PostCard post={post} variant="list" hideCategory />
                 </li>
               ))}
@@ -119,7 +186,7 @@ export async function CategoryGrid({ block }: { block: CategoryGridBlock }) {
         href={block.showMoreLink ? categoryHref(category.slug) : null}
       />
       <ul
-        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 ${GRID_COLS[block.columns] ?? 'lg:grid-cols-3'}`}
+        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 ${GRID_COLS[block.columns] ?? 'lg:grid-cols-3'}`}
       >
         {docs.map((post, i) => (
           <li key={post.id}>

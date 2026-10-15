@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { resolveLink } from '@/lib/links'
 import { isActive, isCurrent, toNavTree } from '@/lib/nav'
 import { quoteIndexForDate } from '@/lib/quote'
-import { formatDate, parsePage } from '@/lib/format'
+import { formatDate, parsePage, withoutSiteName } from '@/lib/format'
 import { mediaSrc } from '@/lib/media'
 import { pageWindow } from '@/lib/pagination'
 
@@ -108,8 +108,26 @@ describe('helpers', () => {
   })
 
   it('formats dates like the original site (Asia/Kolkata)', () => {
-    expect(formatDate('2022-04-25T20:00:00.000Z')).toBe('26 ഏപ്രിൽ 2022') // India time: already the 26th
+    expect(formatDate('2022-04-25T20:00:00.000Z')).toBe('26 April 2022') // India time: already the 26th
     expect(formatDate('not a date')).toBe('')
+    expect(formatDate(null)).toBe('')
+  })
+
+  it('drops the site name from the copyright line (the logo already says it)', () => {
+    const names = ['Islam Malayalam', 'ഇസ്‌ലാം മലയാളം']
+    expect(withoutSiteName('© Islam Malayalam. All rights reserved.', names)).toBe(
+      '© All rights reserved.',
+    )
+    expect(withoutSiteName('© 2026 islam malayalam, all rights reserved', names)).toBe(
+      '© 2026, all rights reserved',
+    )
+    expect(withoutSiteName('© ഇസ്‌ലാം മലയാളം. എല്ലാ അവകാശങ്ങളും', names)).toBe(
+      '© എല്ലാ അവകാശങ്ങളും',
+    )
+    // Nothing to remove, or nothing given: unchanged / empty.
+    expect(withoutSiteName('© All rights reserved.', names)).toBe('© All rights reserved.')
+    expect(withoutSiteName(undefined, names)).toBe('')
+    expect(withoutSiteName('© Acme.', [null, '', '  '])).toBe('© Acme.')
   })
 
   it('makes local media URLs relative whatever origin built them, and drops insecure remotes', () => {

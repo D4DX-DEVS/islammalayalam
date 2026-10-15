@@ -14,7 +14,7 @@ export default function ErrorPage({
     <Container className="py-12 lg:py-16">
       <div
         role="alert"
-        className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-[1.75rem] bg-surface px-6 py-12 text-center"
+        className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-panel bg-surface px-6 py-12 text-center"
       >
         <h1 className="text-2xl font-bold">എന്തോ പിശക് സംഭവിച്ചു</h1>
         <p className="text-sm text-muted">

@@ -28,11 +28,7 @@ export function QuoteOfDaySection({ block }: { block: QuoteOfDayBlock }) {
   const flyer = asMedia(quote.flyer)
   const src = mediaSrc(flyer?.sizes?.large?.url ?? flyer?.url)
   return (
-    <section className="relative isolate overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-brand-deep to-[#123a6b] p-5 text-white shadow-card sm:p-7">
-      <div
-        className="bg-star-lattice pointer-events-none absolute inset-0 -z-10 opacity-[0.07]"
-        aria-hidden="true"
-      />
+    <section className="bg-night relative isolate overflow-hidden rounded-panel p-6 text-white shadow-card ring-1 ring-white/10 sm:p-8">
       <SectionHeading title={block.title || 'ഇന്നത്തെ ചിന്ത'} tone="dark" />
       {src && flyer?.width && flyer.height ? (
         <Image
@@ -46,7 +42,7 @@ export function QuoteOfDaySection({ block }: { block: QuoteOfDayBlock }) {
       ) : null}
       {quote.text ? (
         <figure>
-          <Quote className="mb-3 size-8 text-sky-300" aria-hidden="true" />
+          <Quote className="mb-3 size-9 text-accent" aria-hidden="true" />
           <blockquote className="whitespace-pre-line text-lg font-semibold leading-relaxed sm:text-xl">
             {quote.text}
           </blockquote>
@@ -95,7 +91,7 @@ export function FaqSection({ block }: { block: FaqBlock }) {
   return (
     <section className={PANEL}>
       <SectionHeading title={block.title || 'പൊതുവായ ചോദ്യങ്ങള്‍'} href={more?.href} />
-      <div className="divide-y divide-line overflow-hidden rounded-2xl bg-card shadow-card">
+      <div className="divide-y divide-line overflow-hidden rounded-2xl ring-1 ring-line">
         {items.map((item, i) => (
           <details key={item.id ?? i} className="group">
             <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 font-semibold text-ink transition-colors hover:text-brand sm:px-5 [&::-webkit-details-marker]:hidden">
@@ -117,7 +113,7 @@ export function FaqSection({ block }: { block: FaqBlock }) {
 
 const TONE = {
   brand: {
-    box: 'bg-brand text-white',
+    box: 'bg-brand-gradient text-white',
     eyebrow: 'text-sky-100',
     chip: 'bg-white/12 ring-1 ring-white/20',
     primary: 'bg-white text-brand hover:bg-brand-soft',
@@ -131,7 +127,7 @@ const TONE = {
     secondary: 'ring-1 ring-current hover:bg-black/5',
   },
   navy: {
-    box: 'bg-brand-deep text-white',
+    box: 'bg-night text-white',
     eyebrow: 'text-sky-300',
     chip: 'bg-white/10 ring-1 ring-white/15',
     primary: 'bg-accent-strong text-on-accent hover:opacity-90',
@@ -139,9 +135,9 @@ const TONE = {
   },
   light: {
     box: 'bg-surface text-ink',
-    eyebrow: 'text-accent',
+    eyebrow: 'text-accent-strong',
     chip: 'bg-card ring-1 ring-line',
-    primary: 'bg-brand text-white hover:bg-brand-strong',
+    primary: 'bg-brand-gradient text-white hover:opacity-90',
     secondary: 'ring-1 ring-line text-ink hover:bg-card',
   },
 } as const
@@ -164,21 +160,19 @@ export function CallToActionSection({
   const details = block.details ?? []
   return (
     <section
-      className={`relative isolate overflow-hidden rounded-[1.75rem] shadow-card ${tone.box} ${
+      className={`relative isolate overflow-hidden rounded-panel shadow-card ${tone.box} ${
         hasImage && !compact ? 'grid md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]' : ''
       }`}
     >
-      <div
-        className="bg-star-lattice pointer-events-none absolute inset-0 -z-10 opacity-[0.06]"
-        aria-hidden="true"
-      />
-      <div className="flex flex-col justify-center gap-4 p-6 sm:p-8">
+      <div className="flex flex-col justify-center gap-4 p-7 sm:p-10">
         {block.eyebrow ? (
           <p className={`text-xs font-bold uppercase tracking-wider ${tone.eyebrow}`}>
             {block.eyebrow}
           </p>
         ) : null}
-        <h2 className="text-2xl font-bold leading-snug text-inherit sm:text-3xl">{block.heading}</h2>
+        <h2 className="text-2xl font-bold leading-snug text-inherit sm:text-3xl">
+          {block.heading}
+        </h2>
         {block.text ? (
           <p className="whitespace-pre-line leading-relaxed opacity-90">{block.text}</p>
         ) : null}
@@ -200,7 +194,7 @@ export function CallToActionSection({
                 href={b.href}
                 external={b.external}
                 newTab={b.newTab}
-                className={`inline-flex min-h-11 items-center rounded-full px-6 text-sm font-semibold transition ${
+                className={`inline-flex min-h-12 items-center rounded-full px-7 text-sm font-semibold transition hover:-translate-y-px ${
                   b.style === 'secondary' ? tone.secondary : tone.primary
                 }`}
               >

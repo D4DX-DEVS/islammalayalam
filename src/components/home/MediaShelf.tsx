@@ -1,5 +1,9 @@
-import { AudioRow, BookCard, VideoCard } from '@/components/cards/MediaCards'
+import { Play } from 'lucide-react'
+import { BookCard, VideoCard } from '@/components/cards/MediaCards'
+import { AudioShelf } from '@/components/home/AudioShelf'
 import { PANEL } from '@/components/home/CategorySections'
+import { ScrollRow } from '@/components/ui/ScrollRow'
+import { Container } from '@/components/ui/Container'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { listPosts } from '@/features/posts/queries'
 import { categoryHref } from '@/lib/links'
@@ -7,11 +11,30 @@ import type { Category, MediaShelfBlock } from '@/payload-types'
 
 const FORMAT_TITLE = { video: 'Videos', audio: 'Audios', ebook: 'E-Books' } as const
 
+/** Gold play badge that replaces the gold bar in the video band's heading. */
+const PlayBadge = (
+  <span
+    className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-accent text-brand-deep"
+    aria-hidden="true"
+  >
+    <Play className="ms-0.5 size-4 fill-current" />
+  </span>
+)
+
 /**
- * Videos → navy band with play tiles (swipe row on phones); E-Books → cover shelf; Audios → listen list.
- * Half-width shelves (two side by side on desktop) keep their own panel.
+ * Videos → royal-blue band with a swipeable carousel (edge to edge when it has its own row, a
+ * rounded panel when it shares one); E-Books → cover shelf; Audios → listen list.
+ * `bleed` = the caller renders this row outside the page container, so the band spans the screen.
  */
-export async function MediaShelf({ block, half }: { block: MediaShelfBlock; half: boolean }) {
+export async function MediaShelf({
+  block,
+  half,
+  bleed = false,
+}: {
+  block: MediaShelfBlock
+  half: boolean
+  bleed?: boolean
+}) {
   const category =
     block.category && typeof block.category === 'object' ? (block.category as Category) : null
   const { docs } = await listPosts({
@@ -24,57 +47,56 @@ export async function MediaShelf({ block, half }: { block: MediaShelfBlock; half
   const more = category ? categoryHref(category.slug) : null
 
   if (block.format === 'video') {
-    return (
-      <section className="relative isolate h-full overflow-hidden rounded-[1.75rem] bg-brand-deep px-5 py-7 sm:px-8 sm:py-9">
-        <div
-          className="bg-star-lattice pointer-events-none absolute inset-0 -z-10 opacity-[0.06]"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute -end-24 -top-24 -z-10 size-72 rounded-full bg-sky-400/20 blur-3xl"
-          aria-hidden="true"
-        />
-        <SectionHeading title={title} href={more} tone="dark" />
-        <ul
-          className={`no-scrollbar -mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-2 sm:mx-0 sm:pb-0 sm:grid sm:overflow-visible sm:px-0 ${half ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-4'}`}
+    const items = (
+      <>
+        <SectionHeading title={title} href={more} tone="dark" icon={PlayBadge} />
+        <ScrollRow
+          tone="dark"
+          arrows="beside"
+          label={title}
+          listClassName="-mx-4 px-4 pb-1 sm:mx-0 sm:px-0"
         >
           {docs.map((post) => (
-            <li key={post.id} className="w-[78%] shrink-0 snap-start sm:w-auto">
+            <li
+              key={post.id}
+              data-reveal="up"
+              className={`w-[78%] shrink-0 snap-start sm:w-[calc((100%-1rem)/2)] ${half ? '' : 'lg:w-[calc((100%-3rem)/4)]'}`}
+            >
               <VideoCard post={post} />
             </li>
           ))}
-        </ul>
+        </ScrollRow>
+      </>
+    )
+    return (
+      <section
+        className={`bg-night relative isolate overflow-hidden ring-1 ring-white/10 ${bleed ? 'py-8 sm:py-10' : 'h-full rounded-card px-5 py-7 sm:px-8 sm:py-9'}`}
+      >
+        {bleed ? <Container>{items}</Container> : items}
       </section>
     )
   }
 
   if (block.format === 'ebook') {
     return (
-      <section className={PANEL}>
+      <section className={`${PANEL} flex flex-col`}>
         <SectionHeading title={title} href={more} />
-        <ul
-          className={`grid grid-cols-2 gap-x-5 gap-y-7 ${half ? 'sm:grid-cols-3' : 'sm:grid-cols-4 lg:grid-cols-6'}`}
-        >
-          {docs.map((post) => (
-            <li key={post.id}>
-              <BookCard post={post} />
-            </li>
-          ))}
-        </ul>
+        {/* Three books at a time; the row scrolls (arrows, swipe) when there are more. */}
+        <div className="flex flex-1 flex-col justify-center">
+          <ScrollRow tone="light" arrows="overlay" label={title} listClassName="pb-1">
+            {docs.map((post) => (
+              <li
+                key={post.id}
+                className={`w-[42%] shrink-0 snap-start sm:w-[calc((100%-2rem)/3)] ${half ? '' : 'lg:w-[calc((100%-5rem)/6)]'}`}
+              >
+                <BookCard post={post} />
+              </li>
+            ))}
+          </ScrollRow>
+        </div>
       </section>
     )
   }
 
-  return (
-    <section className={PANEL}>
-      <SectionHeading title={title} href={more} />
-      <ul className={`grid grid-cols-1 gap-3 ${half ? '' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
-        {docs.map((post) => (
-          <li key={post.id}>
-            <AudioRow post={post} />
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
+  return <AudioShelf docs={docs} title={title} more={more} half={half} />
 }

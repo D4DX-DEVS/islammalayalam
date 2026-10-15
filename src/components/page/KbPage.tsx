@@ -5,6 +5,7 @@ import { SectionTabs } from '@/components/page/SectionTabs'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { getChildPages, getPageByPath, type PageLink } from '@/features/pages/queries'
 import { pageHref } from '@/lib/links'
+import { hasBlocks, withoutLeadingTitle } from '@/lib/text/lexical'
 import type { Page } from '@/payload-types'
 
 async function ancestorCrumbs(page: Page): Promise<Crumb[]> {
@@ -32,7 +33,7 @@ function SubPages({
 }) {
   if (!pages.length) return null
   return (
-    <nav aria-label={title} className="rounded-[1.75rem] bg-surface p-3 lg:sticky lg:top-20">
+    <nav aria-label={title} className="rounded-panel bg-surface p-3 lg:sticky lg:top-20">
       <h2 className="px-3 pb-2 pt-2 text-base font-bold">{title}</h2>
       <ul className="space-y-0.5">
         {pages.map((p) => (
@@ -65,6 +66,8 @@ export async function KbPage({ page }: { page: Page }) {
     parentId ? getChildPages(parentId) : Promise.resolve([]),
   ])
   const sections = (page.sections ?? []).filter((s) => s.title)
+  // The title above is the page's only title: a body that opens with the same heading drops it.
+  const body = withoutLeadingTitle(page.content, page.title)
   const nav = children.length
     ? { title: 'ഈ വിഭാഗത്തിൽ', pages: children }
     : { title: 'അനുബന്ധ പേജുകൾ', pages: siblings }
@@ -82,9 +85,9 @@ export async function KbPage({ page }: { page: Page }) {
               className="prose-ml rounded-card border-s-4 border-brand bg-brand-soft/50 px-5 py-4 !text-body"
             />
           ) : null}
-          {page.content ? (
+          {hasBlocks(body) ? (
             <div className="mt-6">
-              <RichText data={page.content} />
+              <RichText data={body} />
             </div>
           ) : null}
         </ContentCard>

@@ -26,13 +26,21 @@ function Player({ id, title }: { id: string; title: string }) {
   )
 }
 
-function Unavailable({ id, external, poster }: { id: string; external: boolean; poster?: ReactNode }) {
+function Unavailable({
+  id,
+  external,
+  poster,
+}: {
+  id: string
+  external: boolean
+  poster?: ReactNode
+}) {
   return (
     <div
       className="relative isolate flex aspect-video flex-col items-center justify-center gap-4 overflow-hidden rounded-card bg-gradient-to-br from-[#0f3d7a] to-[#06142b] px-6 text-center text-white shadow-card"
       data-video-status={external ? 'external' : 'gone'}
     >
-      {poster ?? <div className="bg-star-lattice absolute inset-0 opacity-[0.14]" />}
+      {poster ?? <div className="absolute inset-0 bg-brand-deep" />}
       {poster ? <div className="absolute inset-0 bg-black/65" /> : null}
       <span className="relative inline-flex size-14 items-center justify-center rounded-full bg-white/12 ring-1 ring-white/25 backdrop-blur-sm">
         <VideoOff className="size-6" aria-hidden="true" />

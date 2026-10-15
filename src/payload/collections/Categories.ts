@@ -3,6 +3,7 @@ import { isAdmin, isEditor, publicOrStaff, totpPublicRead } from '@/payload/acce
 import { legacyFields, slugField } from '@/payload/fields'
 import { contentHooks } from '@/payload/hooks'
 import { redirectOnSlugChange } from '@/payload/hooks/paths'
+import { CATEGORY_ICON_OPTIONS } from '@/lib/category-icon-names'
 
 /** Topics, served at /category/<slug>/ (WordPress URL kept). */
 export const Categories: CollectionConfig = {
@@ -25,6 +26,21 @@ export const Categories: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
       filterOptions: { mimeType: { contains: 'image' } },
+    },
+    {
+      name: 'icon',
+      type: 'select',
+      options: [...CATEGORY_ICON_OPTIONS],
+      admin: {
+        description:
+          'Icon on the round shortcut tile under the homepage hero. Leave empty to pick one automatically from the name.',
+      },
+    },
+    {
+      name: 'showInStrip',
+      type: 'checkbox',
+      defaultValue: true,
+      label: 'Show in the homepage shortcut strip',
     },
     {
       name: 'order',

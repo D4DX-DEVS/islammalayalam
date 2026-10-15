@@ -10,7 +10,7 @@ export function ContentCard({
 }) {
   return (
     <div
-      className={`rounded-card bg-card p-5 shadow-card ring-1 ring-line/70 sm:p-8 lg:p-10 ${className}`}
+      className={`rounded-panel bg-card p-5 shadow-card ring-1 ring-line/70 sm:p-10 lg:p-14 ${className}`}
     >
       {children}
     </div>

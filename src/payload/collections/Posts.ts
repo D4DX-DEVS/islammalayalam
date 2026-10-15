@@ -1,6 +1,7 @@
 import type {
   CollectionBeforeChangeHook,
   CollectionConfig,
+  Field,
   TextFieldSingleValidation,
 } from 'payload'
 import {
@@ -39,6 +40,20 @@ const validateHttps: TextFieldSingleValidation = (value) =>
     : 'Only https:// links are allowed'
 const validateVideo: TextFieldSingleValidation = (value) =>
   !value || youtubeId(value) ? true : 'Enter a YouTube link'
+const validateDuration: TextFieldSingleValidation = (value) =>
+  !value || /^(\d{1,2}:)?[0-5]?\d:[0-5]\d$/.test(value)
+    ? true
+    : 'Use mm:ss or h:mm:ss, for example 18:24'
+/** Optional length of a video or audio, shown as a badge on the site. */
+const durationField: Field = {
+  name: 'duration',
+  type: 'text',
+  maxLength: 8,
+  validate: validateDuration,
+  admin: {
+    description: 'Optional length, e.g. 18:24 — shown on the video tile and next to audio tracks.',
+  },
+}
 
 const setPublishedAt: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
   const status = data?._status ?? originalDoc?._status
@@ -122,6 +137,7 @@ export const Posts: CollectionConfig = {
               admin: { condition: (data) => data?.format === 'video' },
               fields: [
                 { name: 'url', type: 'text', validate: validateVideo },
+                durationField,
                 {
                   name: 'youtubeId',
                   type: 'text',
@@ -138,7 +154,7 @@ export const Posts: CollectionConfig = {
                 description:
                   'Spotify link (episode, show or playlist) — plays on the page — or a link to hosted audio (https only). Audio uploads are not accepted.',
               },
-              fields: [{ name: 'url', type: 'text', validate: validateHttps }],
+              fields: [{ name: 'url', type: 'text', validate: validateHttps }, durationField],
             },
             {
               name: 'attachments',

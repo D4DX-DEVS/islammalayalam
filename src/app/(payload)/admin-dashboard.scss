@@ -119,7 +119,7 @@
   }
 
   @media (min-width: 1280px) {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   }
 }
 
@@ -150,9 +150,17 @@
   }
 }
 
+.im-dash__stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .im-dash__stat-icon {
   display: grid;
   place-items: center;
+  flex-shrink: 0;
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 0.6rem;
@@ -160,16 +168,53 @@
   color: var(--im-brand);
 }
 
+// Icon + words together: the colour only backs the label up.
+.im-dash__flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  svg {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+
+  &--warn {
+    background: rgb(217 119 6 / 0.14);
+    color: var(--im-accent);
+  }
+
+  &--info {
+    background: var(--im-brand-soft);
+    color: var(--im-brand);
+  }
+}
+
+// Stat-tile values use the font's proportional figures (not tabular-nums): they read tighter large.
 .im-dash__stat-value {
-  margin-top: 0.5rem;
-  font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  margin-top: 0.6rem;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
   font-weight: 700;
   line-height: 1.1;
+  letter-spacing: -0.01em;
 }
 
 .im-dash__stat-label {
   overflow: hidden;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-dash__stat-hint {
+  overflow: hidden;
+  font-size: 0.78rem;
   color: var(--im-muted);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -190,6 +235,20 @@
   display: grid;
   gap: 1.25rem;
   min-width: 0;
+}
+
+// Charts row: the by-year chart gets the wider column.
+.im-dash__grid--charts {
+  @media (min-width: 1024px) {
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+}
+
+.im-dash__sub {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--im-muted);
 }
 
 .im-dash__panel {
@@ -316,32 +375,51 @@ html[data-theme='dark'] .im-dash__badge--published {
   color: var(--im-muted);
 }
 
-// ---- Quick actions --------------------------------------------------------------------------------
-.im-dash__shortcuts {
-  display: grid;
-  gap: 0.5rem;
+// ---- Quick actions (a strip of chips under the totals) --------------------------------------------
+.im-dash__quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
 
-  @media (min-width: 640px) and (max-width: 1023px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 }
 
-.im-dash__shortcut {
-  display: flex;
+.im-dash__quick-title {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  height: 100%;
-  padding: 0.6rem;
-  border: 1px solid var(--im-border);
-  border-radius: var(--style-radius-m);
-  color: var(--theme-text);
-  transition:
-    border-color 0.15s,
-    background-color 0.15s;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--im-muted);
+}
 
-  > span:last-child {
-    display: grid;
-    min-width: 0;
+.im-dash__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--im-border);
+  border-radius: 999px;
+  background: var(--im-surface);
+  color: var(--theme-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: var(--im-shadow-sm);
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+
+  svg {
+    color: var(--im-brand);
   }
 
   &:hover {
@@ -353,62 +431,6 @@ html[data-theme='dark'] .im-dash__badge--published {
     outline: none;
     box-shadow: var(--im-ring);
   }
-}
-
-.im-dash__shortcut-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.im-dash__shortcut-hint {
-  overflow: hidden;
-  font-size: 0.78rem;
-  color: var(--im-muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-// ---- Categories -------------------------------------------------------------------------------
-.im-dash__cats li + li {
-  border-top: 1px solid var(--im-border);
-}
-
-.im-dash__cat {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  min-height: 2.75rem;
-  margin: 0 -0.5rem;
-  padding: 0 0.5rem;
-  border-radius: var(--style-radius-s);
-  color: var(--theme-text);
-
-  &:hover {
-    background: var(--theme-elevation-50);
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: var(--im-ring);
-  }
-}
-
-.im-dash__cat-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.im-dash__cat-count {
-  min-width: 2.5rem;
-  padding: 0.1rem 0.55rem;
-  border-radius: 999px;
-  background: var(--theme-elevation-50);
-  font-size: 0.8rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  text-align: center;
 }
 
 // ---- Activity timeline ------------------------------------------------------------------------
@@ -468,5 +490,511 @@ html[data-theme='dark'] .im-dash__badge--published {
 
   &--unpublish {
     background: var(--im-accent);
+  }
+}
+
+// ---- Charts ---------------------------------------------------------------------------------------
+// Series colours are the validated categorical slots 1-4 (blue, orange, aqua, yellow); the dark set is
+// stepped for the dark surface. Text never takes a series colour: a swatch beside it carries identity.
+.im-dash {
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+  --viz-track: #cde2fb;
+  --viz-good: #0ca30c;
+  --viz-off: #94a3b8;
+}
+
+html[data-theme='dark'] .im-dash {
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-4: #c98500;
+  --viz-grid: #1f2a3d;
+  --viz-axis: #33445f;
+  --viz-track: rgb(57 135 229 / 0.2);
+  --viz-off: #64748b;
+}
+
+.im-viz {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+// Plot box = the plotted area; the x labels hang below it inside the figure's own padding, so the
+// card never needs a nested scrollbar.
+.im-viz__plot {
+  position: relative;
+  height: 12.5rem;
+  margin: 1.75rem 0 1.75rem 2.4rem;
+}
+
+.im-viz__line {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 0;
+  border-top: 1px solid var(--viz-grid);
+
+  > span {
+    position: absolute;
+    top: -0.55rem;
+    right: 100%;
+    padding-right: 0.5rem;
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--im-muted);
+  }
+
+  &:first-child {
+    border-top-color: var(--viz-axis);
+  }
+}
+
+.im-viz__cols {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+}
+
+.im-viz__slot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  border-radius: var(--style-radius-s);
+  outline: none;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--theme-elevation-50);
+  }
+
+  &:focus-visible {
+    box-shadow: var(--im-ring);
+  }
+
+  &:hover .im-viz__tip,
+  &:focus-visible .im-viz__tip {
+    opacity: 1;
+    transform: translate(var(--tx, -50%), 0);
+  }
+
+  // Tooltips on the edge columns hang inward so they never widen the page.
+  &:nth-child(-n + 2) .im-viz__tip {
+    --tx: 0;
+    left: 0;
+  }
+
+  &:nth-last-child(-n + 2) .im-viz__tip {
+    --tx: 0;
+    right: 0;
+    left: auto;
+  }
+}
+
+// Thin marks: never thicker than 24px, flat on the baseline, rounded at the data end.
+.im-viz__bar {
+  position: relative;
+  width: min(1.5rem, 60%);
+  border-radius: 4px 4px 0 0;
+  background: var(--viz-1);
+
+  &--zero {
+    height: 2px !important;
+    border-radius: 0;
+    background: var(--viz-axis);
+  }
+}
+
+.im-viz__val {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  padding-bottom: 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transform: translateX(-50%);
+}
+
+.im-viz__x {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  padding-top: 0.45rem;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--im-muted);
+}
+
+.im-viz__x-short {
+  display: none;
+}
+
+// Four-digit labels collide on phones; charts that provide a short form swap to it.
+@media (max-width: 560px) {
+  .im-viz__x--short {
+    .im-viz__x-full {
+      display: none;
+    }
+
+    .im-viz__x-short {
+      display: inline;
+    }
+  }
+}
+
+.im-viz__tip {
+  position: absolute;
+  bottom: calc(100% + 0.25rem);
+  left: 50%;
+  z-index: 2;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--style-radius-s);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-md);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(var(--tx, -50%), 0.25rem);
+  transition:
+    opacity 0.12s,
+    transform 0.12s;
+}
+
+// The table twin of a chart: the same numbers, readable by keyboard and screen reader.
+.im-viz__table {
+  font-size: 0.85rem;
+
+  summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--im-brand);
+    font-weight: 600;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--im-ring);
+    }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th,
+  td {
+    padding: 0.4rem 0.5rem;
+    border-top: 1px solid var(--im-border);
+    text-align: left;
+  }
+
+  thead th {
+    border-top: 0;
+    color: var(--im-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  td {
+    text-align: right;
+  }
+}
+
+// ---- Content mix (stacked bar + legend) ---------------------------------------------------------
+.im-mix {
+  display: grid;
+  gap: 1rem;
+}
+
+.im-mix__bar {
+  display: flex;
+  gap: 2px; // surface gap between touching segments
+  height: 1.25rem;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.im-mix__seg {
+  min-width: 4px;
+  display: grid;
+  place-items: center;
+  padding: 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+
+  &--standard,
+  &--video {
+    color: #fff;
+  }
+
+  &--ebook,
+  &--audio {
+    color: #0b0b0b;
+  }
+}
+
+.im-mix__seg--standard,
+.im-mix__swatch--standard {
+  background: var(--viz-1);
+}
+
+.im-mix__seg--video,
+.im-mix__swatch--video {
+  background: var(--viz-2);
+}
+
+.im-mix__seg--ebook,
+.im-mix__swatch--ebook {
+  background: var(--viz-3);
+}
+
+.im-mix__seg--audio,
+.im-mix__swatch--audio {
+  background: var(--viz-4);
+}
+
+.im-mix__legend li + li {
+  border-top: 1px solid var(--im-border);
+}
+
+.im-mix__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto 3rem;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.75rem;
+  margin: 0 -0.5rem;
+  padding: 0 0.5rem;
+  border-radius: var(--style-radius-s);
+  color: var(--theme-text);
+  font-variant-numeric: tabular-nums;
+
+  &:hover {
+    background: var(--theme-elevation-50);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.im-mix__swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+}
+
+.im-mix__share {
+  font-size: 0.8rem;
+  text-align: right;
+  color: var(--im-muted);
+}
+
+// ---- Ranked bars (categories) ---------------------------------------------------------------------
+.im-bars li + li {
+  border-top: 1px solid var(--im-border);
+}
+
+.im-bars__row {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 -0.5rem;
+  padding: 0.6rem 0.5rem;
+  border-radius: var(--style-radius-s);
+  color: var(--theme-text);
+
+  &:hover {
+    background: var(--theme-elevation-50);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.im-bars__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.im-bars__name {
+  overflow: hidden;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-bars__count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.im-bars__track {
+  display: block;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--viz-track);
+}
+
+.im-bars__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--viz-1);
+}
+
+.im-bars__more {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--im-muted);
+}
+
+// ---- Pulse (per-day strip) ------------------------------------------------------------------------
+.im-pulse {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--im-border);
+}
+
+.im-pulse__sum {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--im-muted);
+
+  strong {
+    color: var(--theme-text);
+    font-size: 1rem;
+  }
+}
+
+.im-pulse__cols {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 3px;
+  align-items: end;
+  height: 3rem;
+  border-bottom: 1px solid var(--viz-axis);
+
+  li {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: 100%;
+  }
+}
+
+.im-pulse__bar {
+  display: block;
+  width: min(0.75rem, 100%);
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+  background: var(--viz-1);
+
+  &--zero {
+    background: transparent;
+  }
+}
+
+.im-pulse__axis {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--im-muted);
+}
+
+// ---- Site status -----------------------------------------------------------------------------------
+.im-status li + li {
+  border-top: 1px solid var(--im-border);
+}
+
+.im-status__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 -0.5rem;
+  padding: 0.7rem 0.5rem;
+  border-radius: var(--style-radius-s);
+  color: var(--theme-text);
+}
+
+a.im-status__row {
+  &:hover {
+    background: var(--theme-elevation-50);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.im-status__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  &--on {
+    color: var(--viz-good);
+  }
+
+  &--off {
+    color: var(--viz-off);
+  }
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.im-status__text {
+  display: grid;
+  min-width: 0;
+}
+
+.im-status__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.im-status__detail {
+  font-size: 0.8rem;
+  color: var(--im-muted);
+
+  strong {
+    color: var(--theme-text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .im-viz__tip {
+    transition: none;
   }
 }

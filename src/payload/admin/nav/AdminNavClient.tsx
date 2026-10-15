@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useConfig } from '@payloadcms/ui'
 import {
   ArrowRightLeft,
+  BookOpen,
   ChevronDown,
   CircleUser,
   ExternalLink,
@@ -16,6 +17,7 @@ import {
   Images,
   Inbox,
   LayoutDashboard,
+  LayoutPanelTop,
   LayoutTemplate,
   LogOut,
   Newspaper,
@@ -41,6 +43,7 @@ const ICONS: Record<string, LucideIcon> = {
   media: Images,
   redirects: ArrowRightLeft,
   'contact-messages': Inbox,
+  'postal-requests': BookOpen,
   users: Users,
   'audit-logs': ScrollText,
   'migration-runs': History,
@@ -130,6 +133,16 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
           >
             <LayoutDashboard aria-hidden="true" />
             <span>Dashboard</span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            href={`${admin}/website`}
+            className="im-nav__link"
+            aria-current={isActive(`${admin}/website`) ? 'page' : undefined}
+          >
+            <LayoutPanelTop aria-hidden="true" />
+            <span>Website manager</span>
           </Link>
         </li>
       </ul>

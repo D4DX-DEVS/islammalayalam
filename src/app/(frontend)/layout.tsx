@@ -5,11 +5,15 @@ import { SiteHeader } from '@/components/layout/SiteHeader'
 import { MainNav } from '@/components/layout/MainNav'
 import { Footer } from '@/components/layout/Footer'
 import { BackToTop } from '@/components/layout/BackToTop'
+import { WhatsAppButton } from '@/components/layout/WhatsAppButton'
+import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { PreviewBar } from '@/components/preview/PreviewBar'
 import { getPreviewUser } from '@/features/preview/session'
+import { aiSearchUiEnabled } from '@/features/ai-search/service'
 import { getFooter, getHeader, getSiteSettings } from '@/features/site/queries'
 import { fontVariables } from '@/lib/fonts'
 import { toNavTree } from '@/lib/nav'
+import { whatsappLink } from '@/lib/whatsapp'
 import { parseTheme, THEME_COOKIE } from '@/lib/theme'
 import './globals.css'
 
@@ -40,7 +44,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a1426' },
+    { media: '(prefers-color-scheme: dark)', color: '#070e1c' },
   ],
 }
 
@@ -54,6 +58,11 @@ export default async function FrontendLayout({ children }: { children: ReactNode
     getPreviewUser(),
   ])
   const navItems = toNavTree(header.mainMenu, 'nav')
+  const whatsapp = whatsappLink({
+    number: settings.contact?.whatsappNumber,
+    message: settings.contact?.whatsappMessage,
+    url: settings.social?.whatsapp,
+  })
 
   return (
     // No data-theme → the OS preference applies (CSS); a saved choice comes from the theme cookie.
@@ -72,13 +81,16 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           navItems={navItems}
           showSocial={header.showSocialInTopBar !== false}
           pathname={pathname}
+          aiSearch={aiSearchUiEnabled()}
         />
         <MainNav items={navItems} pathname={pathname} />
         <main id="main" className="flex-1">
           {children}
         </main>
         <Footer footer={footer} settings={settings} />
-        <BackToTop />
+        <BackToTop raised={Boolean(whatsapp)} />
+        {whatsapp ? <WhatsAppButton href={whatsapp} /> : null}
+        <ScrollReveal />
       </body>
     </html>
   )

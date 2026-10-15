@@ -53,6 +53,31 @@ export const SiteSettings: GlobalConfig = {
       fields: [
         { name: 'email', type: 'email' },
         { name: 'phone', type: 'text', maxLength: 40 },
+        {
+          name: 'whatsappNumber',
+          type: 'text',
+          maxLength: 24,
+          label: 'WhatsApp number',
+          validate: (value: string | null | undefined) =>
+            !value || /^\+?[\d\s()-]{8,20}$/.test(value)
+              ? true
+              : 'Enter the number with country code, e.g. +91 98765 43210',
+          admin: {
+            description:
+              'Shows a green “chat on WhatsApp” button at the bottom right of every page. Leave empty to hide it.',
+          },
+        },
+        {
+          name: 'whatsappMessage',
+          type: 'text',
+          maxLength: 200,
+          label: 'WhatsApp greeting',
+          defaultValue: 'അസ്സലാമു അലൈക്കും',
+          admin: {
+            description:
+              'The message that is ready in the chat box when a visitor taps the button.',
+          },
+        },
         { name: 'address', type: 'textarea', maxLength: 400 },
       ],
     },

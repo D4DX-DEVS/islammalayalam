@@ -1,10 +1,11 @@
 import Link from 'next/link'
+import { ArrowRight, CalendarDays, ChevronRight, UserRound } from 'lucide-react'
 import { PostImage } from '@/components/cards/PostImage'
-import { formatDate, readingLabel } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { postHref } from '@/lib/links'
 import type { PostCardData } from '@/features/posts/queries'
 
-export type CardVariant = 'hero' | 'lead' | 'feature' | 'grid' | 'list' | 'side' | 'compact'
+export type CardVariant = 'lead' | 'feature' | 'grid' | 'list' | 'side' | 'compact'
 
 interface PostCardProps {
   post: PostCardData
@@ -17,6 +18,8 @@ interface PostCardProps {
   hideCategory?: boolean
   /** `grid` only: a thumbnail row on phones, a full card from `sm` (keeps long lists short on mobile). */
   compactOnMobile?: boolean
+  /** `list` only: arrow at the end of the row. */
+  chevron?: boolean
 }
 
 export const categoryName = (post: PostCardData): string | null =>
@@ -24,26 +27,37 @@ export const categoryName = (post: PostCardData): string | null =>
     ? post.primaryCategory.name
     : null
 
-/** Date · reading time. */
+/** Author · calendar date (English). The card itself is the link, so the author is plain text. */
 export function CardMeta({
   post,
   light,
   className = '',
 }: {
-  post: Pick<PostCardData, 'publishedAt' | 'readingMinutes'>
+  post: Pick<PostCardData, 'publishedAt' | 'author'>
   light?: boolean
   className?: string
 }) {
   const date = formatDate(post.publishedAt)
-  const reading = readingLabel(post.readingMinutes)
-  if (!date && !reading) return null
+  const author = post.author && typeof post.author === 'object' ? post.author.name : null
+  if (!date && !author) return null
   return (
     <p
-      className={`flex flex-wrap items-center gap-x-2 text-xs ${light ? 'text-white/80' : 'text-muted'} ${className}`}
+      className={`flex flex-wrap items-center gap-x-3.5 gap-y-1 text-xs ${light ? 'text-white/85' : 'text-muted'} ${className}`}
     >
-      {date ? <time dateTime={post.publishedAt ?? undefined}>{date}</time> : null}
-      {date && reading ? <span aria-hidden="true">·</span> : null}
-      {reading ? <span>{reading}</span> : null}
+      {author ? (
+        <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
+          <UserRound className="size-3.5 shrink-0 opacity-75" aria-hidden="true" />
+          <span className="truncate">{author}</span>
+        </span>
+      ) : null}
+      {date ? (
+        <span className="inline-flex items-center gap-1.5">
+          <CalendarDays className="size-3.5 shrink-0 opacity-75" aria-hidden="true" />
+          <time dateTime={post.publishedAt ?? undefined} lang="en">
+            {date}
+          </time>
+        </span>
+      ) : null}
     </p>
   )
 }
@@ -51,20 +65,23 @@ export function CardMeta({
 function Kicker({ name, pill }: { name: string | null; pill?: boolean }) {
   if (!name) return null
   return pill ? (
-    <span className="inline-flex rounded-full bg-brand px-3 py-1 text-xs font-semibold text-white shadow-sm">
+    <span className="inline-flex w-fit rounded-full bg-brand px-3.5 py-1 text-xs font-semibold text-white shadow-sm">
       {name}
     </span>
   ) : (
-    <span className="block text-xs font-semibold tracking-wide text-brand">{name}</span>
+    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand">
+      <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
+      {name}
+    </span>
   )
 }
 
 const TITLE_HOVER = 'transition-colors group-hover:text-brand'
-/** Every card: surface, hairline ring and soft shadow; lifts with a deeper shadow on hover/focus. */
+/** Every card: white surface, hairline ring and soft shadow; lifts with a blue-tinted shadow on hover/focus. */
 export const CARD =
-  'rounded-card bg-card shadow-card ring-1 ring-line/70 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-lift hover:ring-brand/25 focus-visible:-translate-y-1 focus-visible:shadow-lift motion-reduce:transform-none motion-reduce:transition-none'
+  'rounded-card bg-card shadow-card ring-1 ring-line/60 transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lift hover:ring-brand/30 focus-visible:-translate-y-0.5 focus-visible:shadow-lift motion-reduce:transform-none motion-reduce:transition-none'
 
-/** One card, seven layouts: hero overlay, lead, horizontal feature, grid, list row, hero side row, ranked compact. */
+/** One card, six layouts: navy lead, horizontal feature, grid, list row, news row, ranked compact. */
 export function PostCard({
   post,
   variant,
@@ -73,34 +90,34 @@ export function PostCard({
   index,
   hideCategory,
   compactOnMobile,
+  chevron,
 }: PostCardProps) {
   const href = postHref(post.postNumber) ?? '#'
   const cat = hideCategory ? null : categoryName(post)
   const img = { ...post, categoryName: categoryName(post) }
 
-  if (variant === 'hero') {
+  if (variant === 'lead') {
     return (
       <Link
         href={href}
-        className="group relative block aspect-[4/5] overflow-hidden rounded-card bg-brand-deep shadow-card transition duration-300 ease-out hover:-translate-y-1 hover:shadow-lift focus-visible:-translate-y-1 motion-reduce:transform-none sm:aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[28rem]"
+        data-reveal="zoom"
+        className="group relative isolate flex h-full min-h-[22rem] flex-col justify-end overflow-hidden rounded-card bg-brand-deep shadow-card ring-1 ring-black/5 transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lift focus-visible:-translate-y-0.5 motion-reduce:transform-none"
       >
         <PostImage
           post={img}
           size="large"
-          sizes="(min-width: 1280px) 780px, (min-width: 1024px) 62vw, 100vw"
+          sizes="(min-width: 1280px) 460px, (min-width: 1024px) 40vw, 100vw"
           priority={priority}
           cover
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 space-y-3 p-5 sm:p-7 lg:p-8">
-          <Kicker name={cat} pill />
-          <H className="line-clamp-4 text-2xl font-bold leading-snug text-white sm:text-3xl lg:text-[2.15rem]">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#041d4d] via-[#0a3f8f]/70 to-[#0a3f8f]/5" />
+        <div className="relative space-y-3 p-5 sm:p-6">
+          <Kicker name={categoryName(post)} pill />
+          <H className="line-clamp-3 text-xl font-bold leading-snug text-white sm:text-[1.55rem]">
             {post.title}
           </H>
           {post.excerpt ? (
-            <p className="hidden max-w-2xl text-[0.95rem] text-white/85 sm:line-clamp-2">
-              {post.excerpt}
-            </p>
+            <p className="line-clamp-3 text-sm leading-relaxed text-white/85">{post.excerpt}</p>
           ) : null}
           <CardMeta post={post} light />
         </div>
@@ -111,22 +128,32 @@ export function PostCard({
   if (variant === 'side' || variant === 'list') {
     const side = variant === 'side'
     return (
-      <Link href={href} className={`group flex items-start gap-3.5 p-3 sm:gap-4 ${CARD}`}>
+      <Link
+        href={href}
+        data-reveal={side ? 'right' : 'up'}
+        className={`group flex items-center gap-3.5 p-2 pe-3.5 sm:gap-4 ${CARD}`}
+      >
         <PostImage
           post={img}
           size="thumb"
           sizes="160px"
-          className={`aspect-[4/3] shrink-0 rounded-xl ${side ? 'w-24 sm:w-32' : 'w-24 sm:w-28'}`}
+          className={`aspect-[4/3] shrink-0 rounded-lg ${side ? 'w-24 sm:w-36' : 'w-24 sm:w-28'}`}
         />
-        <div className="min-w-0 space-y-1.5">
+        <div className="min-w-0 flex-1 space-y-2 py-1">
           <Kicker name={cat} />
           <H
-            className={`line-clamp-3 font-display font-semibold leading-snug text-ink ${TITLE_HOVER} ${side ? 'text-base' : 'text-[0.97rem]'}`}
+            className={`line-clamp-3 font-display font-semibold leading-snug text-ink ${TITLE_HOVER} ${side ? 'text-[0.97rem] sm:text-base' : 'text-[0.97rem]'}`}
           >
             {post.title}
           </H>
           <CardMeta post={post} />
         </div>
+        {chevron ? (
+          <ChevronRight
+            className="size-5 shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-brand rtl:rotate-180"
+            aria-hidden="true"
+          />
+        ) : null}
       </Link>
     )
   }
@@ -139,7 +166,7 @@ export function PostCard({
       >
         {index ? (
           <span
-            className="w-9 shrink-0 font-display text-3xl font-bold leading-none text-brand/25 tabular-nums"
+            className="w-10 shrink-0 bg-gradient-to-b from-brand-glow to-brand bg-clip-text font-display text-3xl font-bold leading-none text-transparent tabular-nums opacity-60"
             aria-hidden="true"
           >
             {String(index).padStart(2, '0')}
@@ -161,63 +188,60 @@ export function PostCard({
     return (
       <Link
         href={href}
-        className={`group grid overflow-hidden lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] ${CARD}`}
+        data-reveal="left"
+        className={`group grid h-full overflow-hidden sm:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)] ${CARD}`}
       >
         <PostImage
           post={img}
           size="large"
-          sizes="(min-width: 1024px) 800px, 100vw"
+          sizes="(min-width: 1024px) 400px, (min-width: 640px) 45vw, 100vw"
           priority={priority}
-          className="aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-72"
+          className="aspect-[16/10] sm:aspect-auto sm:h-full sm:min-h-72"
         />
-        <div className="space-y-3 self-center p-5 sm:p-7">
-          <Kicker name={cat} />
-          <H
-            className={`text-2xl font-bold leading-snug text-ink sm:text-[1.75rem] ${TITLE_HOVER}`}
-          >
+        <div className="flex flex-col justify-center gap-3 p-5 sm:p-7">
+          <Kicker name={categoryName(post)} pill />
+          <H className={`text-xl font-bold leading-snug text-ink sm:text-[1.65rem] ${TITLE_HOVER}`}>
             {post.title}
           </H>
           {post.excerpt ? (
-            <p className="line-clamp-4 text-[0.97rem] text-body">{post.excerpt}</p>
+            <p className="line-clamp-3 text-[0.95rem] leading-relaxed text-body">{post.excerpt}</p>
           ) : null}
-          <CardMeta post={post} />
+          <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-all group-hover:gap-3 group-hover:bg-brand-strong">
+            കൂടുതൽ വായിക്കുക
+            <ArrowRight className="size-4 rtl:rotate-180" aria-hidden="true" />
+          </span>
         </div>
       </Link>
     )
   }
 
-  const lead = variant === 'lead'
-  const row = compactOnMobile && !lead
+  const row = compactOnMobile
   return (
     <Link
       href={href}
-      className={`group flex h-full overflow-hidden ${CARD} ${row ? 'items-start gap-4 p-3 sm:flex-col sm:gap-0 sm:p-0' : 'flex-col'}`}
+      data-reveal="up"
+      className={`group flex h-full overflow-hidden p-2 ${CARD} ${row ? 'items-start gap-4 sm:flex-col sm:gap-0' : 'flex-col'}`}
     >
       <PostImage
         post={img}
         size="card"
-        sizes={
-          lead
-            ? '(min-width: 1024px) 640px, 100vw'
-            : `(min-width: 1024px) 400px, (min-width: 640px) 50vw, ${row ? '128px' : '100vw'}`
-        }
+        sizes={`(min-width: 1024px) 400px, (min-width: 640px) 50vw, ${row ? '128px' : '100vw'}`}
         priority={priority}
         className={
           row
-            ? 'aspect-[4/3] w-28 shrink-0 rounded-xl sm:aspect-[16/10] sm:w-full sm:rounded-none'
-            : 'aspect-[16/10]'
+            ? 'aspect-[4/3] w-28 shrink-0 rounded-lg sm:aspect-[16/10] sm:w-full'
+            : 'aspect-[16/10] rounded-lg'
         }
       />
-      <div className={`min-w-0 flex-1 space-y-2 ${row ? 'sm:p-5' : 'p-4 sm:p-5'}`}>
+      <div
+        className={`min-w-0 flex-1 space-y-2.5 ${row ? 'py-1 pe-2 sm:px-3 sm:pb-3 sm:pt-4' : 'px-2.5 pb-3 pt-4'}`}
+      >
         <Kicker name={cat} />
         <H
-          className={`line-clamp-3 font-bold leading-snug text-ink ${TITLE_HOVER} ${lead ? 'text-xl sm:text-[1.6rem]' : row ? 'text-[0.97rem] sm:text-[1.05rem]' : 'text-[1.05rem]'}`}
+          className={`line-clamp-3 font-bold leading-snug text-ink ${TITLE_HOVER} ${row ? 'text-[0.97rem] sm:text-[1.05rem]' : 'text-[1.05rem]'}`}
         >
           {post.title}
         </H>
-        {lead && post.excerpt ? (
-          <p className="line-clamp-3 text-[0.97rem] text-body">{post.excerpt}</p>
-        ) : null}
         <CardMeta post={post} />
       </div>
     </Link>

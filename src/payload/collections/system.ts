@@ -83,7 +83,7 @@ export const ContactMessages: CollectionConfig = {
   slug: 'contact-messages',
   admin: {
     useAsTitle: 'subject',
-    group: 'Admin',
+    group: 'Submissions',
     defaultColumns: ['name', 'subject', 'status', 'createdAt'],
   },
   // Created only by the site's server action (Local API, rate-limited); never via the REST API.

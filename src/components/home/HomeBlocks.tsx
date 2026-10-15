@@ -8,6 +8,7 @@ import {
   FeaturedSlider,
 } from '@/components/home/CategorySections'
 import { MediaShelf } from '@/components/home/MediaShelf'
+import { TopicGrid } from '@/components/home/TopicGrid'
 import {
   CallToActionSection,
   FaqSection,
@@ -21,7 +22,8 @@ import {
   QuickLinksSection,
   RichTextSection,
 } from '@/components/home/MiscSections'
-import type { Homepage, SiteSetting } from '@/payload-types'
+import { Container } from '@/components/ui/Container'
+import type { CategoryFeatureBlock, Homepage, SiteSetting, TopicGridBlock } from '@/payload-types'
 
 type LayoutBlock = NonNullable<Homepage['layout']>[number]
 type SidebarBlock = NonNullable<Homepage['sidebar']>[number]
@@ -30,27 +32,57 @@ type AnyBlock = LayoutBlock | SidebarBlock
 const SKELETON: Record<string, SectionSkeletonVariant> = {
   featuredSlider: 'hero',
   categoryFeature: 'split',
+  topicGrid: 'tiles',
   categoryGrid: 'grid',
   mediaShelf: 'band',
   categoryList: 'list',
 }
 
+const isHalf = (block: AnyBlock) => 'width' in block && block.width === 'half'
+/** A full-width video shelf is a band that runs edge to edge, outside the page container. */
+const isBand = (block: AnyBlock) =>
+  block.blockType === 'mediaShelf' && block.format === 'video' && !isHalf(block)
+
+/**
+ * The reference design pairs the first "lead + list" block with a topics panel. When editors have
+ * not placed a topics block themselves, that panel is added beside it (and the lead block shares
+ * the row); as soon as the layout contains a topics block, nothing is added.
+ */
+function withDefaultTopics(blocks: LayoutBlock[]): LayoutBlock[] {
+  if (blocks.some((b) => b.blockType === 'topicGrid')) return blocks
+  const at = blocks.findIndex(
+    (b) => b.blockType === 'categoryFeature' && b.layout !== 'stacked' && !isHalf(b),
+  )
+  if (at < 0) return blocks
+  const lead = blocks[at] as CategoryFeatureBlock
+  const topics: TopicGridBlock = {
+    blockType: 'topicGrid',
+    id: 'auto-topics',
+    width: 'half',
+    limit: 4,
+    title: 'തിരഞ്ഞെടുക്ക വിഷയങ്ങൾ',
+  }
+  return [...blocks.slice(0, at), { ...lead, width: 'half' }, topics, ...blocks.slice(at + 1)]
+}
+
 function renderBlock(
   block: AnyBlock,
   settings: SiteSetting,
-  opts: { priority: boolean; half: boolean; sidebar: boolean },
+  opts: { priority: boolean; half: boolean; sidebar: boolean; bleed: boolean },
 ): ReactNode {
   switch (block.blockType) {
     case 'featuredSlider':
       return <FeaturedSlider block={block} priority={opts.priority} />
     case 'categoryFeature':
-      return <CategoryFeature block={block} priority={opts.priority} />
+      return <CategoryFeature block={block} priority={opts.priority} half={opts.half} />
+    case 'topicGrid':
+      return <TopicGrid block={block} half={opts.half || opts.sidebar} />
     case 'categoryGrid':
       return <CategoryGrid block={block} />
     case 'categoryList':
       return <CategoryList block={block} panel={opts.sidebar || opts.half} />
     case 'mediaShelf':
-      return <MediaShelf block={block} half={opts.half || opts.sidebar} />
+      return <MediaShelf block={block} half={opts.half || opts.sidebar} bleed={opts.bleed} />
     case 'richText':
       return <RichTextSection block={block} />
     case 'banner':
@@ -87,35 +119,71 @@ function groupRows<T extends AnyBlock>(blocks: T[]): T[][] {
   return rows
 }
 
-/** Each section streams independently behind a skeleton shaped like it. */
+interface HomeBlocksProps {
+  blocks: AnyBlock[]
+  settings: SiteSetting
+  /** Rendering the sidebar column: compact variants, no page-width rows. */
+  sidebar?: boolean
+  /** The caller already provides the page container (main column beside a sidebar). */
+  contained?: boolean
+  /** Rendered in its own container row right after the first row (the category icon strip). */
+  afterFirst?: ReactNode
+}
+
+/**
+ * Each section streams independently behind a skeleton shaped like it. In the page layout every
+ * row sits in the site container, except the video band, which spans the full screen width.
+ */
 export function HomeBlocks({
   blocks,
   settings,
   sidebar = false,
-}: {
-  blocks: AnyBlock[]
-  settings: SiteSetting
-  sidebar?: boolean
-}) {
+  contained = false,
+  afterFirst,
+}: HomeBlocksProps) {
+  const page = !sidebar && !contained
+  const shown = blocks.filter((b) => !b.hidden)
+  const rows = groupRows(page ? withDefaultTopics(shown as LayoutBlock[]) : shown)
   return (
-    <div className={sidebar ? 'space-y-8' : 'space-y-14 lg:space-y-16'}>
-      {groupRows(blocks).map((row, r) => {
-        const half = row.length > 1 || ('width' in row[0]! && row[0]!.width === 'half')
+    <div className={sidebar ? 'space-y-8' : 'space-y-10 lg:space-y-12'}>
+      {rows.flatMap((row, r) => {
+        const half = row.length > 1 || isHalf(row[0]!)
+        const bleed = page && row.length === 1 && isBand(row[0]!)
         const cells = row.map((block, i) => (
           <Suspense
             key={block.id ?? `${r}-${i}`}
             fallback={<SectionSkeleton variant={SKELETON[block.blockType] ?? 'list'} />}
           >
-            {renderBlock(block, settings, { priority: !sidebar && r < 2, half, sidebar })}
+            {renderBlock(block, settings, { priority: !sidebar && r < 2, half, sidebar, bleed })}
           </Suspense>
         ))
-        return half ? (
-          <div key={r} className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            {cells}
-          </div>
+        const content = half ? (
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">{cells}</div>
         ) : (
-          <div key={r}>{cells}</div>
+          <div>{cells}</div>
         )
+        // Rows after the first two are rendered lazily (see .lazy-section in globals.css).
+        const lazy = page && r >= 2 ? 'lazy-section' : ''
+        const out: ReactNode[] = [
+          page && !bleed ? (
+            <Container key={`row-${r}`} className={lazy}>
+              {content}
+            </Container>
+          ) : (
+            <div key={`row-${r}`} className={lazy}>
+              {content}
+            </div>
+          ),
+        ]
+        if (r === 0 && afterFirst)
+          out.push(
+            page ? (
+              <Container key="after-first">{afterFirst}</Container>
+            ) : (
+              <div key="after-first">{afterFirst}</div>
+            ),
+          )
+        return out
       })}
     </div>
   )

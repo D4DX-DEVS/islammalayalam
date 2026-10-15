@@ -37,7 +37,7 @@ export function BannerSection({ block }: { block: BannerBlock }) {
       width={media.width}
       height={media.height}
       sizes="(min-width: 1280px) 1216px, 100vw"
-      className="h-auto w-full rounded-card shadow-card"
+      className="h-auto w-full rounded-panel shadow-card"
     />
   )
   return (
@@ -71,7 +71,7 @@ export function QuickLinksSection({ block }: { block: QuickLinksBlock }) {
               href={l.href}
               external={l.external}
               newTab={l.newTab}
-              className="group flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 text-sm font-medium text-ink transition-colors hover:bg-card hover:text-brand"
+              className="group flex min-h-12 items-center justify-between gap-3 rounded-2xl px-4 text-sm font-medium text-ink transition hover:bg-brand-soft hover:text-brand"
             >
               {l.label}
               {l.href ? (
@@ -114,7 +114,7 @@ export function QuickContactSection({
   const c = settings.contact
   const row = 'flex gap-3'
   const icon =
-    'mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand'
+    'mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand'
   return (
     <section className={PANEL}>
       <SectionHeading title={block.title || 'Quick Contact'} />

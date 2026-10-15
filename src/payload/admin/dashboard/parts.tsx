@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Info, MinusCircle, type LucideIcon } from 'lucide-react'
 import { timeAgo } from '@/lib/format'
-import type { ActivityRow, CategoryCount, DashboardRow, MessageRow } from '../dashboardData'
+import type { ActivityRow, DashboardRow, MessageRow } from '../dashboardData'
+import { compact, full } from '../dashboardStats'
 
 /** Building blocks of the admin dashboard (styles: app/(payload)/admin-dashboard.scss). */
 
@@ -91,21 +92,85 @@ export function MessageRows({ rows, admin }: { rows: MessageRow[]; admin: string
   )
 }
 
-export function CategoryBars({ rows, admin }: { rows: CategoryCount[]; admin: string }) {
-  if (!rows.length) return <Empty>No categories yet.</Empty>
+export type StatFlag = { tone: 'warn' | 'info'; label: string }
+
+/** A headline figure: label, value (compact above 10,000, full digits on hover), a context line, an optional flag. */
+export function StatTile({
+  label,
+  value,
+  hint,
+  href,
+  icon: Icon,
+  flag,
+}: {
+  label: string
+  value: number
+  hint?: string
+  href: string
+  icon: LucideIcon
+  flag?: StatFlag | null
+}) {
+  const FlagIcon = flag?.tone === 'warn' ? AlertTriangle : Info
   return (
-    <ul className="im-dash__cats">
-      {rows.map((c) => (
-        <li key={c.id}>
-          <Link
-            href={`${admin}/collections/posts?where[primaryCategory][equals]=${c.id}`}
-            className="im-dash__cat"
-          >
-            <span className="im-dash__cat-name">{c.name}</span>
-            <span className="im-dash__cat-count">{c.posts.toLocaleString('en-IN')}</span>
-          </Link>
-        </li>
-      ))}
+    <Link href={href} className="im-dash__stat">
+      <span className="im-dash__stat-top">
+        <span className="im-dash__stat-icon">
+          <Icon aria-hidden="true" />
+        </span>
+        {flag ? (
+          <span className={`im-dash__flag im-dash__flag--${flag.tone}`}>
+            <FlagIcon aria-hidden="true" />
+            {flag.label}
+          </span>
+        ) : null}
+      </span>
+      <span className="im-dash__stat-value" title={full(value)}>
+        {compact(value)}
+      </span>
+      <span className="im-dash__stat-label">{label}</span>
+      {hint ? <span className="im-dash__stat-hint">{hint}</span> : null}
+    </Link>
+  )
+}
+
+export type StatusRow = {
+  label: string
+  /** "On" / "Off" — always spelled out; the icon only backs it up. */
+  state: 'on' | 'off'
+  detail: string
+  href?: string | null
+}
+
+/** The few switches editors ask about: each row is icon + words, never colour alone. */
+export function StatusRows({ rows }: { rows: StatusRow[] }) {
+  return (
+    <ul className="im-status">
+      {rows.map((row) => {
+        const body = (
+          <>
+            <span className={`im-status__icon im-status__icon--${row.state}`} aria-hidden="true">
+              {row.state === 'on' ? <CheckCircle2 /> : <MinusCircle />}
+            </span>
+            <span className="im-status__text">
+              <span className="im-status__label">{row.label}</span>
+              <span className="im-status__detail">
+                <strong>{row.state === 'on' ? 'On' : 'Off'}</strong> · {row.detail}
+              </span>
+            </span>
+          </>
+        )
+        return (
+          <li key={row.label}>
+            {row.href ? (
+              <Link href={row.href} className="im-status__row">
+                {body}
+              </Link>
+            ) : (
+              <div className="im-status__row">{body}</div>
+            )}
+          </li>
+        )
+      })}
     </ul>
   )
 }

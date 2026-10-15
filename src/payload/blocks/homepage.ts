@@ -61,6 +61,13 @@ export const FeaturedSliderBlock: Block = {
     },
     { ...category(false), admin: { condition: (_, s) => s?.source === 'category' } } as Field,
     limit(6, 10),
+    {
+      name: 'sideTitle',
+      type: 'text',
+      maxLength: 60,
+      defaultValue: 'പുതിയ വാർത്തകൾ',
+      admin: { description: 'Heading of the newest-stories column beside the slider.' },
+    },
   ],
 }
 
@@ -84,6 +91,28 @@ export const CategoryFeatureBlock: Block = {
     },
     limit(5, 9),
     showMore,
+  ],
+}
+
+export const TopicGridBlock: Block = {
+  slug: 'topicGrid',
+  interfaceName: 'TopicGridBlock',
+  labels: { singular: 'Topics: category tiles', plural: 'Topics: category tiles' },
+  fields: [
+    width,
+    { ...title, defaultValue: 'തിരഞ്ഞെടുക്ക വിഷയങ്ങൾ', admin: { description: 'Section heading.' } },
+    {
+      name: 'categories',
+      type: 'relationship',
+      relationTo: 'categories',
+      hasMany: true,
+      maxRows: 8,
+      admin: {
+        description:
+          'Tiles show the category image, or its latest post image, and the article count. Leave empty to use the first topics automatically (video, audio and e-book shelves are skipped).',
+      },
+    },
+    limit(4, 8),
   ],
 }
 
@@ -205,9 +234,26 @@ export const QuickContactBlock: Block = {
   ],
 }
 
-export const mainColumnBlocks: Block[] = [
+/** Every homepage section can be switched off without deleting it (and its settings). */
+const hiddenField: Field = {
+  name: 'hidden',
+  type: 'checkbox',
+  defaultValue: false,
+  label: 'Hide this section',
+  admin: { description: 'Keeps the settings but stops showing the section on the site.' },
+}
+const visible = new Map<Block, Block>()
+const withHide = (blocks: Block[]): Block[] =>
+  blocks.map((block) => {
+    const wrapped = visible.get(block) ?? { ...block, fields: [hiddenField, ...block.fields] }
+    visible.set(block, wrapped)
+    return wrapped
+  })
+
+export const mainColumnBlocks: Block[] = withHide([
   FeaturedSliderBlock,
   CategoryFeatureBlock,
+  TopicGridBlock,
   CategoryGridBlock,
   CategoryListBlock,
   MediaShelfBlock,
@@ -217,8 +263,8 @@ export const mainColumnBlocks: Block[] = [
   FaqBlock,
   QuoteOfDayBlock,
   ReelsBlock,
-]
-export const sidebarBlocks: Block[] = [
+])
+export const sidebarBlocks: Block[] = withHide([
   CategoryListBlock,
   QuickLinksBlock,
   QuickContactBlock,
@@ -229,4 +275,4 @@ export const sidebarBlocks: Block[] = [
   ReelsBlock,
   CallToActionBlock,
   FaqBlock,
-]
+])

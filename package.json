@@ -19,6 +19,7 @@
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "seed:dev": "cross-env NODE_OPTIONS=--no-deprecation MONGODB_URI=mongodb://127.0.0.1:27017/islammalayalam_dev DO_SPACES_BUCKET= DO_SPACES_ENDPOINT= DO_SPACES_KEY= DO_SPACES_SECRET= DO_SPACES_CDN_ENDPOINT= DO_SPACES_FOLDER= payload run scripts/dev/seed.ts",
     "create-admin": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/create-admin.ts",
+    "content:postal-page": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/content/postal-library-page.ts",
     "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload run migration/run.ts",
     "dev:migration": "tsx scripts/dev/dev-migration.ts",
     "test:unit": "vitest run --config ./vitest.config.mts --project unit",
@@ -28,6 +29,7 @@
     "env:check": "node scripts/env-check.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.134.0",
     "@payloadcms/db-mongodb": "3.90.2",
     "@payloadcms/next": "3.90.2",
     "@payloadcms/plugin-seo": "3.90.2",
