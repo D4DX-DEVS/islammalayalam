@@ -1,4 +1,4 @@
-import { spotifyEmbedUrl } from '@/lib/security/url'
+import { spotifyEmbedUrl, spotifyOpenUrl } from '@/lib/security/url'
 import { cdnUrl } from '@/lib/spaces'
 
 /**
@@ -24,4 +24,32 @@ export function audioSource(url: string | null | undefined): AudioSource {
   if (AUDIO_FILE.test(raw) && (raw.startsWith('/') || (cdn && raw.startsWith(`${cdn}/`))))
     return { kind: 'file', src: raw }
   return { kind: 'link', src: raw }
+}
+
+export type TrackAudio = {
+  source: AudioSource
+  /** Address for the player's Spotify button (episode / show on Spotify), when there is one. */
+  spotifyLink: string | null
+}
+
+/**
+ * What a post's audio fields give the player. Hosted audio plays right in the player; otherwise a
+ * Spotify link (the dedicated Spotify field, or Spotify typed into the audio link) plays in
+ * Spotify's embed. Either way a Spotify link, if there is one, also feeds the Spotify button.
+ */
+export function trackAudio(
+  audio: { url?: string | null; spotifyUrl?: string | null } | null | undefined,
+): TrackAudio {
+  const link = audioSource(audio?.url)
+  const spotifyLink =
+    spotifyOpenUrl(audio?.spotifyUrl) ??
+    (link.kind === 'spotify' ? spotifyOpenUrl(audio?.url) : null)
+  if (link.kind === 'file' || link.kind === 'spotify') return { source: link, spotifyLink }
+  const embed = spotifyEmbedUrl(audio?.spotifyUrl ?? '')
+  if (embed)
+    return {
+      source: { kind: 'spotify', src: embed, tall: /\/(show|playlist|album)\//.test(embed) },
+      spotifyLink,
+    }
+  return { source: link, spotifyLink }
 }

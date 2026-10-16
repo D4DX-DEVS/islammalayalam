@@ -1,6 +1,6 @@
 import type { Field, FieldHook, TextFieldSingleValidation } from 'payload'
 import { normalizeSlug } from '@/lib/text/slug'
-import { isSafeHref } from '@/lib/security/url'
+import { isSafeHref, spotifyOpenUrl, youtubeId } from '@/lib/security/url'
 import { staffFieldOnly } from '@/payload/access'
 
 /** Slug: NFC, zero-width-free, Malayalam-safe. Derived from `source` when left empty. */
@@ -174,3 +174,21 @@ export function linkGroup(name = 'link', opts: { required?: boolean } = {}): Fie
     ],
   }
 }
+
+/** For a text field that holds a Spotify link (episode, show, playlist, album or track); empty is fine. */
+export const validateSpotifyLink: TextFieldSingleValidation = (value) =>
+  !value || spotifyOpenUrl(value)
+    ? true
+    : 'Enter a Spotify link, e.g. https://open.spotify.com/episode/… or /show/… or /playlist/…'
+
+/** Optional https link (Spotify, hosted audio…); empty is fine. */
+export const validateOptionalHttps: TextFieldSingleValidation = (value) =>
+  !value || (isSafeHref(value) && value.trim().startsWith('https://'))
+    ? true
+    : 'Enter a link that starts with https://'
+
+/** Optional YouTube link; empty is fine. */
+export const validateYouTubeLink: TextFieldSingleValidation = (value) =>
+  !value || youtubeId(value)
+    ? true
+    : 'Enter a YouTube link, e.g. https://www.youtube.com/watch?v=… or https://youtu.be/…'

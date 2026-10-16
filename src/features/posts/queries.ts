@@ -46,7 +46,7 @@ export type PostListQuery = {
 
 // The key carries a version: bump it whenever CARD_SELECT changes, so a persisted cache can't serve the old shape.
 export const listPosts = cached(
-  'posts:list:v2',
+  'posts:list:v3',
   TAGS,
   async (q: PostListQuery): Promise<PostList> => {
     const payload = await getPayloadClient()

@@ -38,3 +38,34 @@ export async function youtubeStatus(id: string): Promise<VideoStatus> {
     return 'unknown'
   }
 }
+
+/** The title and channel an oEmbed response reports (either may be missing). */
+export function parseOembed(body: unknown): { title: string | null; author: string | null } {
+  const record = body && typeof body === 'object' ? (body as Record<string, unknown>) : {}
+  const text = (value: unknown) =>
+    typeof value === 'string' && value.trim()
+      ? value.replace(/\s+/g, ' ').trim().slice(0, 300)
+      : null
+  return { title: text(record.title), author: text(record.author_name) }
+}
+
+export type VideoDetails = { status: VideoStatus; title: string | null; author: string | null }
+
+/** Status (as above) plus the title and channel YouTube reports, from the same cached request. */
+export async function youtubeDetails(id: string): Promise<VideoDetails> {
+  if (!VIDEO_ID.test(id)) return { status: 'gone', title: null, author: null }
+  const endpoint = new URL('https://www.youtube.com/oembed')
+  endpoint.searchParams.set('url', `https://www.youtube.com/watch?v=${id}`)
+  endpoint.searchParams.set('format', 'json')
+  try {
+    const res = await fetch(endpoint.toString(), {
+      next: { revalidate: RECHECK_SECONDS },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    })
+    const status = statusFromOembed(res.status)
+    if (status !== 'ok') return { status, title: null, author: null }
+    return { status, ...parseOembed(await res.json().catch(() => null)) }
+  } catch {
+    return { status: 'unknown', title: null, author: null }
+  }
+}

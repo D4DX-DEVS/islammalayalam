@@ -19,6 +19,7 @@ import {
   reviewFlags,
   searchKeyField,
   searchTextField,
+  validateSpotifyLink,
 } from '@/payload/fields'
 import { contentHooks } from '@/payload/hooks'
 import {
@@ -152,9 +153,29 @@ export const Posts: CollectionConfig = {
               admin: {
                 condition: (data) => data?.format === 'audio',
                 description:
-                  'Spotify link (episode, show or playlist) — plays on the page — or a link to hosted audio (https only). Audio uploads are not accepted.',
+                  'Add a Spotify link (it plays inside the player on the site), or a link to hosted audio (https only). Audio uploads are not accepted. With both, the hosted audio plays and the Spotify link feeds the Spotify button.',
               },
-              fields: [{ name: 'url', type: 'text', validate: validateHttps }, durationField],
+              fields: [
+                {
+                  name: 'spotifyUrl',
+                  label: 'Spotify link',
+                  type: 'text',
+                  maxLength: 300,
+                  validate: validateSpotifyLink,
+                  admin: {
+                    description:
+                      'Episode, show or playlist, e.g. https://open.spotify.com/episode/… (use Share → Copy link in Spotify).',
+                  },
+                },
+                {
+                  name: 'url',
+                  label: 'Hosted audio link',
+                  type: 'text',
+                  validate: validateHttps,
+                  admin: { description: 'Optional: a direct https link to an audio file.' },
+                },
+                durationField,
+              ],
             },
             {
               name: 'attachments',

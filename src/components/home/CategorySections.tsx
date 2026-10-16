@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { PostCard, CardMeta, categoryName } from '@/components/cards/PostCard'
-import { PostImage } from '@/components/cards/PostImage'
+import { PostImage, hasPicture } from '@/components/cards/PostImage'
 import { HeroSlider } from '@/components/home/HeroSlider'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { listPosts, type PostCardData } from '@/features/posts/queries'
@@ -96,7 +96,7 @@ export async function FeaturedSlider({
       {side.length ? (
         <div className="flex flex-col">
           <SectionHeading
-            title={block.sideTitle || 'പുതിയ വാർത്തകൾ'}
+            title={block.sideTitle || 'Featured Post'}
             href={category && block.source === 'category' ? categoryHref(category.slug) : null}
             className="enter"
           />
@@ -132,7 +132,10 @@ export async function CategoryFeature({
   if (!category) return null
   const { docs } = await listPosts({ categoryId: category.id, limit: block.limit })
   if (!docs.length) return null
-  const [lead, ...rest] = docs
+  // The lead card is the big picture of the section, so it prefers a post that has one.
+  const leadAt = Math.max(0, docs.findIndex(hasPicture))
+  const lead = docs[leadAt]!
+  const rest = docs.filter((_, i) => i !== leadAt)
   const more = block.showMoreLink ? categoryHref(category.slug) : null
   const stacked = block.layout === 'stacked'
   return (
@@ -142,7 +145,7 @@ export async function CategoryFeature({
         <div
           className={`grid grid-cols-1 gap-4 ${half ? '' : 'lg:grid-cols-[minmax(0,1.12fr)_minmax(0,1fr)] lg:gap-6'}`}
         >
-          <PostCard post={lead!} variant="feature" priority={priority} />
+          <PostCard post={lead} variant="feature" priority={priority} />
           {rest.length ? (
             <ul className="grid grid-cols-1 gap-3 lg:auto-rows-fr">
               {rest.slice(0, 4).map((post) => (
@@ -157,12 +160,12 @@ export async function CategoryFeature({
         <div
           className={`grid grid-cols-1 gap-4 ${half ? 'md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:gap-4' : 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] lg:gap-6'}`}
         >
-          <PostCard post={lead!} variant="lead" priority={priority} />
+          <PostCard post={lead} variant="lead" priority={priority} />
           {rest.length ? (
             <ul className="grid grid-cols-1 gap-3 lg:auto-rows-fr">
               {rest.slice(0, 4).map((post) => (
                 <li key={post.id} className="[&>a]:h-full">
-                  <PostCard post={post} variant="list" hideCategory />
+                  <PostCard post={post} variant="row" />
                 </li>
               ))}
             </ul>

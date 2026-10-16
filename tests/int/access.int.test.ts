@@ -113,6 +113,45 @@ describe('anonymous visitors', () => {
     expect(updated.name).toBe('Anyone')
   })
 
+  it('see active quotes only, and cannot create them (editors can)', async () => {
+    await payload.create({
+      collection: 'quotes',
+      data: { text: 'Visible quote', active: true },
+      overrideAccess: true,
+    })
+    const hidden = await payload.create({
+      collection: 'quotes',
+      data: { text: 'Hidden quote', active: false },
+      overrideAccess: true,
+    })
+    const texts = (await payload.find({ collection: 'quotes', overrideAccess: false })).docs.map(
+      (d) => d.text,
+    )
+    expect(texts).toContain('Visible quote')
+    expect(texts).not.toContain('Hidden quote')
+    expect(
+      await statusOf(() =>
+        payload.findByID({ collection: 'quotes', id: hidden.id, overrideAccess: false }),
+      ),
+    ).toBe(404)
+    expect(
+      await statusOf(() =>
+        payload.create({
+          collection: 'quotes',
+          data: { text: 'Sneaky', active: true },
+          overrideAccess: false,
+        }),
+      ),
+    ).toBe(403)
+    const made = await payload.create({
+      collection: 'quotes',
+      data: { text: 'Written by an editor' },
+      user: editor,
+      overrideAccess: false,
+    })
+    expect(made.label).toBe('Written by an editor')
+  })
+
   it('see published posts only — also when asking for drafts', async () => {
     for (const draft of [false, true]) {
       const res = await payload.find({ collection: 'posts', overrideAccess: false, draft })

@@ -71,6 +71,9 @@ export interface Config {
     pages: Page;
     categories: Category;
     authors: Author;
+    quotes: Quote;
+    audios: Audio;
+    videos: Video;
     media: Media;
     redirects: Redirect;
     'contact-messages': ContactMessage;
@@ -90,6 +93,9 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     authors: AuthorsSelect<false> | AuthorsSelect<true>;
+    quotes: QuotesSelect<false> | QuotesSelect<true>;
+    audios: AudiosSelect<false> | AudiosSelect<true>;
+    videos: VideosSelect<false> | VideosSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'contact-messages': ContactMessagesSelect<false> | ContactMessagesSelect<true>;
@@ -184,9 +190,16 @@ export interface Post {
     youtubeId?: string | null;
   };
   /**
-   * Spotify link (episode, show or playlist) — plays on the page — or a link to hosted audio (https only). Audio uploads are not accepted.
+   * Add a Spotify link (it plays inside the player on the site), or a link to hosted audio (https only). Audio uploads are not accepted. With both, the hosted audio plays and the Spotify link feeds the Spotify button.
    */
   audio?: {
+    /**
+     * Episode, show or playlist, e.g. https://open.spotify.com/episode/… (use Share → Copy link in Spotify).
+     */
+    spotifyUrl?: string | null;
+    /**
+     * Optional: a direct https link to an audio file.
+     */
     url?: string | null;
     /**
      * Optional length, e.g. 18:24 — shown on the video tile and next to audio tracks.
@@ -585,6 +598,94 @@ export interface Page {
   createdAt: string;
 }
 /**
+ * The homepage shows one quote a day. A quote with a “Show on” date appears that day; quotes without a date take turns, one per day.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotes".
+ */
+export interface Quote {
+  id: string;
+  label?: string | null;
+  /**
+   * The quote itself. Used for sharing and as the poster’s description.
+   */
+  text?: string | null;
+  /**
+   * Who said it or where it is from, e.g. ഖുര്‍ആന്‍ 2:286.
+   */
+  source?: string | null;
+  /**
+   * Optional poster image (square or portrait works best). Without one, the text is shown on a designed card.
+   */
+  poster?: (string | null) | Media;
+  /**
+   * India date. Leave empty to put the quote in the daily rotation.
+   */
+  showOn?: string | null;
+  /**
+   * Untick to hide it without deleting.
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Quick audio entries for the homepage Audios player: just a link, a title and an author — all optional. Newest first.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audios".
+ */
+export interface Audio {
+  id: string;
+  label?: string | null;
+  /**
+   * Optional. A Spotify link (episode, show or playlist — it plays inside the player) or a direct https link to an audio file.
+   */
+  link?: string | null;
+  /**
+   * Optional. Left empty, the site uses the title the link itself reports.
+   */
+  title?: string | null;
+  /**
+   * Optional. Speaker, channel or presenter.
+   */
+  author?: string | null;
+  /**
+   * Untick to hide it from the site without deleting it.
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Quick video entries for the homepage Videos band: just a link, a title and an author — all optional. Newest first.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "videos".
+ */
+export interface Video {
+  id: string;
+  label?: string | null;
+  /**
+   * Optional. A YouTube link. The video opens in a popup player on the homepage.
+   */
+  link?: string | null;
+  /**
+   * Optional. Left empty, the site uses the title the link itself reports.
+   */
+  title?: string | null;
+  /**
+   * Optional. Speaker, channel or presenter.
+   */
+  author?: string | null;
+  /**
+   * Untick to hide it from the site without deleting it.
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -744,6 +845,18 @@ export interface PayloadLockedDocument {
         value: string | Author;
       } | null)
     | ({
+        relationTo: 'quotes';
+        value: string | Quote;
+      } | null)
+    | ({
+        relationTo: 'audios';
+        value: string | Audio;
+      } | null)
+    | ({
+        relationTo: 'videos';
+        value: string | Video;
+      } | null)
+    | ({
         relationTo: 'media';
         value: string | Media;
       } | null)
@@ -837,6 +950,7 @@ export interface PostsSelect<T extends boolean = true> {
   audio?:
     | T
     | {
+        spotifyUrl?: T;
         url?: T;
         duration?: T;
       };
@@ -985,6 +1099,46 @@ export interface AuthorsSelect<T extends boolean = true> {
         sourceHash?: T;
         migratedAt?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotes_select".
+ */
+export interface QuotesSelect<T extends boolean = true> {
+  label?: T;
+  text?: T;
+  source?: T;
+  poster?: T;
+  showOn?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audios_select".
+ */
+export interface AudiosSelect<T extends boolean = true> {
+  label?: T;
+  link?: T;
+  title?: T;
+  author?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "videos_select".
+ */
+export interface VideosSelect<T extends boolean = true> {
+  label?: T;
+  link?: T;
+  title?: T;
+  author?: T;
+  active?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1318,6 +1472,42 @@ export interface Header {
     | null;
   showSocialInTopBar?: boolean | null;
   /**
+   * A full-width image banner right below the menu bar, on every page, with an optional link. With no image, nothing is shown.
+   */
+  topBanner?: {
+    /**
+     * Wide image — 1920 × 240 or larger looks sharp on every screen (the banner is shown edge to edge).
+     */
+    image?: (string | null) | Media;
+    /**
+     * A narrower version, e.g. 900 × 360, used on screens under 640 px wide. Without one, the main image is scaled down.
+     */
+    mobileImage?: (string | null) | Media;
+    link?: {
+      type?: ('reference' | 'custom' | 'none') | null;
+      newTab?: boolean | null;
+      label?: string | null;
+      reference?:
+        | ({
+            relationTo: 'pages';
+            value: string | Page;
+          } | null)
+        | ({
+            relationTo: 'posts';
+            value: string | Post;
+          } | null)
+        | ({
+            relationTo: 'categories';
+            value: string | Category;
+          } | null);
+      url?: string | null;
+    };
+    /**
+     * Keeps the settings but stops showing the banner on the site.
+     */
+    hidden?: boolean | null;
+  };
+  /**
    * Blue navigation bar. Up to three levels.
    */
   mainMenu?:
@@ -1461,7 +1651,7 @@ export interface FeaturedSliderBlock {
   category?: (string | null) | Category;
   limit: number;
   /**
-   * Heading of the newest-stories column beside the slider.
+   * Heading of the stories column beside the slider.
    */
   sideTitle?: string | null;
   id?: string | null;
@@ -1577,6 +1767,38 @@ export interface MediaShelfBlock {
    */
   title?: string | null;
   limit: number;
+  /**
+   * Your Spotify show or playlist (Share → Copy link in Spotify). It adds the Spotify button to the player. Each audio post can also have its own Spotify link.
+   */
+  spotifyUrl?: string | null;
+  /**
+   * Banner images shown in a row below the e-book shelf, each with its own link. Wide images (about 4:1, like 676 × 164) fit best.
+   */
+  banners?:
+    | {
+        image: string | Media;
+        link?: {
+          type?: ('reference' | 'custom' | 'none') | null;
+          newTab?: boolean | null;
+          label?: string | null;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: string | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: string | Post;
+              } | null)
+            | ({
+                relationTo: 'categories';
+                value: string | Category;
+              } | null);
+          url?: string | null;
+        };
+        id?: string | null;
+      }[]
+    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShelf';
@@ -2025,6 +2247,22 @@ export interface HeaderSelect<T extends boolean = true> {
         id?: T;
       };
   showSocialInTopBar?: T;
+  topBanner?:
+    | T
+    | {
+        image?: T;
+        mobileImage?: T;
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              label?: T;
+              reference?: T;
+              url?: T;
+            };
+        hidden?: T;
+      };
   mainMenu?:
     | T
     | {
@@ -2199,6 +2437,22 @@ export interface MediaShelfBlockSelect<T extends boolean = true> {
   category?: T;
   title?: T;
   limit?: T;
+  spotifyUrl?: T;
+  banners?:
+    | T
+    | {
+        image?: T;
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              label?: T;
+              reference?: T;
+              url?: T;
+            };
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }

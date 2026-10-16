@@ -5,7 +5,7 @@ import { formatDate } from '@/lib/format'
 import { postHref } from '@/lib/links'
 import type { PostCardData } from '@/features/posts/queries'
 
-export type CardVariant = 'lead' | 'feature' | 'grid' | 'list' | 'side' | 'compact'
+export type CardVariant = 'lead' | 'feature' | 'grid' | 'list' | 'row' | 'side' | 'compact'
 
 interface PostCardProps {
   post: PostCardData
@@ -62,8 +62,14 @@ export function CardMeta({
   )
 }
 
-function Kicker({ name, pill }: { name: string | null; pill?: boolean }) {
+function Kicker({ name, pill, soft }: { name: string | null; pill?: boolean; soft?: boolean }) {
   if (!name) return null
+  if (soft)
+    return (
+      <span className="inline-flex w-fit rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
+        {name}
+      </span>
+    )
   return pill ? (
     <span className="inline-flex w-fit rounded-full bg-brand px-3.5 py-1 text-xs font-semibold text-white shadow-sm">
       {name}
@@ -101,6 +107,7 @@ export function PostCard({
       <Link
         href={href}
         data-reveal="zoom"
+        suppressHydrationWarning
         className="group relative isolate flex h-full min-h-[22rem] flex-col justify-end overflow-hidden rounded-card bg-brand-deep shadow-card ring-1 ring-black/5 transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lift focus-visible:-translate-y-0.5 motion-reduce:transform-none"
       >
         <PostImage
@@ -119,7 +126,35 @@ export function PostCard({
           {post.excerpt ? (
             <p className="line-clamp-3 text-sm leading-relaxed text-white/85">{post.excerpt}</p>
           ) : null}
-          <CardMeta post={post} light />
+          <CardMeta post={post} light className="border-t border-white/20 pt-3.5" />
+        </div>
+      </Link>
+    )
+  }
+
+  // `row`: the list beside a lead card — a roomier picture, so the stack reads as a column of stories.
+  if (variant === 'row') {
+    return (
+      <Link
+        href={href}
+        data-reveal="up"
+        suppressHydrationWarning
+        className={`group flex items-center gap-3.5 p-2 pe-4 sm:gap-5 sm:p-2.5 sm:pe-5 ${CARD}`}
+      >
+        <PostImage
+          post={img}
+          size="card"
+          sizes="(min-width: 640px) 168px, 112px"
+          className="aspect-[4/3] w-28 shrink-0 rounded-xl sm:w-40"
+        />
+        <div className="min-w-0 flex-1 space-y-2 py-1">
+          <Kicker name={cat} soft />
+          <H
+            className={`line-clamp-3 font-display text-[0.97rem] font-semibold leading-snug text-ink sm:text-[1.05rem] ${TITLE_HOVER}`}
+          >
+            {post.title}
+          </H>
+          <CardMeta post={post} />
         </div>
       </Link>
     )
@@ -131,6 +166,7 @@ export function PostCard({
       <Link
         href={href}
         data-reveal={side ? 'right' : 'up'}
+        suppressHydrationWarning
         className={`group flex items-center gap-3.5 p-2 pe-3.5 sm:gap-4 ${CARD}`}
       >
         <PostImage
@@ -189,6 +225,7 @@ export function PostCard({
       <Link
         href={href}
         data-reveal="left"
+        suppressHydrationWarning
         className={`group grid h-full overflow-hidden sm:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)] ${CARD}`}
       >
         <PostImage
@@ -220,6 +257,7 @@ export function PostCard({
     <Link
       href={href}
       data-reveal="up"
+      suppressHydrationWarning
       className={`group flex h-full overflow-hidden p-2 ${CARD} ${row ? 'items-start gap-4 sm:flex-col sm:gap-0' : 'flex-col'}`}
     >
       <PostImage

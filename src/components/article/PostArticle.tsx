@@ -11,14 +11,15 @@ import { YouTubeVideo } from '@/components/richtext/YouTubeVideo'
 import { listPosts } from '@/features/posts/queries'
 import { formatDate } from '@/lib/format'
 import { categoryHref, postHref } from '@/lib/links'
-import { audioSource } from '@/lib/audio'
+import { trackAudio } from '@/lib/audio'
 import type { Author, Category, Media, Post } from '@/payload-types'
 
 const asObj = <T,>(v: unknown): T | null => (v && typeof v === 'object' ? (v as T) : null)
 const SITE_URL = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3444'
 
-function AudioPlayer({ url }: { url: string }) {
-  const source = audioSource(url)
+function AudioPlayer({ audio }: { audio: NonNullable<Post['audio']> }) {
+  const { source } = trackAudio(audio)
+  const url = audio.url ?? ''
   if (source.kind === 'spotify') {
     return (
       <iframe
@@ -164,9 +165,9 @@ export function PostArticle({ post, siteName }: { post: Post; siteName: string }
             />
           ) : null}
 
-          {post.format === 'audio' && post.audio?.url ? (
+          {post.format === 'audio' && (post.audio?.url || post.audio?.spotifyUrl) ? (
             <div className="mx-auto mt-8 max-w-4xl rounded-3xl bg-surface p-5 ring-1 ring-line/60">
-              <AudioPlayer url={post.audio.url} />
+              <AudioPlayer audio={post.audio!} />
             </div>
           ) : null}
 

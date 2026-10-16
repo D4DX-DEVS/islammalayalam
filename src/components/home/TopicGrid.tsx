@@ -40,7 +40,7 @@ export async function TopicGrid({ block, half }: { block: TopicGridBlock; half: 
         {tiles.map(({ category, latest, total }) => {
           const own = isCategory(category.image) ? category.image : null
           return (
-            <li key={category.id} data-reveal="up" className="h-full">
+            <li key={category.id} data-reveal="up" suppressHydrationWarning className="h-full">
               <Link
                 href={categoryHref(category.slug) ?? '#'}
                 className={`group flex h-full flex-col overflow-hidden ${CARD}`}

@@ -29,6 +29,7 @@ export async function DashboardView({ payload, permissions, user }: Props) {
     <DashboardBody
       data={data}
       admin={payload.config.routes.admin}
+      api={payload.config.routes.api}
       permissions={permissions}
       user={user}
     />

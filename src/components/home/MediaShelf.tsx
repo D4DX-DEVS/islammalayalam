@@ -1,13 +1,46 @@
 import { Play } from 'lucide-react'
 import { BookCard, VideoCard } from '@/components/cards/MediaCards'
 import { AudioShelf } from '@/components/home/AudioShelf'
-import { PANEL } from '@/components/home/CategorySections'
+import { BannerAds } from '@/components/home/BannerAds'
 import { ScrollRow } from '@/components/ui/ScrollRow'
 import { Container } from '@/components/ui/Container'
 import { SectionHeading } from '@/components/ui/SectionHeading'
-import { listPosts } from '@/features/posts/queries'
+import { listAudioEntries, listVideoEntries, type MediaEntry } from '@/features/media-items/queries'
+import { listPosts, type PostCardData } from '@/features/posts/queries'
+import { displayTitle, mergeFirst } from '@/lib/media-items'
+import { youtubeId } from '@/lib/security/url'
+import { youtubeDetails, youtubeStatus, type VideoStatus } from '@/lib/youtube'
 import { categoryHref } from '@/lib/links'
 import type { Category, MediaShelfBlock } from '@/payload-types'
+
+type VideoTile = {
+  key: string
+  post: PostCardData
+  status: VideoStatus
+  /** The post page; null for a quick entry (it has none). */
+  href: string | null | undefined
+  author: string | null
+}
+
+/** A quick video entry as a card: the YouTube thumbnail comes from the video id, like a Video post's. */
+const entryPost = (id: string, title: string, videoId: string): PostCardData =>
+  ({
+    id,
+    title,
+    excerpt: null,
+    featuredImage: null,
+    postNumber: null,
+    publishedAt: null,
+    format: 'video',
+    primaryCategory: null,
+    video: {
+      url: `https://www.youtube.com/watch?v=${videoId}`,
+      youtubeId: videoId,
+      duration: null,
+    },
+    audio: null,
+    author: null,
+  }) as unknown as PostCardData
 
 const FORMAT_TITLE = { video: 'Videos', audio: 'Audios', ebook: 'E-Books' } as const
 
@@ -42,11 +75,45 @@ export async function MediaShelf({
     categoryId: category?.id,
     limit: block.limit,
   })
-  if (!docs.length) return null
+  // Quick entries added in the admin (link / title / author) always come first in the Audios and
+  // Videos sections — they have no category, so a section limited to one still shows them.
+  const entries: MediaEntry[] =
+    block.format === 'ebook'
+      ? []
+      : block.format === 'video'
+        ? await listVideoEntries(block.limit)
+        : await listAudioEntries(block.limit)
+  if (!docs.length && !entries.length) return null
   const title = block.title || category?.name || FORMAT_TITLE[block.format]
   const more = category ? categoryHref(category.slug) : null
 
   if (block.format === 'video') {
+    // Ask YouTube (cached for hours) which videos still play, so the popup can say so for the ones that do not.
+    // Entries come first (newest first), then the Video posts.
+    const entryTiles: VideoTile[] = await Promise.all(
+      entries.map(async (entry) => {
+        const videoId = youtubeId(entry.link) ?? ''
+        const details = await youtubeDetails(videoId)
+        return {
+          key: `entry-${entry.id}`,
+          post: entryPost(entry.id, displayTitle(entry, 'video', details.title), videoId),
+          status: details.status,
+          href: null,
+          author: entry.author || details.author,
+        }
+      }),
+    )
+    const postDocs = docs.slice(0, Math.max(0, block.limit - entryTiles.length))
+    const postTiles: VideoTile[] = await Promise.all(
+      postDocs.map(async (post) => ({
+        key: post.id,
+        post,
+        status: post.video?.youtubeId ? await youtubeStatus(post.video.youtubeId) : 'unknown',
+        href: undefined,
+        author: null,
+      })),
+    )
+    const tiles = mergeFirst(entryTiles, postTiles, block.limit)
     const items = (
       <>
         <SectionHeading title={title} href={more} tone="dark" icon={PlayBadge} />
@@ -56,13 +123,19 @@ export async function MediaShelf({
           label={title}
           listClassName="-mx-4 px-4 pb-1 sm:mx-0 sm:px-0"
         >
-          {docs.map((post) => (
+          {tiles.map((tile) => (
             <li
-              key={post.id}
+              key={tile.key}
               data-reveal="up"
+              suppressHydrationWarning
               className={`w-[78%] shrink-0 snap-start sm:w-[calc((100%-1rem)/2)] ${half ? '' : 'lg:w-[calc((100%-3rem)/4)]'}`}
             >
-              <VideoCard post={post} />
+              <VideoCard
+                post={tile.post}
+                status={tile.status}
+                href={tile.href}
+                author={tile.author}
+              />
             </li>
           ))}
         </ScrollRow>
@@ -78,12 +151,15 @@ export async function MediaShelf({
   }
 
   if (block.format === 'ebook') {
+    // The column is as tall as its neighbour in the row (the Audios player): the shelf takes all the
+    // height the banner ads leave, and its cards grow to fill it. On a phone, where the sections
+    // stack, the cards keep a sensible height of their own.
     return (
-      <section className={`${PANEL} flex flex-col`}>
-        <SectionHeading title={title} href={more} />
-        {/* Three books at a time; the row scrolls (arrows, swipe) when there are more. */}
-        <div className="flex flex-1 flex-col justify-center">
-          <ScrollRow tone="light" arrows="overlay" label={title} listClassName="pb-1">
+      <div className="flex h-full flex-col gap-6">
+        <section className="flex flex-1 flex-col rounded-card bg-card px-4 py-4 shadow-card ring-1 ring-line/60 sm:px-6 sm:py-5">
+          <SectionHeading title={title} href={more} className="!mb-3 sm:!mb-4" />
+          {/* Three books at a time; the row scrolls (arrows, swipe) when there are more. */}
+          <ScrollRow tone="light" arrows="overlay" label={title} fill listClassName="pb-1">
             {docs.map((post) => (
               <li
                 key={post.id}
@@ -93,10 +169,21 @@ export async function MediaShelf({
               </li>
             ))}
           </ScrollRow>
-        </div>
-      </section>
+        </section>
+        <BannerAds banners={block.banners} />
+      </div>
     )
   }
 
-  return <AudioShelf docs={docs} title={title} more={more} half={half} />
+  return (
+    <AudioShelf
+      docs={docs}
+      entries={entries}
+      limit={block.limit}
+      title={title}
+      more={more}
+      half={half}
+      spotifyUrl={block.spotifyUrl}
+    />
+  )
 }

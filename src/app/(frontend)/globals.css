@@ -265,6 +265,49 @@
     );
   }
 
+  /*
+   * Image hover: a soft band of light passes over the picture from left to right. Put `shine` on the
+   * (positioned, overflow-hidden) box around an image. It plays when that box, or a card around it
+   * marked `group`, is hovered or keyboard-focused. Nothing moves or scales, and it is off for
+   * visitors who prefer reduced motion.
+   */
+  .shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      transparent 34%,
+      rgb(255 255 255 / 0.22) 44%,
+      rgb(255 255 255 / 0.5) 50%,
+      rgb(255 255 255 / 0.22) 56%,
+      transparent 66%,
+      transparent 100%
+    );
+    transform: translateX(-100%);
+  }
+  .shine:hover::after,
+  .group:hover .shine::after,
+  .group:focus-visible .shine::after {
+    animation: shine-sweep 0.95s ease-out;
+  }
+  @keyframes shine-sweep {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shine::after {
+      display: none;
+    }
+  }
+
   /* Royal-blue surface with soft light pools: video shelf, footer, quote and promo cards. */
   .bg-night {
     background-color: var(--royal-2);
@@ -363,29 +406,30 @@
  *
  * - `data-reveal` (below the fold): <ScrollReveal> arms the hidden state only after hydration, so
  *   server-rendered HTML, no-JS visitors and crawlers always see the content. An IntersectionObserver
- *   adds `data-revealed` as each element nears the viewport; elements that appear together stagger.
+ *   adds `data-revealed` as each element nears the viewport (elements that appear together stagger)
+ *   and `data-reveal-done` once it has played or was already on screen, which turns the effect off for it.
  * - `.enter` (above the fold): a pure-CSS fade-up that plays on first paint, delayed with
  *   `--enter-delay`; it always ends visible, so it needs no script.
  * Both are off for visitors who prefer reduced motion.
  */
 @media (prefers-reduced-motion: no-preference) {
-  .reveal-ready [data-reveal]:not([data-revealed]) {
+  .reveal-ready [data-reveal]:not([data-revealed], [data-reveal-done]) {
     opacity: 0;
     transform: translateY(1.1rem);
   }
-  .reveal-ready [data-reveal='fade']:not([data-revealed]) {
+  .reveal-ready [data-reveal='fade']:not([data-revealed], [data-reveal-done]) {
     transform: none;
   }
-  .reveal-ready [data-reveal='zoom']:not([data-revealed]) {
+  .reveal-ready [data-reveal='zoom']:not([data-revealed], [data-reveal-done]) {
     transform: scale(0.88);
   }
-  .reveal-ready [data-reveal='left']:not([data-revealed]) {
+  .reveal-ready [data-reveal='left']:not([data-revealed], [data-reveal-done]) {
     transform: translateX(-1.5rem);
   }
-  .reveal-ready [data-reveal='right']:not([data-revealed]) {
+  .reveal-ready [data-reveal='right']:not([data-revealed], [data-reveal-done]) {
     transform: translateX(1.5rem);
   }
-  .reveal-ready [data-reveal][data-revealed] {
+  .reveal-ready [data-reveal][data-revealed]:not([data-reveal-done]) {
     transition:
       opacity 0.65s ease-out,
       transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);

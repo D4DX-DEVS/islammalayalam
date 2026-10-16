@@ -25,6 +25,8 @@ import {
   Redirects,
 } from '@/payload/collections/system'
 import { PostalRequests } from '@/payload/collections/PostalRequests'
+import { Audios, Videos } from '@/payload/collections/MediaLinks'
+import { Quotes } from '@/payload/collections/Quotes'
 import { Users } from '@/payload/collections/Users'
 import { globals } from '@/payload/globals'
 
@@ -176,6 +178,9 @@ export default buildConfig({
     Pages,
     Categories,
     Authors,
+    Quotes,
+    Audios,
+    Videos,
     Media,
     Redirects,
     ContactMessages,

@@ -119,6 +119,46 @@ export const Header: GlobalConfig = {
       label: 'Show social icons in the header (desktop)',
     },
     {
+      name: 'topBanner',
+      label: 'Top banner',
+      type: 'group',
+      admin: {
+        description:
+          'A full-width image banner right below the menu bar, on every page, with an optional link. With no image, nothing is shown.',
+      },
+      fields: [
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          filterOptions: { mimeType: { contains: 'image' } },
+          admin: {
+            description:
+              'Wide image — 1920 × 240 or larger looks sharp on every screen (the banner is shown edge to edge).',
+          },
+        },
+        {
+          name: 'mobileImage',
+          label: 'Image for phones (optional)',
+          type: 'upload',
+          relationTo: 'media',
+          filterOptions: { mimeType: { contains: 'image' } },
+          admin: {
+            description:
+              'A narrower version, e.g. 900 × 360, used on screens under 640 px wide. Without one, the main image is scaled down.',
+          },
+        },
+        linkGroup('link', { required: false }),
+        {
+          name: 'hidden',
+          type: 'checkbox',
+          defaultValue: false,
+          label: 'Hide the top banner',
+          admin: { description: 'Keeps the settings but stops showing the banner on the site.' },
+        },
+      ],
+    },
+    {
       name: 'mainMenu',
       type: 'array',
       maxRows: 14,

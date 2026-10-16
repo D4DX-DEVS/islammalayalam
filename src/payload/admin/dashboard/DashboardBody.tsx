@@ -7,6 +7,7 @@ import {
   ExternalLink,
   FilePen,
   FilePlus2,
+  ListPlus,
   FileText,
   Flag,
   FolderTree,
@@ -26,6 +27,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { timeAgo } from '@/lib/format'
+import { QuickAdd } from './QuickAdd'
 import type { DashboardData } from '../dashboardData'
 import { CategoryBars, ColumnChart, FormatMix, Pulse } from './charts'
 import {
@@ -54,6 +56,8 @@ type BodyProps = {
   data: DashboardData
   /** Admin route prefix, e.g. "/admin". */
   admin: string
+  /** Payload's REST route (the quick-add forms save through it), e.g. "/api". */
+  api?: string
   permissions?: SanitizedPermissions
   user: DashboardUser
   now?: Date
@@ -73,7 +77,14 @@ function greeting(now: Date): string {
   return 'Good evening'
 }
 
-export function DashboardBody({ data, admin, permissions, user, now = new Date() }: BodyProps) {
+export function DashboardBody({
+  data,
+  admin,
+  api = '/api',
+  permissions,
+  user,
+  now = new Date(),
+}: BodyProps) {
   const col = (slug: string) => `${admin}/collections/${slug}`
   const can = permissions ?? {}
   const canRead = (slug: string) => Boolean(can.collections?.[slug]?.read)
@@ -286,6 +297,21 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
             ))}
           </ul>
         </nav>
+      ) : null}
+
+      {can.collections?.audios?.create || can.collections?.videos?.create ? (
+        <Panel title="Add audio or video" icon={ListPlus}>
+          <p className="im-dash__sub">
+            Add a link, a title and an author — all optional. New entries appear first in the
+            homepage Audios player and Videos band.
+          </p>
+          <QuickAdd
+            api={api}
+            adminBase={admin}
+            audio={Boolean(can.collections?.audios?.create)}
+            video={Boolean(can.collections?.videos?.create)}
+          />
+        </Panel>
       ) : null}
 
       <div className="im-dash__grid im-dash__grid--charts">

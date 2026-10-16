@@ -104,14 +104,16 @@ const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
     if (!src || !m.width || !m.height) return null
     return (
       <figure>
-        <Image
-          src={src}
-          alt={m.alt ?? ''}
-          width={m.width}
-          height={m.height}
-          sizes="(min-width: 768px) 720px, 100vw"
-          className="h-auto w-full rounded-card"
-        />
+        <span className="shine relative block overflow-hidden rounded-card">
+          <Image
+            src={src}
+            alt={m.alt ?? ''}
+            width={m.width}
+            height={m.height}
+            sizes="(min-width: 768px) 720px, 100vw"
+            className="h-auto w-full"
+          />
+        </span>
         {m.caption ? (
           <figcaption className="mt-2 text-sm text-muted">{m.caption}</figcaption>
         ) : null}

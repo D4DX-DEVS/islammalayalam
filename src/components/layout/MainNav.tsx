@@ -21,6 +21,11 @@ const PANEL_LINK =
  * works — and is crawlable — without JavaScript. Below `xl` the MobileNav drawer is used instead.
  */
 export function MainNav({ items, pathname }: MainNavProps) {
+  // The Home icon stays at the left; the first text menu takes the free space on its left side
+  // (`ms-auto`), which pushes it and every menu after it to the right edge of the bar.
+  const isHome = (item: NavItem) =>
+    item.href === '/' && !item.external && item.children.length === 0
+  const firstTextAt = items.findIndex((item) => !isHome(item))
   return (
     <div className="sticky top-0 z-30 hidden border-b border-line/60 bg-card/80 backdrop-blur-xl xl:block">
       <Container>
@@ -30,9 +35,12 @@ export function MainNav({ items, pathname }: MainNavProps) {
               const alignRight = index >= items.length - RIGHT_ALIGNED
               const active = isActive(item, pathname)
               // The link to the homepage is a house icon (its label stays for screen readers).
-              const home = item.href === '/' && !item.external && item.children.length === 0
+              const home = isHome(item)
               return (
-                <li key={item.id} className="group relative">
+                <li
+                  key={item.id}
+                  className={`group relative ${index === firstTextAt ? 'ms-auto' : ''}`}
+                >
                   <SmartLink
                     href={item.href}
                     external={item.external}

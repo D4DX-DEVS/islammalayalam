@@ -28,6 +28,7 @@ export function SectionHeading({
   return (
     <div
       data-reveal="fade"
+      suppressHydrationWarning
       className={`mb-5 flex items-center justify-between gap-4 sm:mb-6 ${className}`}
     >
       <Tag

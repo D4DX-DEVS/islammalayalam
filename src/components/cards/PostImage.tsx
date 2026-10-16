@@ -60,6 +60,14 @@ function pickSource(
     : null
 }
 
+/** True when the post has a picture of its own (an image, or a YouTube thumbnail), not the placeholder. */
+export function hasPicture(post: PostLike): boolean {
+  const media =
+    post.featuredImage && typeof post.featuredImage === 'object' ? post.featuredImage : null
+  if (media && pickSource(media, 'large')) return true
+  return Boolean(post.format === 'video' && post.video?.youtubeId)
+}
+
 /**
  * Featured image with two fallbacks: the YouTube thumbnail for video posts, then the site's
  * placeholder image (public/brand/post-placeholder.jpg). Never an empty grey box (audit §4).
@@ -77,7 +85,7 @@ export function PostImage({
   const media =
     post.featuredImage && typeof post.featuredImage === 'object' ? post.featuredImage : null
   const src = media ? pickSource(media, size) : null
-  const frame = `${cover ? 'absolute inset-0' : 'relative'} isolate overflow-hidden bg-surface ${className}`
+  const frame = `${cover ? 'absolute inset-0' : 'relative'} shine isolate overflow-hidden bg-surface ${className}`
 
   if (media && src) {
     return (
@@ -93,7 +101,7 @@ export function PostImage({
           fetchPriority={priority ? 'high' : undefined}
           placeholder={media.blurDataURL ? 'blur' : 'empty'}
           blurDataURL={media.blurDataURL ?? undefined}
-          className={`${fit === 'contain' ? 'object-contain' : 'object-cover'} group-hover:scale-[1.04]`}
+          className={fit === 'contain' ? 'object-contain' : 'object-cover'}
         />
       </div>
     )
@@ -109,7 +117,7 @@ export function PostImage({
           fill
           sizes={sizes}
           unoptimized
-          className="object-cover group-hover:scale-[1.04]"
+          className="object-cover"
         />
       </div>
     )
@@ -143,7 +151,7 @@ export function PostImage({
         fill
         sizes={sizes}
         loading={priority ? 'eager' : undefined}
-        className="object-cover group-hover:scale-[1.04]"
+        className="object-cover"
       />
     </div>
   )

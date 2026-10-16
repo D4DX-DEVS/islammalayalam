@@ -19,7 +19,12 @@ export async function CategoryStrip() {
         {categories.map((c) => {
           const Icon = categoryIcon(c)
           return (
-            <li key={c.id} data-reveal="zoom" className="min-w-[6.5rem] flex-1 snap-start">
+            <li
+              key={c.id}
+              data-reveal="zoom"
+              suppressHydrationWarning
+              className="min-w-[6.5rem] flex-1 snap-start"
+            >
               <Link
                 href={categoryHref(c.slug) ?? '#'}
                 className="group flex h-full flex-col items-center gap-2.5 rounded-xl px-1 py-3 text-center"

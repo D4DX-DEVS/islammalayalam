@@ -7,6 +7,7 @@ import {
   CategoryList,
   FeaturedSlider,
 } from '@/components/home/CategorySections'
+import { LeadWithAside } from '@/components/home/LeadWithAside'
 import { MediaShelf } from '@/components/home/MediaShelf'
 import { TopicGrid } from '@/components/home/TopicGrid'
 import {
@@ -23,7 +24,7 @@ import {
   RichTextSection,
 } from '@/components/home/MiscSections'
 import { Container } from '@/components/ui/Container'
-import type { CategoryFeatureBlock, Homepage, SiteSetting, TopicGridBlock } from '@/payload-types'
+import type { CategoryFeatureBlock, Homepage, SiteSetting } from '@/payload-types'
 
 type LayoutBlock = NonNullable<Homepage['layout']>[number]
 type SidebarBlock = NonNullable<Homepage['sidebar']>[number]
@@ -44,25 +45,15 @@ const isBand = (block: AnyBlock) =>
   block.blockType === 'mediaShelf' && block.format === 'video' && !isHalf(block)
 
 /**
- * The reference design pairs the first "lead + list" block with a topics panel. When editors have
- * not placed a topics block themselves, that panel is added beside it (and the lead block shares
- * the row); as soon as the layout contains a topics block, nothing is added.
+ * The first "lead + list" section gets the daily-quote sidebar beside it (75% / 25%) — unless
+ * editors placed a topics block themselves, in which case the layout is exactly what they built.
  */
-function withDefaultTopics(blocks: LayoutBlock[]): LayoutBlock[] {
-  if (blocks.some((b) => b.blockType === 'topicGrid')) return blocks
-  const at = blocks.findIndex(
+function leadWithAside(blocks: LayoutBlock[]): CategoryFeatureBlock | null {
+  if (blocks.some((b) => b.blockType === 'topicGrid')) return null
+  const lead = blocks.find(
     (b) => b.blockType === 'categoryFeature' && b.layout !== 'stacked' && !isHalf(b),
   )
-  if (at < 0) return blocks
-  const lead = blocks[at] as CategoryFeatureBlock
-  const topics: TopicGridBlock = {
-    blockType: 'topicGrid',
-    id: 'auto-topics',
-    width: 'half',
-    limit: 4,
-    title: 'തിരഞ്ഞെടുക്ക വിഷയങ്ങൾ',
-  }
-  return [...blocks.slice(0, at), { ...lead, width: 'half' }, topics, ...blocks.slice(at + 1)]
+  return (lead as CategoryFeatureBlock | undefined) ?? null
 }
 
 function renderBlock(
@@ -143,7 +134,8 @@ export function HomeBlocks({
 }: HomeBlocksProps) {
   const page = !sidebar && !contained
   const shown = blocks.filter((b) => !b.hidden)
-  const rows = groupRows(page ? withDefaultTopics(shown as LayoutBlock[]) : shown)
+  const asideBlock = page ? leadWithAside(shown as LayoutBlock[]) : null
+  const rows = groupRows(shown)
   return (
     <div className={sidebar ? 'space-y-8' : 'space-y-10 lg:space-y-12'}>
       {rows.flatMap((row, r) => {
@@ -154,7 +146,16 @@ export function HomeBlocks({
             key={block.id ?? `${r}-${i}`}
             fallback={<SectionSkeleton variant={SKELETON[block.blockType] ?? 'list'} />}
           >
-            {renderBlock(block, settings, { priority: !sidebar && r < 2, half, sidebar, bleed })}
+            {block === asideBlock ? (
+              <LeadWithAside
+                block={asideBlock}
+                priority={!sidebar && r < 2}
+                siteName={settings.siteName}
+                tagline={settings.tagline}
+              />
+            ) : (
+              renderBlock(block, settings, { priority: !sidebar && r < 2, half, sidebar, bleed })
+            )}
           </Suspense>
         ))
         const content = half ? (

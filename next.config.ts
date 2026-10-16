@@ -39,6 +39,8 @@ const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
   reactStrictMode: true,
   images: {
+    // 75 is the default; banners (ads, the top banner) ask for 90 so text and QR codes stay crisp.
+    qualities: [75, 90],
     localPatterns: [{ pathname: '/api/media/file/**' }, { pathname: '/brand/**' }],
     remotePatterns: [
       ...cdnPattern(),

@@ -17,6 +17,7 @@ function Card({
     <section
       aria-labelledby={titleId}
       data-reveal="up"
+      suppressHydrationWarning
       className="mb-10 overflow-hidden rounded-card bg-gradient-to-br from-brand-soft via-card to-card p-5 shadow-card ring-1 ring-brand/20 sm:p-7"
     >
       <header className="mb-4 flex items-center gap-3">

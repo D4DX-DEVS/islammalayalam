@@ -11,6 +11,8 @@ interface ScrollRowProps {
   arrows?: 'beside' | 'overlay'
   /** Extra classes for the scrolling <ul> (negative margins for edge-to-edge swipe on phones, …). */
   listClassName?: string
+  /** Grow to the height the parent gives (items stretch to match); for rows inside a stretched panel. */
+  fill?: boolean
   label: string
 }
 
@@ -23,6 +25,7 @@ export function ScrollRow({
   tone = 'light',
   arrows = 'overlay',
   listClassName = '',
+  fill = false,
   label,
 }: ScrollRowProps) {
   const list = useRef<HTMLUListElement>(null)
@@ -82,10 +85,12 @@ export function ScrollRow({
   )
 
   return (
-    <div className={arrows === 'beside' ? 'flex items-center gap-4' : 'relative'}>
+    <div
+      className={`${arrows === 'beside' ? 'flex items-center gap-4' : 'relative'} ${fill ? 'flex min-h-0 flex-1 flex-col' : ''}`}
+    >
       <ul
         ref={list}
-        className={`no-scrollbar flex min-w-0 snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth ${arrows === 'beside' ? 'flex-1' : ''} ${listClassName}`}
+        className={`no-scrollbar flex min-w-0 snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth ${arrows === 'beside' || fill ? 'flex-1' : ''} ${listClassName}`}
       >
         {children}
       </ul>

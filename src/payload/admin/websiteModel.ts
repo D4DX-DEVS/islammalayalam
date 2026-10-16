@@ -82,6 +82,7 @@ function describeBlock(
   block: Block,
   index: number,
   edit: { href: string | null; label: string },
+  extras: { audiosWithoutAudio?: number | null } = {},
 ): SectionRow {
   const base = {
     key: `${block.blockType}-${block.id ?? index}`,
@@ -136,22 +137,26 @@ function describeBlock(
           label: block.title || 'Videos',
           icon: 'video',
           detail: `Full-width blue band with a carousel · ${scope} · ${plural(block.limit, 'video')}`,
-          note: 'Add a YouTube link (and optionally the length) in each Video post.',
+          note: 'Videos open in a popup player. Add one in seconds from the dashboard (Add video: link, title, author — all optional), or as a Video post.',
         }
       if (block.format === 'audio')
         return {
           ...base,
           label: block.title || 'Audios',
           icon: 'audio',
-          detail: `Spotify-style player · ${scope} · ${plural(block.limit, 'track')} · ${WIDTH(block)}`,
-          note: 'Add a Spotify link or a hosted audio link in each Audio post.',
+          detail: `Podcast-style player with search and paging · ${scope} · up to ${plural(block.limit, 'episode')} · ${block.spotifyUrl ? 'Spotify button on' : 'no Spotify button'} · ${WIDTH(block)}`,
+          note: extras.audiosWithoutAudio
+            ? `${plural(extras.audiosWithoutAudio, 'Audio post')} ${extras.audiosWithoutAudio === 1 ? 'has' : 'have'} no audio yet. Add real audio in seconds from the dashboard (Add audio: link, title, author — all optional), or open the post → Media & files → Audio and add a Spotify link.`
+            : block.spotifyUrl
+              ? 'Each Audio post can have its own Spotify link (plays in the player) or a hosted audio link.'
+              : 'Add your Spotify show or playlist link to this section for the Spotify button, and a Spotify link or hosted audio link in each Audio post.',
         }
       return {
         ...base,
         label: block.title || 'E-Books',
         icon: 'ebook',
-        detail: `Cover shelf · ${scope} · ${plural(block.limit, 'book')} · ${WIDTH(block)}`,
-        note: 'Add the cover image and the PDF in each E-book post.',
+        detail: `Cover shelf · ${scope} · ${plural(block.limit, 'book')} · ${plural(block.banners?.length ?? 0, 'banner ad')} below · ${WIDTH(block)}`,
+        note: 'Add the cover image and the PDF in each E-book post. Banner ads (image + link) are added on this section.',
       }
     }
     case 'richText':
@@ -251,6 +256,13 @@ export type WebsiteInput = {
     authors: number | null
     media: number | null
     redirects: number | null
+    /** Active quotes (the daily quote in the homepage sidebar). */
+    quotes?: number | null
+    /** Published audio posts that have neither a Spotify link nor a hosted audio link. */
+    audiosWithoutAudio?: number | null
+    /** Quick audio / video entries (link, title, author) added from the dashboard. */
+    audioItems?: number | null
+    videoItems?: number | null
   }
 }
 
@@ -281,9 +293,11 @@ export function buildWebsite({
   const stripShown = categories.filter((c) => c.showInStrip !== false && !c.hidden).length
 
   const layout = (homepage?.layout ?? []) as Block[]
-  const rows: SectionRow[] = layout.map((b, i) => describeBlock(b, i, homeEdit))
-  // The strip sits right under the hero; the topics panel is added beside the first lead block when
-  // the editor has not placed a topics block (see HomeBlocks.withDefaultTopics).
+  const rows: SectionRow[] = layout.map((b, i) =>
+    describeBlock(b, i, homeEdit, { audiosWithoutAudio: counts.audiosWithoutAudio }),
+  )
+  // The strip sits right under the hero; the Daily Quote sidebar is added beside the first lead block
+  // when the editor has not placed a topics block (see HomeBlocks.leadWithAside).
   const heroAt = layout.findIndex((b) => b.blockType === 'featuredSlider')
   rows.splice(heroAt + 1, 0, {
     key: 'category-strip',
@@ -304,22 +318,27 @@ export function buildWebsite({
         r.key.startsWith(`categoryFeature-${layout[leadAt]!.id ?? leadAt}`),
       )
       rows.splice(at + 1, 0, {
-        key: 'auto-topics',
-        label: 'Topic tiles',
-        icon: 'topics',
+        key: 'auto-quote-sidebar',
+        label: 'Daily quote sidebar',
+        icon: 'quote',
         auto: true,
         detail:
-          'Shown beside the lead section until you add your own “Topics” section to the Homepage',
-        editHref: homeEdit.href,
-        editLabel: 'Add a Topics section',
+          'The right-hand 25% beside the lead section: today’s quote poster with the share options (a site card until the first quote is added)',
+        editHref:
+          can.createCollection('quotes') || can.updateCollection('quotes') ? col('quotes') : null,
+        editLabel: 'Manage quotes',
         viewHref: '/',
       })
     }
   }
 
   const sidebar = ((homepage?.sidebar ?? []) as Block[]).map((b, i) =>
-    describeBlock(b, i, homeEdit),
+    describeBlock(b, i, homeEdit, { audiosWithoutAudio: counts.audiosWithoutAudio }),
   )
+
+  const topBannerOn =
+    Boolean(header?.topBanner?.image || header?.topBanner?.mobileImage) &&
+    !header?.topBanner?.hidden
 
   const site: SectionRow[] = [
     {
@@ -331,6 +350,19 @@ export function buildWebsite({
         : 'Menus and top-bar links',
       editHref: can.updateGlobal('header') ? global('header') : null,
       editLabel: 'Edit header',
+      viewHref: '/',
+    },
+    {
+      key: 'top-banner',
+      label: 'Top banner',
+      icon: 'banner',
+      detail: topBannerOn
+        ? `Full-width image right below the menu bar${header?.topBanner?.mobileImage ? ' (with a phone version)' : ''}`
+        : header?.topBanner?.hidden
+          ? 'Switched off — tick “Hide the top banner” off in Header & menu → Top banner to show it again'
+          : 'Not shown yet: add an image under Header & menu → Top banner',
+      editHref: can.updateGlobal('header') ? global('header') : null,
+      editLabel: topBannerOn ? 'Edit banner' : 'Add a banner',
       viewHref: '/',
     },
     {
@@ -364,6 +396,22 @@ export function buildWebsite({
         : 'Hidden until a WhatsApp number is entered in Site settings → Contact',
       editHref: can.updateGlobal('site-settings') ? global('site-settings') : null,
       editLabel: whatsappOn ? 'Edit number' : 'Add a number',
+      viewHref: '/',
+    },
+    {
+      key: 'daily-quote',
+      label: 'Daily quote',
+      icon: 'quote',
+      detail: counts.quotes
+        ? `${plural(counts.quotes, 'active quote')}: one poster a day in the homepage sidebar beside the first lead section, with sharing to every network`
+        : 'Not shown yet: add a quote and a poster appears in the homepage sidebar beside the first lead section',
+      note:
+        counts.quotes === 0
+          ? 'Until there is a quote, the section beside it keeps the full width.'
+          : undefined,
+      editHref:
+        can.createCollection('quotes') || can.updateCollection('quotes') ? col('quotes') : null,
+      editLabel: counts.quotes ? 'Manage quotes' : 'Add a quote',
       viewHref: '/',
     },
     {
@@ -429,6 +477,20 @@ export function buildWebsite({
         counts.audios,
         'posts',
         f('audio'),
+      ),
+      card(
+        'audio-items',
+        'Quick audio',
+        'Just a link, title and author (all optional): first in the Audios player',
+        counts.audioItems ?? null,
+        'audios',
+      ),
+      card(
+        'video-items',
+        'Quick video',
+        'Just a link, title and author (all optional): first in the Videos band',
+        counts.videoItems ?? null,
+        'videos',
       ),
       card('ebooks', 'E-books', 'A cover image and a PDF', counts.ebooks, 'posts', f('ebook')),
       card(

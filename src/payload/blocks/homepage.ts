@@ -1,5 +1,5 @@
 import type { Block, Field } from 'payload'
-import { linkGroup } from '@/payload/fields'
+import { linkGroup, validateSpotifyLink } from '@/payload/fields'
 import { simpleEditor } from '@/payload/editor'
 import { CallToActionBlock, FaqBlock, QuoteOfDayBlock, ReelsBlock } from './homepage-engage'
 
@@ -65,8 +65,8 @@ export const FeaturedSliderBlock: Block = {
       name: 'sideTitle',
       type: 'text',
       maxLength: 60,
-      defaultValue: 'പുതിയ വാർത്തകൾ',
-      admin: { description: 'Heading of the newest-stories column beside the slider.' },
+      defaultValue: 'Featured Post',
+      admin: { description: 'Heading of the stories column beside the slider.' },
     },
   ],
 }
@@ -169,7 +169,41 @@ export const MediaShelfBlock: Block = {
     },
     { ...category(false), admin: { description: 'Optional: limit to one category' } } as Field,
     title,
-    limit(4),
+    limit(4, 60),
+    {
+      name: 'spotifyUrl',
+      label: 'Spotify link',
+      type: 'text',
+      maxLength: 300,
+      validate: validateSpotifyLink,
+      admin: {
+        condition: (_, sibling) => sibling?.format === 'audio',
+        description:
+          'Your Spotify show or playlist (Share → Copy link in Spotify). It adds the Spotify button to the player. Each audio post can also have its own Spotify link.',
+      },
+    },
+    {
+      name: 'banners',
+      label: 'Banner ads',
+      type: 'array',
+      maxRows: 4,
+      labels: { singular: 'Banner ad', plural: 'Banner ads' },
+      admin: {
+        condition: (_, sibling) => sibling?.format === 'ebook',
+        description:
+          'Banner images shown in a row below the e-book shelf, each with its own link. Wide images (about 4:1, like 676 × 164) fit best.',
+      },
+      fields: [
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          required: true,
+          filterOptions: { mimeType: { contains: 'image' } },
+        },
+        linkGroup('link', { required: false }),
+      ],
+    },
   ],
 }
 

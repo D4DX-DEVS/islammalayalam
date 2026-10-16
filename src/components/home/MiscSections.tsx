@@ -31,14 +31,16 @@ export function BannerSection({ block }: { block: BannerBlock }) {
   if (!media || !src || !media.width || !media.height) return null
   const link = resolveLink(block.link)
   const img = (
-    <Image
-      src={src}
-      alt={media.alt ?? ''}
-      width={media.width}
-      height={media.height}
-      sizes="(min-width: 1280px) 1216px, 100vw"
-      className="h-auto w-full rounded-panel shadow-card"
-    />
+    <span className="shine relative block overflow-hidden rounded-panel shadow-card">
+      <Image
+        src={src}
+        alt={media.alt ?? ''}
+        width={media.width}
+        height={media.height}
+        sizes="(min-width: 1280px) 1216px, 100vw"
+        className="h-auto w-full"
+      />
+    </span>
   )
   return (
     <section>

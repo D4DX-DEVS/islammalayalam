@@ -87,3 +87,7 @@ export const staffFieldOnly: FieldAccess = ({ req }) =>
 
 /** Access config fragment that tells payload-totp not to wrap `read` (we handle it above). */
 export const totpPublicRead = { totp: { disableAccessWrapper: { read: true } } } as const
+
+/** Public read of items marked "Active" only (quotes, audio and video links); staff see everything after TOTP. */
+export const publicActiveOrStaff: Access = (args) =>
+  args.req.user ? totpAccess(isStaff)(args) : ({ active: { equals: true } } satisfies Where)

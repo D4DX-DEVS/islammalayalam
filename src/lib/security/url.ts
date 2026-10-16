@@ -64,3 +64,9 @@ export function spotifyEmbedUrl(input: string): string | null {
   if (!type || !id || !SPOTIFY_TYPES.has(type) || !SPOTIFY_ID.test(id)) return null
   return `https://open.spotify.com/embed/${type}/${id}`
 }
+
+/** The address a visitor opens on Spotify (open.spotify.com/<type>/<id>), normalised; null if it is not a Spotify link. */
+export function spotifyOpenUrl(input: string | null | undefined): string | null {
+  const embed = input ? spotifyEmbedUrl(input) : null
+  return embed ? embed.replace('/embed/', '/') : null
+}

@@ -93,7 +93,7 @@ export function Footer({ footer, settings }: { footer: FooterData; settings: Sit
   return (
     <footer className="bg-night relative isolate mt-16 overflow-hidden text-white lg:mt-20">
       <Container className="grid gap-12 py-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,2fr)] lg:gap-16 lg:py-16">
-        <div data-reveal="fade" className="space-y-5">
+        <div data-reveal="fade" suppressHydrationWarning className="space-y-5">
           <Brand settings={settings} tone="light" />
           {settings.tagline ? (
             <p className="max-w-sm text-sm leading-relaxed text-white/75">{settings.tagline}</p>
@@ -106,7 +106,12 @@ export function Footer({ footer, settings }: { footer: FooterData; settings: Sit
         </div>
         <div className={`grid gap-10 sm:grid-cols-2 ${rest.length > 2 ? 'lg:grid-cols-3' : ''}`}>
           {rest.map((column, i) => (
-            <section key={column.id ?? i} aria-labelledby={`footer-col-${i}`} data-reveal="up">
+            <section
+              key={column.id ?? i}
+              aria-labelledby={`footer-col-${i}`}
+              data-reveal="up"
+              suppressHydrationWarning
+            >
               <h2 id={`footer-col-${i}`} className="mb-5 text-base font-bold text-white">
                 {column.title}
                 <span className="mt-2 block h-0.5 w-8 rounded-full bg-accent" aria-hidden="true" />

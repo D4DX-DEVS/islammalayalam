@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { cookies, headers } from 'next/headers'
 import { SiteHeader } from '@/components/layout/SiteHeader'
 import { MainNav } from '@/components/layout/MainNav'
+import { TopBanner } from '@/components/layout/TopBanner'
 import { Footer } from '@/components/layout/Footer'
 import { BackToTop } from '@/components/layout/BackToTop'
 import { WhatsAppButton } from '@/components/layout/WhatsAppButton'
@@ -84,6 +85,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           aiSearch={aiSearchUiEnabled()}
         />
         <MainNav items={navItems} pathname={pathname} />
+        <TopBanner banner={header.topBanner} />
         <main id="main" className="flex-1">
           {children}
         </main>

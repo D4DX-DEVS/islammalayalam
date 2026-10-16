@@ -26,7 +26,15 @@ export async function loadWebsite(
   }
 
   const count = async (
-    collection: 'posts' | 'pages' | 'authors' | 'media' | 'redirects',
+    collection:
+      | 'posts'
+      | 'pages'
+      | 'authors'
+      | 'media'
+      | 'redirects'
+      | 'quotes'
+      | 'audios'
+      | 'videos',
     where?: Where,
   ) => {
     if (!can.readCollection(collection)) return null
@@ -54,6 +62,10 @@ export async function loadWebsite(
     authors,
     media,
     redirects,
+    quotes,
+    audiosWithoutAudio,
+    audioItems,
+    videoItems,
   ] = await Promise.all([
     payload.findGlobal({ slug: 'homepage', depth: 1, ...as }).catch(() => null),
     payload.findGlobal({ slug: 'header', depth: 0, ...as }).catch(() => null),
@@ -78,6 +90,17 @@ export async function loadWebsite(
     count('authors'),
     count('media'),
     count('redirects'),
+    count('quotes', { active: { equals: true } }),
+    count('posts', {
+      and: [
+        { format: { equals: 'audio' } },
+        { _status: { equals: 'published' } },
+        { 'audio.url': { exists: false } },
+        { 'audio.spotifyUrl': { exists: false } },
+      ],
+    }),
+    count('audios'),
+    count('videos'),
   ])
 
   return buildWebsite({
@@ -89,6 +112,19 @@ export async function loadWebsite(
     settings,
     categories,
     aiSearchOn: aiSearchConfigured(),
-    counts: { articles, videos, audios, ebooks, pages, authors, media, redirects },
+    counts: {
+      articles,
+      videos,
+      audios,
+      ebooks,
+      pages,
+      authors,
+      media,
+      redirects,
+      quotes,
+      audiosWithoutAudio,
+      audioItems,
+      videoItems,
+    },
   })
 }

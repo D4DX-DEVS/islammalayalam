@@ -113,7 +113,7 @@ describe('website manager model', () => {
       'featuredSlider-h',
       'category-strip', // right under the hero
       'categoryFeature-a',
-      'auto-topics', // beside the first lead + list, until the editor adds their own
+      'auto-quote-sidebar', // beside the first lead + list, until the editor adds their own topics block
       'categoryGrid-b',
       'mediaShelf-c',
       'categoryFeature-d',
@@ -122,7 +122,7 @@ describe('website manager model', () => {
     ])
   })
 
-  it('does not invent a topics panel once the editor placed one', () => {
+  it('does not add the quote sidebar row once the editor placed a topics block', () => {
     const withTopics = [
       ...layout.slice(0, 2),
       { id: 't', blockType: 'topicGrid', limit: 4 },
@@ -132,7 +132,7 @@ describe('website manager model', () => {
       (r) => r.key,
     )
     expect(keys).toContain('topicGrid-t')
-    expect(keys).not.toContain('auto-topics')
+    expect(keys).not.toContain('auto-quote-sidebar')
   })
 
   it('names the audio shelf as the player and counts visible strip categories only', () => {
@@ -158,9 +158,11 @@ describe('website manager model', () => {
     expect(open.homepage[0]!.editHref).toBe('/admin/globals/homepage')
     expect(open.site.map((r) => r.editHref)).toEqual([
       '/admin/globals/header',
+      '/admin/globals/header', // the top banner lives in Header & menu
       '/admin/globals/site-settings',
       '/admin/globals/footer',
       '/admin/globals/site-settings', // WhatsApp number lives in Site settings
+      '/admin/collections/quotes', // the daily quote
       null, // AI search is a server setting, not edited in the admin
     ])
     expect(open.content.find((c) => c.key === 'audios')).toMatchObject({
@@ -188,6 +190,69 @@ describe('website manager model', () => {
     ).site
     expect(on.find((r) => r.key === 'whatsapp')).toMatchObject({ editLabel: 'Edit number' })
     expect(on.find((r) => r.key === 'ai-search')?.note).toBeUndefined()
+  })
+
+  it('lists the daily quote and says what happens until one exists', () => {
+    const counts = (quotes: number | null) => ({ ...input().counts, quotes })
+    const none = buildWebsite(input({ counts: counts(0) })).site.find(
+      (r) => r.key === 'daily-quote',
+    )
+    expect(none).toMatchObject({ editLabel: 'Add a quote', editHref: '/admin/collections/quotes' })
+    expect(none?.note).toMatch(/full width/)
+
+    const some = buildWebsite(input({ counts: counts(3) })).site.find(
+      (r) => r.key === 'daily-quote',
+    )
+    expect(some).toMatchObject({ editLabel: 'Manage quotes' })
+    expect(some?.detail).toMatch(/3 active quotes/)
+    expect(some?.note).toBeUndefined()
+
+    // A role that cannot touch quotes gets no edit link.
+    const locked = buildWebsite(input({ can: nothing, counts: counts(3) })).site
+    expect(locked.find((r) => r.key === 'daily-quote')?.editHref).toBeNull()
+  })
+
+  it('describes the top banner and what to do when it is empty or hidden', () => {
+    const find = (header: unknown) =>
+      buildWebsite(input({ header: header as never })).site.find((r) => r.key === 'top-banner')
+    expect(find({ topBanner: { image: 'm1' } })).toMatchObject({ editLabel: 'Edit banner' })
+    expect(find({ topBanner: { image: 'm1', mobileImage: 'm2' } })?.detail).toMatch(/phone version/)
+    expect(find({ topBanner: { image: 'm1', hidden: true } })).toMatchObject({
+      editLabel: 'Add a banner',
+      detail: expect.stringMatching(/Switched off/),
+    })
+    expect(find({})).toMatchObject({ editLabel: 'Add a banner' })
+    expect(find(null)?.editLabel).toBe('Add a banner')
+  })
+
+  it('warns when audio posts have no audio yet', () => {
+    const counts = (n: number | null) => ({ ...input().counts, audiosWithoutAudio: n })
+    const note = (n: number | null) =>
+      buildWebsite(input({ counts: counts(n) })).homepage.find((r) => r.icon === 'audio')?.note
+    expect(note(4)).toMatch(/4 Audio posts have no audio yet/)
+    expect(note(1)).toMatch(/1 Audio post has no audio yet/)
+    expect(note(0)).not.toMatch(/no audio yet/)
+    expect(note(null)).not.toMatch(/no audio yet/)
+  })
+
+  it('lists the quick audio and video entries with counts and an "add" link', () => {
+    const counts = { ...input().counts, audioItems: 3, videoItems: 0 }
+    const content = buildWebsite(input({ counts })).content
+    expect(content.find((c) => c.key === 'audio-items')).toMatchObject({
+      count: 3,
+      listHref: '/admin/collections/audios',
+      createHref: '/admin/collections/audios/create',
+    })
+    expect(content.find((c) => c.key === 'video-items')).toMatchObject({
+      count: 0,
+      createHref: '/admin/collections/videos/create',
+    })
+    // A role that cannot read them sees no count and no add link.
+    const locked = buildWebsite(input({ can: nothing, counts })).content
+    expect(locked.find((c) => c.key === 'audio-items')).toMatchObject({
+      count: null,
+      createHref: null,
+    })
   })
 
   it('copes with an empty homepage', () => {

@@ -16,8 +16,8 @@ export const getSiteSettings = cached(
 )
 
 export const getHeader = cached(
-  'header',
-  [globalTag('header'), ...LINK_TAGS],
+  'header:v5',
+  [globalTag('header'), ...LINK_TAGS, collectionTag('media')],
   async (): Promise<Header> => {
     const payload = await getPayloadClient()
     return payload.findGlobal({ slug: 'header', depth: 1, populate: POPULATE, ...PUBLIC })
@@ -33,8 +33,9 @@ export const getFooter = cached(
   },
 )
 
+// The key carries a version: bump it when the homepage's defaults or shape change (see features/shared).
 export const getHomepage = cached(
-  'homepage',
+  'homepage:v4',
   [globalTag('homepage'), ...LINK_TAGS, collectionTag('media')],
   async (): Promise<Homepage> => {
     const payload = await getPayloadClient()

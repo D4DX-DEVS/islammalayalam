@@ -28,7 +28,7 @@ export function ReelPlayer({ id, title }: { id: string; title: string }) {
           type="button"
           onClick={() => setPlaying(true)}
           aria-label={`പ്ലേ ചെയ്യുക: ${title}`}
-          className="group absolute inset-0 size-full text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="group shine absolute inset-0 size-full overflow-hidden text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         >
           {thumbFailed ? (
             <span className="absolute inset-0 bg-brand-deep" aria-hidden="true" />
@@ -39,7 +39,7 @@ export function ReelPlayer({ id, title }: { id: string; title: string }) {
               fill
               sizes="(min-width: 1024px) 10rem, 45vw"
               onError={() => setThumbFailed(true)}
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover"
             />
           )}
           <span

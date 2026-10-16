@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { statusFromOembed, youtubeStatus } from '@/lib/youtube'
+import { parseOembed, statusFromOembed, youtubeDetails, youtubeStatus } from '@/lib/youtube'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -49,5 +49,64 @@ describe('youtubeStatus', () => {
     await expect(youtubeStatus('../../x?next=1')).resolves.toBe('gone')
     await expect(youtubeStatus('')).resolves.toBe('gone')
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('parseOembed', () => {
+  it('reads the title and the channel', () => {
+    expect(parseOembed({ title: '  Hello   world ', author_name: 'A Channel' })).toEqual({
+      title: 'Hello world',
+      author: 'A Channel',
+    })
+  })
+
+  it('tolerates missing, empty and wrong-typed values', () => {
+    expect(parseOembed({})).toEqual({ title: null, author: null })
+    expect(parseOembed(null)).toEqual({ title: null, author: null })
+    expect(parseOembed('text')).toEqual({ title: null, author: null })
+    expect(parseOembed({ title: '   ', author_name: 42 })).toEqual({ title: null, author: null })
+  })
+
+  it('shortens an absurdly long title', () => {
+    expect(parseOembed({ title: 'x'.repeat(1000) }).title).toHaveLength(300)
+  })
+})
+
+describe('youtubeDetails', () => {
+  it('returns the status together with the reported title and channel', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () => new Response(JSON.stringify({ title: 'T', author_name: 'C' }), { status: 200 }),
+      ),
+    )
+    expect(await youtubeDetails('fvRsB9zkoxM')).toEqual({ status: 'ok', title: 'T', author: 'C' })
+  })
+
+  it('gives no title for a removed video, and "gone" for a bad id without asking YouTube', async () => {
+    const fetchMock = vi.fn(async () => new Response('', { status: 403 }))
+    vi.stubGlobal('fetch', fetchMock)
+    expect(await youtubeDetails('fvRsB9zkoxM')).toEqual({
+      status: 'gone',
+      title: null,
+      author: null,
+    })
+    fetchMock.mockClear()
+    expect((await youtubeDetails('nope')).status).toBe('gone')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('has no verdict when YouTube cannot be reached', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('offline')
+      }),
+    )
+    expect(await youtubeDetails('fvRsB9zkoxM')).toEqual({
+      status: 'unknown',
+      title: null,
+      author: null,
+    })
   })
 })
