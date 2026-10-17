@@ -1,25 +1,23 @@
 import type { Access, FieldAccess, PayloadRequest, Where } from 'payload'
-import { totpAccess } from 'payload-totp'
+import { mfaSatisfied, type MfaUser } from '@/lib/mfa-policy'
 
 /**
  * Deny-by-default access control.
  *
- * Staff access requires (a) a staff role and (b) completed TOTP enrollment, unless MFA is disabled
- * (NODE_ENV=test only, enforced in src/lib/env.ts). The payload-totp plugin already forces the
- * TOTP login step for enrolled users; (b) closes the gap where a password-only session of a
- * not-yet-enrolled user could use the REST API before finishing setup.
+ * Staff access requires (a) a staff role and (b) a session that passed every sign-in step the site
+ * requires: while Settings → Security asks for two-step verification, that is password AND an
+ * authenticator code (payload-totp's "totp" session); otherwise the password alone. This is the
+ * only TOTP check on data: payload-totp's static access wrapper is switched off so the setting can
+ * change at runtime (src/payload/mfa.ts).
  */
 export const ROLES = ['admin', 'editor', 'author'] as const
 export type Role = (typeof ROLES)[number]
 
-type MaybeUser = PayloadRequest['user'] & { role?: Role | null; hasTotp?: boolean }
+type MaybeUser = PayloadRequest['user'] & MfaUser & { role?: Role | null }
 
-const mfaDisabled = (): boolean =>
-  process.env.TOTP_DISABLED === 'true' && process.env.NODE_ENV === 'test'
-
+/** Signed in AND past the second step when the site requires it. */
 export function isEnrolled(user: MaybeUser | null | undefined): boolean {
-  if (!user) return false
-  return mfaDisabled() || user.hasTotp === true
+  return Boolean(user && mfaSatisfied(user))
 }
 
 export function hasRole(user: MaybeUser | null | undefined, ...roles: Role[]): boolean {
@@ -28,7 +26,7 @@ export function hasRole(user: MaybeUser | null | undefined, ...roles: Role[]): b
 
 const userOf = (req: PayloadRequest) => req.user as MaybeUser | null
 
-/** Collection/global access helpers (wrapped by payload-totp automatically unless noted). */
+/** Collection/global access helpers. */
 export const isAdmin: Access = ({ req }) => hasRole(userOf(req), 'admin')
 export const isEditor: Access = ({ req }) => hasRole(userOf(req), 'admin', 'editor')
 export const isStaff: Access = ({ req }) => hasRole(userOf(req), 'admin', 'editor', 'author')
@@ -36,13 +34,13 @@ export const nobody: Access = () => false
 
 /**
  * Public read of published documents; editors/admins see every draft, authors only their own
- * ("Author: own drafts only"). Used with `custom.totp.disableAccessWrapper.read = true`, so TOTP is
- * re-applied manually for signed-in users. Draft queries apply this to the latest version.
+ * ("Author: own drafts only"). A signed-in user who has not finished sign-in sees nothing.
+ * Draft queries apply this to the latest version.
  */
-export const publishedOrStaff: Access = async (args) => {
+export const publishedOrStaff: Access = (args) => {
   const user = userOf(args.req)
   if (!user) return { _status: { equals: 'published' } } satisfies Where
-  const allowed = await totpAccess(isStaff)(args)
+  const allowed = isStaff(args)
   if (allowed !== true || hasRole(user, 'admin', 'editor')) return allowed
   return {
     or: [{ _status: { equals: 'published' } }, { createdBy: { equals: user.id } }],
@@ -58,10 +56,10 @@ export const versionsOfOwnOrEditor: Access = ({ req }) => {
   return false
 }
 
-/** Public read of non-versioned content (categories, authors, media); staff after TOTP. */
+/** Public read of non-versioned content (categories, authors, media); staff after full sign-in. */
 export const publicOrStaff: Access = (args) => {
   if (!args.req.user) return true
-  return totpAccess(isStaff)(args)
+  return isStaff(args)
 }
 
 /** Authors may only touch documents they created; editors/admins everything. */
@@ -72,7 +70,7 @@ export const editorOrOwnDoc: Access = ({ req }) => {
   return false
 }
 
-/** Users collection: admins manage everyone; others only themselves (TOTP-enrolled). */
+/** Users collection: admins manage everyone; others only themselves (after full sign-in). */
 export const adminOrSelf: Access = ({ req }) => {
   const user = userOf(req)
   if (hasRole(user, 'admin')) return true
@@ -85,9 +83,12 @@ export const editorFieldOnly: FieldAccess = ({ req }) => hasRole(userOf(req), 'a
 export const staffFieldOnly: FieldAccess = ({ req }) =>
   hasRole(userOf(req), 'admin', 'editor', 'author')
 
-/** Access config fragment that tells payload-totp not to wrap `read` (we handle it above). */
+/**
+ * Marks entities with public `read`. Inert while payload-totp's access wrapper is off (see above);
+ * kept so the public reads stay public should the wrapper ever be switched back on.
+ */
 export const totpPublicRead = { totp: { disableAccessWrapper: { read: true } } } as const
 
-/** Public read of items marked "Active" only (quotes, audio and video links); staff see everything after TOTP. */
+/** Public read of items marked "Active" only (quotes, audio and video links); staff see everything after full sign-in. */
 export const publicActiveOrStaff: Access = (args) =>
-  args.req.user ? totpAccess(isStaff)(args) : ({ active: { equals: true } } satisfies Where)
+  args.req.user ? isStaff(args) : ({ active: { equals: true } } satisfies Where)

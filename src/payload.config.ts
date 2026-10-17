@@ -7,6 +7,7 @@ import { seoPlugin } from '@payloadcms/plugin-seo'
 import { s3Storage } from '@payloadcms/storage-s3'
 import sharp from 'sharp'
 import { payloadTotp } from 'payload-totp'
+import { mfaPolicy } from '@/payload/plugins/mfaPolicy'
 import { totpGuard } from '@/payload/plugins/totpGuard'
 import { getEnv, spacesConfig } from '@/lib/env'
 import { MAX_PDF_BYTES } from '@/lib/media/file-policy'
@@ -57,8 +58,11 @@ const rowActionsField: Field = {
     components: { Cell: '/payload/admin/RowActions#RowActions' },
   },
 }
+// Admin users are editors, not developers: the API tab and API URL are hidden on every screen.
+const HIDE_API = { hideAPIURL: true } as const
+
 const withListDefaults = (collection: CollectionConfig): CollectionConfig => {
-  const admin = { pagination: LIST_PAGINATION, ...collection.admin }
+  const admin = { pagination: LIST_PAGINATION, ...HIDE_API, ...collection.admin }
   if (!ROW_ACTIONS.has(collection.slug)) return { ...collection, admin }
   return {
     ...collection,
@@ -190,7 +194,7 @@ export default buildConfig({
     MigrationRuns,
     MigrationIssues,
   ].map(withListDefaults),
-  globals,
+  globals: globals.map((g) => ({ ...g, admin: { ...HIDE_API, ...g.admin } })),
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   sharp,
   plugins: [
@@ -207,11 +211,17 @@ export default buildConfig({
     // Must follow every plugin that adds collections/globals: it wraps the access of everything before it.
     payloadTotp({
       collection: 'users',
+      // Hides "remove authenticator" and keeps POST /api/remove-totp refused. Whether setup is
+      // actually required comes from Settings → Security, applied by mfaPolicy() below.
       forceSetup: true,
+      // mfaPolicy() wraps access instead, following the runtime setting.
+      disableAccessWrapper: true,
       disabled: env.TOTP_DISABLED === 'true' && env.NODE_ENV === 'test',
       totp: { issuer: SITE_NAME, algorithm: 'SHA1', digits: 6, period: 30 },
     }),
-    // Attempt limit + replay protection for payload-totp's code check; must follow payloadTotp().
+    // Both must follow payloadTotp(): runtime on/off switch (access + admin redirects), then the
+    // attempt limit + replay protection for the code check.
+    mfaPolicy(),
     totpGuard(),
   ],
 })

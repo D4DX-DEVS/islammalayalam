@@ -5,6 +5,8 @@
 @use './admin-dashboard';
 @use './admin-website';
 @use './admin-header';
+@use './admin-security';
+@use './admin-dialog';
 
 :root {
   --im-brand: #0b6bd3;

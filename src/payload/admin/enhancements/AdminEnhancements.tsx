@@ -2,12 +2,20 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { ConfirmationModal, useModal } from '@payloadcms/ui'
+import { useModal } from '@payloadcms/ui'
+import { Globe, LockOpen, UserRound } from 'lucide-react'
+import { ConfirmDialog } from './ConfirmDialog'
 import { confirmRuleFor, GUARDED_BUTTONS } from './confirmRules'
 import type { ConfirmRule } from './confirmRules'
 import { PasswordToggles } from './PasswordToggles'
 
 const MODAL_SLUG = 'im-confirm-action'
+
+const ICONS: Record<ConfirmRule['kind'], ReactNode> = {
+  publish: <Globe />,
+  account: <UserRound />,
+  unlock: <LockOpen />,
+}
 
 /**
  * Admin-wide provider (admin.components.providers). Asks for confirmation before Publish / Save /
@@ -58,8 +66,10 @@ export function AdminEnhancements({ children }: { children?: ReactNode }) {
       {children}
       <PasswordToggles />
       {rule && (
-        <ConfirmationModal
+        <ConfirmDialog
           modalSlug={MODAL_SLUG}
+          tone={rule.kind === 'unlock' ? 'danger' : 'brand'}
+          icon={ICONS[rule.kind]}
           heading={rule.heading}
           body={rule.body}
           confirmLabel={rule.confirmLabel}

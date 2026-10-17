@@ -2,6 +2,7 @@ import { APIError } from 'payload'
 import type { CollectionBeforeOperationHook, CollectionConfig, PayloadRequest } from 'payload'
 import { adminFieldOnly, adminOrSelf, isAdmin, ROLES } from '@/payload/access'
 import { auditCollectionChange, auditCollectionDelete, auditLogin } from '@/payload/hooks/auditLog'
+import { mfaRequiredField } from '@/payload/mfa'
 
 const MIN_PASSWORD = 12
 const MAX_PASSWORD = 256
@@ -59,7 +60,8 @@ export const blockRemoteFirstUser: CollectionBeforeOperationHook = async ({
 
 /**
  * Staff accounts (ASVS V2/V3): lockout after 5 failures for 15 min, 4 h sessions, secure/Lax
- * cookies, no API keys, 12+ char passwords, TOTP enforced by payload-totp (forceSetup).
+ * cookies, no API keys, 12+ char passwords, TOTP via payload-totp while Settings → Security
+ * requires it (src/payload/mfa.ts).
  * Public sign-up does not exist: only admins create users.
  */
 export const Users: CollectionConfig = {
@@ -115,5 +117,6 @@ export const Users: CollectionConfig = {
           'Admin: everything. Editor: all content + publishing. Author: own drafts only.',
       },
     },
+    mfaRequiredField,
   ],
 }

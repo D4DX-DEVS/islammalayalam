@@ -4,7 +4,6 @@ import { draftMode, headers } from 'next/headers'
 import { unstable_rethrow } from 'next/navigation'
 import { createLocalReq } from 'payload'
 import type { Payload } from 'payload'
-import { totpAccess } from 'payload-totp'
 import { getPayloadClient } from '@/lib/payload'
 import { encodePath } from '@/lib/text/slug'
 import type { PreviewTarget } from '@/lib/preview'
@@ -13,8 +12,8 @@ import type { User } from '@/payload-types'
 
 /**
  * Who may see unpublished content on the public site: a staff member whose admin session is fully
- * signed in (password AND the TOTP step), checked with the same `totpAccess(isStaff)` rule the
- * REST API uses. The draft-mode cookie alone is never enough — it only says "try preview"; every
+ * signed in (password, plus the TOTP step while Settings → Security requires it), checked with the
+ * same `isStaff` rule the REST API uses. The draft-mode cookie alone is never enough — it only says "try preview"; every
  * preview request re-checks the admin session, so logging out ends preview immediately.
  */
 export type PreviewUser = User & { collection: 'users' }
@@ -27,7 +26,7 @@ export async function authenticatePreview(
     const { user } = await payload.auth({ headers: requestHeaders })
     if (!user || user.collection !== 'users') return null
     const req = await createLocalReq({ user }, payload)
-    return (await totpAccess(isStaff)({ req })) === true ? (user as PreviewUser) : null
+    return isStaff({ req }) === true ? (user as PreviewUser) : null
   } catch (err) {
     unstable_rethrow(err)
     return null

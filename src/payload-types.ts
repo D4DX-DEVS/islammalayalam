@@ -118,12 +118,14 @@ export interface Config {
     header: Header;
     homepage: Homepage;
     footer: Footer;
+    'security-settings': SecuritySetting;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     header: HeaderSelect<false> | HeaderSelect<true>;
     homepage: HomepageSelect<false> | HomepageSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    'security-settings': SecuritySettingsSelect<false> | SecuritySettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -462,6 +464,7 @@ export interface User {
    * Admin: everything. Editor: all content + publishing. Author: own drafts only.
    */
   role: 'admin' | 'editor' | 'author';
+  mfaRequired?: boolean | null;
   totpSecret?: string | null;
   hasTotp?: boolean | null;
   updatedAt: string;
@@ -1283,6 +1286,7 @@ export interface PostalRequestsSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  mfaRequired?: T;
   totpSecret?: T;
   hasTotp?: T;
   updatedAt?: T;
@@ -2192,6 +2196,16 @@ export interface Footer {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "security-settings".
+ */
+export interface SecuritySetting {
+  id: string;
+  requireTwoFactor?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
@@ -2683,6 +2697,16 @@ export interface FooterSelect<T extends boolean = true> {
         id?: T;
       };
   copyright?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "security-settings_select".
+ */
+export interface SecuritySettingsSelect<T extends boolean = true> {
+  requireTwoFactor?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

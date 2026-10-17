@@ -23,13 +23,15 @@ import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea
 import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { TOTPField as TOTPField_4eaf6cb33cfb75be01716613e3c9a512 } from 'payload-totp/rsc'
+import { TwoStepSwitch as TwoStepSwitch_0376b53c672cc593bbbb7182da800ca7 } from '../../../payload/admin/mfa/TwoStepSwitch'
+import { NoSaveButton as NoSaveButton_468e712a4a4ae597d52b9393bc65afa4 } from '../../../payload/admin/mfa/NoSaveButton'
 import { AdminNav as AdminNav_74e3fe0496955cab51bfdd544405d262 } from '../../../payload/admin/nav/AdminNav'
 import { AdminIcon as AdminIcon_5a7677049bffc15cb0bb8cd55f4b061a } from '../../../payload/admin/graphics'
 import { AdminLogo as AdminLogo_5a7677049bffc15cb0bb8cd55f4b061a } from '../../../payload/admin/graphics'
 import { ThemeSwitch as ThemeSwitch_67fdcbcc9161d0e83bb7d5541e4e5fef } from '../../../payload/admin/header/ThemeSwitch'
 import { AccountMenu as AccountMenu_e5b58975b91fe42267d466b562dfcf4f } from '../../../payload/admin/header/AccountMenu'
 import { AdminEnhancements as AdminEnhancements_40e24ac34751418a63bbf5150fd79a57 } from '../../../payload/admin/enhancements/AdminEnhancements'
-import { TOTPProvider as TOTPProvider_4eaf6cb33cfb75be01716613e3c9a512 } from 'payload-totp/rsc'
+import { MfaProvider as MfaProvider_0bea617d7bb1a6b186100be1af05974a } from '../../../payload/admin/mfa/MfaProvider'
 import { TOTPSetup as TOTPSetup_4eaf6cb33cfb75be01716613e3c9a512 } from 'payload-totp/rsc'
 import { TOTPVerify as TOTPVerify_4eaf6cb33cfb75be01716613e3c9a512 } from 'payload-totp/rsc'
 import { DashboardView as DashboardView_01c7b037f23d5242659990f28a9e7ce6 } from '../../../payload/admin/dashboard/DashboardView'
@@ -64,13 +66,15 @@ export const importMap = {
   "@payloadcms/plugin-seo/client#MetaImageComponent": MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#PreviewComponent": PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "payload-totp/rsc#TOTPField": TOTPField_4eaf6cb33cfb75be01716613e3c9a512,
+  "/payload/admin/mfa/TwoStepSwitch#TwoStepSwitch": TwoStepSwitch_0376b53c672cc593bbbb7182da800ca7,
+  "/payload/admin/mfa/NoSaveButton#NoSaveButton": NoSaveButton_468e712a4a4ae597d52b9393bc65afa4,
   "/payload/admin/nav/AdminNav#AdminNav": AdminNav_74e3fe0496955cab51bfdd544405d262,
   "/payload/admin/graphics#AdminIcon": AdminIcon_5a7677049bffc15cb0bb8cd55f4b061a,
   "/payload/admin/graphics#AdminLogo": AdminLogo_5a7677049bffc15cb0bb8cd55f4b061a,
   "/payload/admin/header/ThemeSwitch#ThemeSwitch": ThemeSwitch_67fdcbcc9161d0e83bb7d5541e4e5fef,
   "/payload/admin/header/AccountMenu#AccountMenu": AccountMenu_e5b58975b91fe42267d466b562dfcf4f,
   "/payload/admin/enhancements/AdminEnhancements#AdminEnhancements": AdminEnhancements_40e24ac34751418a63bbf5150fd79a57,
-  "payload-totp/rsc#TOTPProvider": TOTPProvider_4eaf6cb33cfb75be01716613e3c9a512,
+  "/payload/admin/mfa/MfaProvider#MfaProvider": MfaProvider_0bea617d7bb1a6b186100be1af05974a,
   "payload-totp/rsc#TOTPSetup": TOTPSetup_4eaf6cb33cfb75be01716613e3c9a512,
   "payload-totp/rsc#TOTPVerify": TOTPVerify_4eaf6cb33cfb75be01716613e3c9a512,
   "/payload/admin/dashboard/DashboardView#DashboardView": DashboardView_01c7b037f23d5242659990f28a9e7ce6,

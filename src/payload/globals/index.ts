@@ -5,6 +5,7 @@ import { mainColumnBlocks, sidebarBlocks } from '@/payload/blocks/homepage'
 import { auditGlobalChange } from '@/payload/hooks/auditLog'
 import { guardGlobalContent } from '@/payload/hooks/contentGuard'
 import { revalidateGlobal } from '@/payload/hooks/revalidate'
+import { applyMfaSetting, SECURITY_SETTINGS } from '@/payload/mfa'
 
 /**
  * Site-wide, editor-controlled globals: settings, header (top bar + 3-level menu), homepage
@@ -252,4 +253,26 @@ export const Footer: GlobalConfig = {
   ],
 }
 
-export const globals: GlobalConfig[] = [SiteSettings, Header, Homepage, Footer]
+/** Admin-only sign-in policy (src/payload/mfa.ts). Not public: it is never rendered on the site. */
+export const SecuritySettings: GlobalConfig = {
+  slug: SECURITY_SETTINGS,
+  label: 'Security',
+  admin: {
+    group: 'Settings',
+    // One self-saving switch (TwoStepSwitch) with its own confirmation: no Save button.
+    components: { elements: { SaveButton: '/payload/admin/mfa/NoSaveButton#NoSaveButton' } },
+  },
+  access: { read: isAdmin, update: isAdmin },
+  hooks: { afterChange: [applyMfaSetting, auditGlobalChange] },
+  fields: [
+    {
+      name: 'requireTwoFactor',
+      type: 'checkbox',
+      label: 'Two-step verification (authenticator app) at sign-in',
+      defaultValue: true,
+      admin: { components: { Field: '/payload/admin/mfa/TwoStepSwitch#TwoStepSwitch' } },
+    },
+  ],
+}
+
+export const globals: GlobalConfig[] = [SiteSettings, Header, Homepage, Footer, SecuritySettings]

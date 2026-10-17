@@ -4,6 +4,8 @@
  * immediately. Pure so it can be unit-tested; AdminEnhancements applies it to real clicks.
  */
 export interface ConfirmRule {
+  /** What the action touches; picks the dialog's icon (publish = the live site). */
+  kind: 'publish' | 'account' | 'unlock'
   heading: string
   body: string
   confirmLabel: string
@@ -16,26 +18,31 @@ const ADMIN = '/admin'
 
 const RULES = {
   publishPost: {
+    kind: 'publish',
     heading: 'Publish this post?',
     body: 'It goes live on the website straight away and readers will see these changes.',
     confirmLabel: 'Publish',
   },
   savePage: {
+    kind: 'publish',
     heading: 'Save and update the live page?',
     body: 'Pages have no drafts: saving changes the page on the website straight away.',
     confirmLabel: 'Save and update',
   },
   saveUser: {
+    kind: 'account',
     heading: 'Save changes to this account?',
     body: 'Role, email and password changes apply immediately and can lock someone out.',
     confirmLabel: 'Save account',
   },
   saveSettings: {
+    kind: 'publish',
     heading: 'Update the whole website?',
     body: 'These settings are shared by every page; the change is visible to all visitors at once.',
     confirmLabel: 'Save settings',
   },
   forceUnlock: {
+    kind: 'unlock',
     heading: 'Unlock this account?',
     body: 'The account was locked after too many failed logins. Unlock it only if you know the owner made those attempts.',
     confirmLabel: 'Unlock account',

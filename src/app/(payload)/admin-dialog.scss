@@ -1,0 +1,113 @@
+// Confirmation dialogs (payload/admin/enhancements/ConfirmDialog.tsx). Payload's ConfirmationModal
+// does the mechanics (blurred backdrop, focus trap, Esc, stacking inside drawers); this is the
+// look. Payload's own rules sit in `@layer payload-default`, so these unlayered rules win.
+
+.im-dialog {
+  --im-danger: #dc2626;
+  --im-danger-strong: #b91c1c;
+  --im-danger-soft: #fee2e2;
+  padding: 1rem;
+
+  html[data-theme='dark'] & {
+    --im-danger: #f87171;
+    --im-danger-strong: #fca5a5;
+    --im-danger-soft: rgb(248 113 113 / 0.16);
+  }
+
+  .confirmation-modal__wrapper {
+    width: min(100%, 26rem);
+    max-width: none;
+    padding: 2rem 1.75rem 1.75rem;
+    gap: 1.5rem;
+    border: 1px solid var(--im-border);
+    border-radius: 1.25rem;
+    background: var(--im-surface);
+    box-shadow: var(--im-shadow-lg);
+    text-align: center;
+    animation: im-dialog-in 0.18s ease-out;
+  }
+
+  .confirmation-modal__content {
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: var(--im-brand-soft);
+    color: var(--im-brand);
+
+    svg {
+      width: 1.6rem;
+      height: 1.6rem;
+    }
+  }
+
+  &--danger &__icon {
+    background: var(--im-danger-soft);
+    color: var(--im-danger);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  &__body {
+    margin: 0;
+    color: var(--im-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .confirmation-modal__controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+
+    .btn {
+      width: 100%;
+      min-height: 2.75rem;
+      margin: 0;
+      border-radius: 0.75rem;
+    }
+  }
+
+  // The red confirm button: Payload's .btn reads these variables.
+  &--danger #confirm-action {
+    --bg-color: var(--im-danger);
+    --hover-bg: var(--im-danger-strong);
+    --color: #fff;
+    --hover-color: #fff;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .confirmation-modal__wrapper {
+      animation: none;
+    }
+  }
+}
+
+@keyframes im-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
