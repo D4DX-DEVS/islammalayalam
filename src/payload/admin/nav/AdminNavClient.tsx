@@ -7,8 +7,7 @@ import { useConfig } from '@payloadcms/ui'
 import {
   ArrowRightLeft,
   BookOpen,
-  ChevronDown,
-  CircleUser,
+  ChevronRight,
   ExternalLink,
   File,
   FileText,
@@ -17,6 +16,7 @@ import {
   History,
   Images,
   Inbox,
+  Megaphone,
   LayoutDashboard,
   LayoutPanelTop,
   LayoutTemplate,
@@ -35,8 +35,8 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-export type NavItemData = { slug: string; kind: 'collection' | 'global'; label: string }
-export type NavGroupData = { label: string; items: NavItemData[] }
+import type { NavGroupData, NavItemData } from './navModel'
+
 type NavUser = { name: string; email: string; role: string }
 
 const ICONS: Record<string, LucideIcon> = {
@@ -60,31 +60,28 @@ const ICONS: Record<string, LucideIcon> = {
   header: PanelTop,
   homepage: LayoutTemplate,
   footer: PanelBottom,
+  'ads-banners': Megaphone,
+  website: LayoutPanelTop,
 }
 
 const ROLE_LABEL: Record<string, string> = { admin: 'Admin', editor: 'Editor', author: 'Author' }
-const STORAGE_KEY = 'im-nav-collapsed'
-/** Rarely used groups start collapsed until the user opens them. */
-const DEFAULT_COLLAPSED = ['Migration']
+const STORAGE_KEY = 'im-nav-tucked-open'
 
-function readCollapsed(): string[] {
+function readOpen(): string[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return DEFAULT_COLLAPSED
-    const parsed: unknown = JSON.parse(raw)
-    return Array.isArray(parsed)
-      ? parsed.filter((v): v is string => typeof v === 'string')
-      : DEFAULT_COLLAPSED
+    const parsed: unknown = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : []
   } catch {
-    return DEFAULT_COLLAPSED
+    return []
   }
 }
 
-function writeCollapsed(labels: string[]): void {
+function writeOpen(keys: string[]): void {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(labels))
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(keys))
   } catch {
-    // Private mode / blocked storage: collapsing still works for this page view.
+    // Private mode / blocked storage: opening still works for this page view.
   }
 }
 
@@ -96,30 +93,53 @@ const initials = (user: NavUser): string =>
     .map((p) => p[0]?.toUpperCase())
     .join('')
 
+const badgeText = (n: number): string => (n > 99 ? '99+' : String(n))
+
 export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user: NavUser }) {
   const pathname = usePathname()
   const { config } = useConfig()
   const admin = config.routes.admin
   const logout = `${admin}${config.admin.routes.logout ?? '/logout'}`
-  const [collapsed, setCollapsed] = useState<string[]>([])
+  const [open, setOpen] = useState<string[]>([])
 
   useEffect(() => {
     // Restored after mount so server and client render the same markup.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCollapsed(readCollapsed())
+    setOpen(readOpen())
   }, [])
 
-  const toggle = (label: string) => {
-    const next = collapsed.includes(label)
-      ? collapsed.filter((l) => l !== label)
-      : [...collapsed, label]
-    setCollapsed(next)
-    writeCollapsed(next)
+  const toggle = (key: string) => {
+    const next = open.includes(key) ? open.filter((k) => k !== key) : [...open, key]
+    setOpen(next)
+    writeOpen(next)
   }
 
-  const hrefFor = (item: NavItemData) =>
-    `${admin}/${item.kind === 'collection' ? 'collections' : 'globals'}/${item.slug}`
+  const hrefFor = (item: NavItemData) => `${admin}${item.href}`
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+
+  const renderItem = (item: NavItemData) => {
+    const href = hrefFor(item)
+    const Icon = ICONS[item.slug] ?? File
+    return (
+      <li key={item.key}>
+        <Link
+          href={href}
+          prefetch={false}
+          className="im-nav__link"
+          aria-current={isActive(href) ? 'page' : undefined}
+        >
+          <Icon aria-hidden="true" />
+          <span className="im-nav__text">{item.label}</span>
+          {item.badge ? (
+            <span className="im-nav__badge">
+              {badgeText(item.badge)}
+              <span className="im-nav__sr"> waiting</span>
+            </span>
+          ) : null}
+        </Link>
+      </li>
+    )
+  }
 
   return (
     <nav className="nav__wrap im-nav" aria-label="Admin">
@@ -140,57 +160,44 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
             aria-current={pathname === admin ? 'page' : undefined}
           >
             <LayoutDashboard aria-hidden="true" />
-            <span>Dashboard</span>
-          </Link>
-        </li>
-        <li>
-          <Link
-            href={`${admin}/website`}
-            className="im-nav__link"
-            aria-current={isActive(`${admin}/website`) ? 'page' : undefined}
-          >
-            <LayoutPanelTop aria-hidden="true" />
-            <span>Website manager</span>
+            <span className="im-nav__text">Today</span>
           </Link>
         </li>
       </ul>
 
       {groups.map((group) => {
-        const open = !collapsed.includes(group.label)
-        const id = `im-nav-group-${group.label.toLowerCase().replace(/\W+/g, '-')}`
+        const id = `im-nav-group-${group.key}`
+        if (group.tucked) {
+          const expanded = open.includes(group.key)
+          return (
+            <div key={group.key} className="im-nav__group im-nav__group--tucked">
+              <button
+                type="button"
+                className="im-nav__link im-nav__tuck"
+                aria-expanded={expanded}
+                aria-controls={id}
+                onClick={() => toggle(group.key)}
+              >
+                <ChevronRight aria-hidden="true" data-open={expanded} />
+                <span className="im-nav__text">{group.label}</span>
+                <span className="im-nav__tag">Admins</span>
+              </button>
+              {expanded ? (
+                <ul id={id} className="im-nav__list">
+                  {group.items.map(renderItem)}
+                </ul>
+              ) : null}
+            </div>
+          )
+        }
         return (
-          <div key={group.label} className="im-nav__group">
-            <button
-              type="button"
-              className="im-nav__group-toggle"
-              aria-expanded={open}
-              aria-controls={id}
-              onClick={() => toggle(group.label)}
-            >
-              <span>{group.label}</span>
-              <ChevronDown aria-hidden="true" data-open={open} />
-            </button>
-            {open ? (
-              <ul id={id} className="im-nav__list">
-                {group.items.map((item) => {
-                  const href = hrefFor(item)
-                  const Icon = ICONS[item.slug] ?? File
-                  return (
-                    <li key={href}>
-                      <Link
-                        href={href}
-                        prefetch={false}
-                        className="im-nav__link"
-                        aria-current={isActive(href) ? 'page' : undefined}
-                      >
-                        <Icon aria-hidden="true" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            ) : null}
+          <div key={group.key} className="im-nav__group" role="group" aria-labelledby={`${id}-h`}>
+            <p id={`${id}-h`} className="im-nav__group-label">
+              {group.label}
+            </p>
+            <ul id={id} className="im-nav__list">
+              {group.items.map(renderItem)}
+            </ul>
           </div>
         )
       })}
@@ -198,7 +205,7 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
       <div className="im-nav__footer">
         <a href="/" target="_blank" rel="noopener noreferrer" className="im-nav__link">
           <ExternalLink aria-hidden="true" />
-          <span>View website</span>
+          <span className="im-nav__text">View website</span>
         </a>
         <div className="im-nav__user">
           <Link href={`${admin}/account`} className="im-nav__user-link" title="Your account">
@@ -209,7 +216,6 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
               <span className="im-nav__user-name">{user.name || user.email}</span>
               <span className="im-nav__user-role">{ROLE_LABEL[user.role] ?? 'Staff'}</span>
             </span>
-            <CircleUser aria-hidden="true" className="im-nav__user-icon" />
           </Link>
           <Link href={logout} className="im-nav__logout" aria-label="Log out" title="Log out">
             <LogOut aria-hidden="true" />

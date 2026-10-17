@@ -3,7 +3,8 @@ import { getPayloadClient } from '@/lib/payload'
 import { mediaSrc } from '@/lib/media'
 import { collectionTag } from '@/payload/hooks/revalidate'
 import { cached, POPULATE, PUBLIC } from '@/features/shared'
-import { pickDailyQuote } from './pick'
+import { istDayKey } from '@/lib/quote'
+import { showableQuotes } from './pick'
 import type { Media, Quote } from '@/payload-types'
 
 const TAGS = [collectionTag('quotes'), collectionTag('media')]
@@ -15,6 +16,8 @@ export type QuoteView = {
   source: string
   /** ISO date the quote is scheduled for, if any. */
   showOn: string | null
+  /** The date it counts from: "Show on", else when it was created. */
+  date: string | null
   poster: { src: string; width: number; height: number; alt: string } | null
   href: string
 }
@@ -42,16 +45,20 @@ function toView(doc: Quote): QuoteView | null {
     text,
     source: (doc.source ?? '').trim(),
     showOn: doc.showOn ?? null,
+    date: doc.showOn ?? doc.createdAt ?? null,
     poster,
     href: quoteHref(String(doc.id)),
   }
 }
 
-/** Today's quote (the `day` argument, an India date, is only the cache key so it flips at midnight). */
-export const getDailyQuote = cached(
-  'quotes:daily:v4',
+/**
+ * Every quote that may be shown today, in the admin's order (top row first). The `day` argument (an India date) is only the
+ * cache key, so the list refreshes at midnight and a quote dated for tomorrow appears on time.
+ */
+const loadShowable = cached(
+  'quotes:showable:v3',
   TAGS,
-  async (_day: string): Promise<QuoteView | null> => {
+  async (_day: string): Promise<QuoteView[]> => {
     const payload = await getPayloadClient()
     const res = await payload.find({
       collection: 'quotes',
@@ -61,13 +68,37 @@ export const getDailyQuote = cached(
       populate: POPULATE,
       ...PUBLIC,
     })
-    const picked = pickDailyQuote(
+    return showableQuotes(
       res.docs.map((d) => ({ ...d, id: String(d.id) })),
       new Date(),
-    )
-    return picked ? toView(picked as Quote) : null
+    ).flatMap((doc) => {
+      const view = toView(doc as Quote)
+      return view ? [view] : []
+    })
   },
 )
+
+const showable = () => loadShowable(istDayKey(new Date()) ?? '')
+
+/** The first `count` quotes in the admin's order: the homepage Insights slider. */
+export async function getLatestQuotes(count: number): Promise<QuoteView[]> {
+  return (await showable()).slice(0, Math.max(0, count))
+}
+
+export type QuotePage = { docs: QuoteView[]; page: number; totalPages: number; totalDocs: number }
+
+/** One page of the Insights archive, in the admin's order. */
+export async function getQuotesPage(page: number, perPage: number): Promise<QuotePage> {
+  const all = await showable()
+  const totalPages = Math.max(1, Math.ceil(all.length / perPage))
+  const current = Math.min(Math.max(1, Math.floor(page) || 1), totalPages)
+  return {
+    docs: all.slice((current - 1) * perPage, current * perPage),
+    page: current,
+    totalPages,
+    totalDocs: all.length,
+  }
+}
 
 const OBJECT_ID = /^[a-f0-9]{24}$/i
 

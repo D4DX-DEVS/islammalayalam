@@ -2,11 +2,12 @@ import { Suspense } from 'react'
 import { Container } from '@/components/ui/Container'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { HomeBlocks } from '@/components/home/HomeBlocks'
+import { TopBanner } from '@/components/layout/TopBanner'
 import { CategoryStrip } from '@/components/home/CategoryStrip'
-import { getHomepage, getSiteSettings } from '@/features/site/queries'
+import { getAds, getHomepage, getSiteSettings } from '@/features/site/queries'
 
 export default async function HomePage() {
-  const [home, settings] = await Promise.all([getHomepage(), getSiteSettings()])
+  const [home, settings, ads] = await Promise.all([getHomepage(), getSiteSettings(), getAds()])
   const layout = home.layout ?? []
   const sidebar = home.sidebar ?? []
   // Category shortcuts sit right under the hero.
@@ -17,29 +18,35 @@ export default async function HomePage() {
   )
 
   return (
-    <div className="py-5 lg:py-7">
-      <h1 className="sr-only">
-        {settings.siteNameMl ? `${settings.siteName} — ${settings.siteNameMl}` : settings.siteName}
-      </h1>
-      {layout.length === 0 && sidebar.length === 0 ? (
-        <Container>
-          <EmptyState
-            title="ഹോംപേജ് ക്രമീകരിച്ചിട്ടില്ല"
-            description="Admin → Settings → Homepage-ൽ വിഭാഗങ്ങൾ ചേർക്കുക."
-          />
-        </Container>
-      ) : sidebar.length ? (
-        <Container>
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_21rem]">
-            <HomeBlocks blocks={layout} settings={settings} contained afterFirst={strip} />
-            <aside aria-label="സൈഡ്ബാർ" className="min-w-0">
-              <HomeBlocks blocks={sidebar} settings={settings} sidebar />
-            </aside>
-          </div>
-        </Container>
-      ) : (
-        <HomeBlocks blocks={layout} settings={settings} afterFirst={strip} />
-      )}
-    </div>
+    <>
+      {/* The top banner is for the homepage only: inner pages start straight under the menu. */}
+      <TopBanner ads={ads.top} />
+      <div className="py-5 lg:py-7">
+        <h1 className="sr-only">
+          {settings.siteNameMl
+            ? `${settings.siteName} — ${settings.siteNameMl}`
+            : settings.siteName}
+        </h1>
+        {layout.length === 0 && sidebar.length === 0 ? (
+          <Container>
+            <EmptyState
+              title="ഹോംപേജ് ക്രമീകരിച്ചിട്ടില്ല"
+              description="Admin → Settings → Homepage-ൽ വിഭാഗങ്ങൾ ചേർക്കുക."
+            />
+          </Container>
+        ) : sidebar.length ? (
+          <Container>
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_21rem]">
+              <HomeBlocks blocks={layout} settings={settings} contained afterFirst={strip} />
+              <aside aria-label="സൈഡ്ബാർ" className="min-w-0">
+                <HomeBlocks blocks={sidebar} settings={settings} sidebar />
+              </aside>
+            </div>
+          </Container>
+        ) : (
+          <HomeBlocks blocks={layout} settings={settings} afterFirst={strip} />
+        )}
+      </div>
+    </>
   )
 }

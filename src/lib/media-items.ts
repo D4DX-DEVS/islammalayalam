@@ -29,6 +29,16 @@ export function itemLabel(fields: MediaFields, kind: MediaKind): string {
 }
 
 /**
+ * The name to store after a save. A partial update (a reorder, a toggle) carries only the fields it
+ * changes, so the saved entry's own fields fill in the rest — otherwise a reorder would rename it.
+ */
+export const labelFor = (
+  incoming: MediaFields,
+  saved: MediaFields | null | undefined,
+  kind: MediaKind,
+): string => itemLabel({ ...saved, ...incoming }, kind)
+
+/**
  * The title visitors see: the one the editor typed, else the one the link's own site reports
  * (YouTube / Spotify, fetched by the caller), else the author, else the link's host.
  */
@@ -44,7 +54,7 @@ export function displayTitle(
 export const hasAnyField = (fields: MediaFields): boolean =>
   Boolean(clean(fields.link) || clean(fields.title) || clean(fields.author))
 
-/** Newest entries first, then the posts, never more than `limit` in all. */
+/** The entries (already in the admin's order) first, then the posts, never more than `limit` in all. */
 export function mergeFirst<T>(entries: T[], posts: T[], limit: number): T[] {
   return [...entries, ...posts].slice(0, Math.max(0, Math.floor(limit)))
 }

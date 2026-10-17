@@ -219,7 +219,7 @@
   border-radius: 999px;
   background: var(--im-brand-soft);
   color: var(--im-brand);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -282,7 +282,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       color: var(--im-muted);
     }
   }
@@ -309,7 +309,7 @@
 .im-account__badge {
   padding: 0.12rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
 
   &.is-on {

@@ -12,19 +12,10 @@ import { spotifyTitle } from '@/lib/spotify'
 import type { MediaEntry } from '@/features/media-items/queries'
 import type { PostCardData } from '@/features/posts/queries'
 
-const HeadphonesBadge = (
-  <span
-    className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-accent text-brand-deep"
-    aria-hidden="true"
-  >
-    <Headphones className="size-4" />
-  </span>
-)
-
 /**
  * The Audios section as a podcast-style player. Builds the episode list on the server (artwork is
  * rendered here, so the images keep their lazy loading and fallbacks) and hands it to the client
- * player. The quick entries added in the admin (link / title / author) come first, newest first,
+ * player. The quick entries added in the admin (link / title / author) come first, in the order set in the admin,
  * then the Audio posts; when there are entries, posts with no audio of their own are left out.
  * `spotifyUrl` is the show/playlist link the editor set on the section.
  */
@@ -116,7 +107,7 @@ export async function AudioShelf({
         half={half}
         label={title}
         spotifyUrl={spotifyOpenUrl(spotifyUrl)}
-        heading={<SectionHeading title={title} href={more} tone="dark" icon={HeadphonesBadge} />}
+        heading={<SectionHeading title={title} href={more} tone="dark" icon={Headphones} />}
       />
     </section>
   )

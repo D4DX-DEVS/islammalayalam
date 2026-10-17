@@ -1,49 +1,40 @@
 import Link from 'next/link'
 import type { SanitizedPermissions } from 'payload'
 import {
-  Activity,
-  BarChart3,
+  ArrowRight,
   BookOpen,
+  CheckCircle2,
+  ChevronRight,
   ExternalLink,
   FilePen,
-  FilePlus2,
-  ListPlus,
   FileText,
   Flag,
-  FolderTree,
+  ImagePlus,
   ImageUp,
-  Images,
   Inbox,
   LayoutPanelTop,
   LayoutTemplate,
+  Megaphone,
   Menu,
   Newspaper,
   PanelBottom,
-  PieChart,
   Plus,
-  Send,
   Settings,
-  SlidersHorizontal,
+  TrendingUp,
   type LucideIcon,
 } from 'lucide-react'
-import { timeAgo } from '@/lib/format'
-import { QuickAdd } from './QuickAdd'
 import type { DashboardData } from '../dashboardData'
-import { CategoryBars, ColumnChart, FormatMix, Pulse } from './charts'
-import {
-  ActivityRows,
-  MessageRows,
-  Panel,
-  PostRows,
-  StatTile,
-  StatusRows,
-  type StatusRow,
-} from './parts'
+import { QuickAdd } from './QuickAdd'
+import { RecentPosts } from './RecentPosts'
+import { ActivityRows, Panel, StatusStrip, type StatusRow } from './parts'
+import { buildQueue, queueSummary, type QueueIcon } from './queue'
+import { Pulse } from './charts'
 
 /**
- * The dashboard's layout: totals, charts, recent work, site status and the audit trail. Presentational
- * (no data access), so it can render from DashboardView's real data or from mock data. Every link and
- * panel is filtered by the signed-in user's permissions.
+ * The home screen ("Today"): what needs you, a place to start something new, the state of the site,
+ * and recent work. Totals and charts live on Reports. Presentational (no data access), so it can
+ * render from DashboardView's real data or from mock data. Every link and panel is filtered by the
+ * signed-in user's permissions.
  */
 export type DashboardUser = {
   id: string | number
@@ -56,17 +47,24 @@ type BodyProps = {
   data: DashboardData
   /** Admin route prefix, e.g. "/admin". */
   admin: string
-  /** Payload's REST route (the quick-add forms save through it), e.g. "/api". */
+  /** Payload's REST route (the quick-add form saves through it), e.g. "/api". */
   api?: string
   permissions?: SanitizedPermissions
   user: DashboardUser
   now?: Date
 }
 
-type Shortcut = { label: string; hint: string; href: string; icon: LucideIcon; allowed: boolean }
+type Tile = { label: string; href: string; icon: LucideIcon; allowed: boolean }
+type Chip = { label: string; hint: string; href: string; icon: LucideIcon; allowed: boolean }
 
-const ROLE_LABEL: Record<string, string> = { admin: 'Admin', editor: 'Editor', author: 'Author' }
 const TZ = 'Asia/Kolkata'
+
+const QUEUE_ICON: Record<QueueIcon, LucideIcon> = {
+  review: Flag,
+  postal: BookOpen,
+  inbox: Inbox,
+  draft: FilePen,
+}
 
 function greeting(now: Date): string {
   const hour = Number(
@@ -89,118 +87,52 @@ export function DashboardBody({
   const can = permissions ?? {}
   const canRead = (slug: string) => Boolean(can.collections?.[slug]?.read)
   const posts = col('posts')
-  const draftsHref = `${posts}?where[_status][equals]=draft`
-  const reviewHref = `${posts}?where[flags.needsReview][equals]=true`
   const today = new Intl.DateTimeFormat('en-IN', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    year: 'numeric',
     timeZone: TZ,
   }).format(now)
   const name = user.name || user.email?.split('@')[0] || 'there'
 
-  const stats = data.stats
-  const tiles = [
+  const queue = buildQueue({
+    stats: data.stats,
+    edges: data.queue,
+    admin,
+    canRead,
+    ownDraftsOnly: data.ownDraftsOnly,
+    now: now.getTime(),
+  })
+
+  const tiles: Tile[] = [
     {
-      label: 'Published posts',
-      value: stats.published,
+      label: 'Post',
+      href: `${posts}/create`,
       icon: Newspaper,
-      href: posts,
-      hint: data.lastPublishedAt
-        ? `Last published ${timeAgo(data.lastPublishedAt)}`
-        : 'Nothing published yet',
+      allowed: Boolean(can.collections?.posts?.create),
     },
     {
-      label: data.ownDraftsOnly ? 'Your drafts' : 'Drafts',
-      value: stats.drafts,
-      icon: FilePen,
-      href: draftsHref,
-      hint: stats.drafts > 0 ? 'Not live yet' : 'Everything is published',
-    },
-    {
-      label: 'Needs review',
-      value: stats.needsReview,
-      icon: Flag,
-      href: reviewHref,
-      hint: stats.needsReview > 0 ? 'Flagged by editors' : 'Nothing flagged',
-      flag: stats.needsReview > 0 ? ({ tone: 'warn', label: 'Action needed' } as const) : null,
-    },
-    {
-      label: 'Pages',
-      value: stats.pages,
-      icon: FileText,
-      href: col('pages'),
-      hint: 'Static and KB pages',
-    },
-    {
-      label: 'Media files',
-      value: stats.media,
-      icon: Images,
-      href: col('media'),
-      hint: 'Images and PDF',
-    },
-    {
-      label: 'New messages',
-      value: stats.newMessages,
-      icon: Inbox,
-      href: `${col('contact-messages')}?where[status][equals]=new`,
-      hint: stats.newMessages > 0 ? 'Waiting in the inbox' : 'Inbox is clear',
-      flag: stats.newMessages > 0 ? ({ tone: 'info', label: 'Unread' } as const) : null,
-      hidden: !canRead('contact-messages'),
-    },
-    {
-      label: 'Postal requests',
-      value: stats.newRequests,
-      icon: BookOpen,
-      href: `${col('postal-requests')}?where[status][equals]=new`,
-      hint: stats.newRequests > 0 ? 'Waiting to be handled' : 'No new requests',
-      flag: stats.newRequests > 0 ? ({ tone: 'info', label: 'New' } as const) : null,
-      hidden: !canRead('postal-requests'),
-    },
-  ].filter((tile) => !tile.hidden)
-
-  const site = data.site
-  const siteRows: StatusRow[] = site
-    ? [
-        {
-          label: 'Homepage',
-          state: site.sectionsShown > 0 ? 'on' : 'off',
-          detail:
-            site.sectionsHidden > 0
-              ? `${site.sectionsShown} sections shown, ${site.sectionsHidden} hidden`
-              : `${site.sectionsShown} sections shown`,
-          href: can.globals?.homepage?.update ? `${admin}/globals/homepage` : null,
-        },
-        {
-          label: 'WhatsApp chat',
-          state: site.whatsappOn ? 'on' : 'off',
-          detail: site.whatsappOn ? 'Button shown on the site' : 'Add a number in Site settings',
-          href: can.globals?.['site-settings']?.update ? `${admin}/globals/site-settings` : null,
-        },
-        {
-          label: 'AI search',
-          state: site.aiSearchOn ? 'on' : 'off',
-          detail: site.aiSearchOn ? 'Visitors can ask questions' : 'Needs a server API key',
-        },
-      ]
-    : []
-
-  const shortcuts: Shortcut[] = [
-    {
-      label: 'New page',
-      hint: 'Static page or KB section',
+      label: 'Page',
       href: `${col('pages')}/create`,
       icon: FileText,
       allowed: Boolean(can.collections?.pages?.create),
     },
     {
-      label: 'Upload media',
-      hint: 'Images and PDF',
+      label: 'Insight',
+      href: `${col('quotes')}/create`,
+      icon: ImagePlus,
+      allowed: Boolean(can.collections?.quotes?.create),
+    },
+    {
+      label: 'Upload files',
       href: `${col('media')}/create`,
       icon: ImageUp,
       allowed: Boolean(can.collections?.media?.create),
     },
+  ]
+  const allowedTiles = tiles.filter((t) => t.allowed)
+
+  const chips: Chip[] = [
     {
       label: 'Website manager',
       hint: 'Every page and section, with where to edit it',
@@ -216,7 +148,7 @@ export function DashboardBody({
       allowed: Boolean(can.globals?.homepage?.update),
     },
     {
-      label: 'Header & menu',
+      label: 'Header and menu',
       hint: 'Top navigation',
       href: `${admin}/globals/header`,
       icon: Menu,
@@ -231,25 +163,77 @@ export function DashboardBody({
     },
     {
       label: 'Site settings',
-      hint: 'Name, social, SEO defaults',
+      hint: 'Name, social links, search defaults',
       href: `${admin}/globals/site-settings`,
       icon: Settings,
       allowed: Boolean(can.globals?.['site-settings']?.update),
     },
+    {
+      label: 'Ads banners',
+      hint: 'Top and bottom banners, with their links',
+      href: `${admin}/globals/ads-banners`,
+      icon: Megaphone,
+      allowed: Boolean(can.globals?.['ads-banners']?.update),
+    },
   ]
-  const allowedShortcuts = shortcuts.filter((s) => s.allowed)
+  const allowedChips = chips.filter((c) => c.allowed)
+
+  const site = data.site
+  const statusRows: StatusRow[] = [
+    ...(site
+      ? ([
+          {
+            label: 'Homepage',
+            state: site.sectionsShown > 0 ? 'on' : 'off',
+            detail:
+              site.sectionsHidden > 0
+                ? `${site.sectionsShown} sections shown, ${site.sectionsHidden} hidden`
+                : `${site.sectionsShown} sections shown`,
+            href: can.globals?.homepage?.update ? `${admin}/globals/homepage` : null,
+          },
+          {
+            label: 'WhatsApp chat',
+            state: site.whatsappOn ? 'on' : 'off',
+            detail: site.whatsappOn
+              ? 'The chat button is shown on the site'
+              : 'Add a number in Site settings to show the button',
+            href: can.globals?.['site-settings']?.update ? `${admin}/globals/site-settings` : null,
+          },
+          {
+            label: 'AI search',
+            state: site.aiSearchOn ? 'on' : 'off',
+            detail: site.aiSearchOn
+              ? 'Visitors can ask questions'
+              : 'Switched off. Ask the site developer to turn it on.',
+          },
+        ] satisfies StatusRow[])
+      : []),
+    {
+      label: 'Two-step login',
+      state: data.twoStepOn ? 'on' : 'off',
+      detail: data.twoStepOn ? 'Required for all staff' : 'Staff sign in with a password only',
+      href: can.globals?.['security-settings']?.update
+        ? `${admin}/globals/security-settings`
+        : null,
+    },
+  ]
+
+  const canSeeActivity = canRead('audit-logs')
+  const canQuickAdd = Boolean(can.collections?.audios?.create || can.collections?.videos?.create)
+  const hasCreate = Boolean(allowedTiles.length || canQuickAdd)
+  // The board has one column per block that this person can use, so no column is ever left empty.
+  const boardColumns = 1 + Number(hasCreate) + Number(allowedChips.length > 0)
 
   return (
     <div className="im-dash im-dash--view">
       <header className="im-dash__hero">
         <div>
-          <p className="im-dash__eyebrow">
-            {today} · {ROLE_LABEL[user.role ?? ''] ?? 'Staff'}
-          </p>
           <h1 className="im-dash__title">
             {greeting(now)}, {name}
           </h1>
-          <p className="im-dash__lead">Here is what is happening on Islam Malayalam.</p>
+          <p className="im-dash__lead">
+            {today} · {queueSummary(queue.length)}
+          </p>
         </div>
         <div className="im-dash__hero-actions">
           <a href="/" target="_blank" rel="noopener noreferrer" className="im-dash__btn">
@@ -265,126 +249,143 @@ export function DashboardBody({
         </div>
       </header>
 
-      <ul className="im-dash__stats" aria-label="Content totals">
-        {tiles.map((tile) => (
-          <li key={tile.label}>
-            <StatTile
-              label={tile.label}
-              value={tile.value}
-              hint={tile.hint}
-              href={tile.href}
-              icon={tile.icon}
-              flag={'flag' in tile ? tile.flag : null}
-            />
-          </li>
-        ))}
-      </ul>
+      <div className={`im-board im-board--${boardColumns}`}>
+        <div className="im-board__col">
+          <Panel
+            title="Needs you today"
+            className="im-dash__panel--flush im-dash__panel--queue"
+            aside={
+              queue.length ? (
+                <span className="im-dash__count">
+                  {queue.length} {queue.length === 1 ? 'item' : 'items'}
+                </span>
+              ) : null
+            }
+          >
+            {queue.length ? (
+              <ul className="im-queue">
+                {queue.map((row) => {
+                  const Icon = QUEUE_ICON[row.icon]
+                  return (
+                    <li key={row.key}>
+                      <Link href={row.href} className="im-queue__row">
+                        <span className={`im-queue__icon im-queue__icon--${row.tone}`}>
+                          <Icon aria-hidden="true" />
+                        </span>
+                        <span className="im-queue__text">
+                          <span className="im-queue__title">{row.title}</span>
+                          <span className="im-queue__detail">{row.detail}</span>
+                        </span>
+                        <span className="im-queue__count" aria-hidden="true">
+                          {row.count.toLocaleString('en-IN')}
+                        </span>
+                        <span className="im-queue__action">
+                          {row.action}
+                          <ArrowRight aria-hidden="true" />
+                        </span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <p className="im-dash__clear">
+                <CheckCircle2 aria-hidden="true" />
+                You are all caught up. Nothing is waiting for review, no new messages and no postal
+                library requests.
+              </p>
+            )}
+          </Panel>
+          <Panel title="Site status" className="im-board__grow">
+            <StatusStrip rows={statusRows} />
+          </Panel>
+        </div>
 
-      {allowedShortcuts.length ? (
-        <nav className="im-dash__quick" aria-label="Quick actions">
-          <span className="im-dash__quick-title">
-            <FilePlus2 aria-hidden="true" />
-            Quick actions
-          </span>
-          <ul>
-            {allowedShortcuts.map(({ label, hint, href, icon: Icon }) => (
-              <li key={href}>
-                <Link href={href} className="im-dash__chip" title={hint}>
-                  <Icon aria-hidden="true" />
-                  {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      ) : null}
+        {hasCreate ? (
+          <div className="im-board__col">
+            <Panel title="Create" className="im-dash__create im-board__grow">
+              {allowedTiles.length ? (
+                <ul className="im-tiles">
+                  {allowedTiles.map(({ label, href, icon: Icon }) => (
+                    <li key={href}>
+                      <Link href={href} className="im-tiles__tile">
+                        <Icon aria-hidden="true" />
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {canQuickAdd ? (
+                <QuickAdd
+                  api={api}
+                  adminBase={admin}
+                  audio={Boolean(can.collections?.audios?.create)}
+                  video={Boolean(can.collections?.videos?.create)}
+                />
+              ) : null}
+            </Panel>
+          </div>
+        ) : null}
 
-      {can.collections?.audios?.create || can.collections?.videos?.create ? (
-        <Panel title="Add audio or video" icon={ListPlus}>
-          <p className="im-dash__sub">
-            Add a link, a title and an author — all optional. New entries appear first in the
-            homepage Audios player and Videos band.
-          </p>
-          <QuickAdd
-            api={api}
-            adminBase={admin}
-            audio={Boolean(can.collections?.audios?.create)}
-            video={Boolean(can.collections?.videos?.create)}
-          />
-        </Panel>
-      ) : null}
-
-      <div className="im-dash__grid im-dash__grid--charts">
-        <Panel title="Published posts by year" icon={BarChart3} href={posts} hrefLabel="All posts">
-          <p className="im-dash__sub">
-            {data.years.length
-              ? 'How many posts went live each year.'
-              : 'Charts appear once posts are published.'}
-          </p>
-          <ColumnChart
-            columns={data.years.map((y) => ({
-              key: String(y.year),
-              label: String(y.year),
-              short: `’${String(y.year).slice(2)}`,
-              value: y.count,
-            }))}
-            noun="post"
-            heads={['Year', 'Published posts']}
-          />
-        </Panel>
-        <Panel title="Content mix" icon={PieChart} href={posts} hrefLabel="All posts">
-          <p className="im-dash__sub">Published posts by format.</p>
-          <FormatMix formats={data.formats} admin={admin} />
-        </Panel>
+        {allowedChips.length ? (
+          <div className="im-board__col im-board__col--wide">
+            <Panel title="Edit the site" className="im-board__grow">
+              <ul className="im-links">
+                {allowedChips.map(({ label, hint, href, icon: Icon }) => (
+                  <li key={href}>
+                    <Link href={href} className="im-links__row">
+                      <span className="im-links__icon">
+                        <Icon aria-hidden="true" />
+                      </span>
+                      <span className="im-links__text">
+                        <span className="im-links__label">{label}</span>
+                        <span className="im-links__hint">{hint}</span>
+                      </span>
+                      <ChevronRight className="im-links__go" aria-hidden="true" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          </div>
+        ) : null}
       </div>
 
       <div className="im-dash__grid">
-        <div className="im-dash__col">
-          <Panel
-            title={data.ownDraftsOnly ? 'Your recent drafts' : 'Recent drafts'}
-            icon={FilePen}
-            href={draftsHref}
-          >
-            <PostRows
-              rows={data.drafts}
-              admin={admin}
-              empty="No drafts. Everything is published."
-            />
-          </Panel>
-          <Panel title="Recently published" icon={Send} href={posts}>
-            <PostRows rows={data.published} admin={admin} empty="Nothing published yet." />
-          </Panel>
-          {data.stats.needsReview > 0 ? (
-            <Panel title="Needs review" icon={Flag} href={reviewHref}>
-              <PostRows rows={data.review} admin={admin} empty="Nothing is waiting for review." />
-            </Panel>
-          ) : null}
-          {canRead('audit-logs') ? (
-            <Panel title="Recent activity" icon={Activity} href={col('audit-logs')}>
-              <Pulse days={data.pulse} noun="action" />
-              <ActivityRows rows={data.activity} admin={admin} />
-            </Panel>
-          ) : null}
-        </div>
+        <Panel
+          title="Recent posts"
+          className="im-dash__panel--flush"
+          href={posts}
+          hrefLabel="See all posts"
+        >
+          <RecentPosts
+            admin={admin}
+            recent={data.recent}
+            drafts={data.drafts}
+            published={data.published}
+          />
+        </Panel>
 
-        <div className="im-dash__col">
-          {siteRows.length ? (
-            <Panel title="Site status" icon={SlidersHorizontal}>
-              <StatusRows rows={siteRows} />
-            </Panel>
-          ) : null}
-          {canRead('categories') ? (
-            <Panel title="Top categories" icon={FolderTree} href={col('categories')}>
-              <CategoryBars rows={data.categories} admin={admin} />
-            </Panel>
-          ) : null}
-          {canRead('contact-messages') ? (
-            <Panel title="Inbox" icon={Inbox} href={col('contact-messages')}>
-              <MessageRows rows={data.messages} admin={admin} />
-            </Panel>
-          ) : null}
-        </div>
+        {canSeeActivity ? (
+          <Panel title="Activity" href={col('audit-logs')} hrefLabel="Activity log">
+            <Pulse days={data.pulse} noun="action" />
+            <ActivityRows rows={data.activity} admin={admin} />
+          </Panel>
+        ) : null}
       </div>
+
+      <Link href={`${admin}/reports`} className="im-dash__reports">
+        <TrendingUp aria-hidden="true" />
+        <span>
+          Totals, posts per year and the content mix now live in <strong>Reports</strong>, one click
+          away.
+        </span>
+        <span className="im-dash__reports-go">
+          Open Reports
+          <ArrowRight aria-hidden="true" />
+        </span>
+      </Link>
     </div>
   )
 }

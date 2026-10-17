@@ -1,36 +1,31 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, Headphones, Loader2, Plus, TriangleAlert, Video } from 'lucide-react'
+import { CheckCircle2, Loader2, Plus, TriangleAlert } from 'lucide-react'
 import { hasAnyField } from '@/lib/media-items'
 
 /**
- * Quick add for the homepage's Audios and Videos: a link, a title and an author — every one of them
- * optional (at least one has to be filled in, or there would be nothing to save). Saves through
- * Payload's own REST API as the signed-in user, so access rules, link checks and the audit log apply
- * exactly as in the full editor, which stays one click away ("Edit").
+ * Quick add for the homepage's Audio and Videos, inside the dashboard's Create panel: a link, and
+ * optionally a title and an author. At least one of the three has to be filled in, or there would be
+ * nothing to save. One form with an Audio / Video switch (only the kinds this role may add are
+ * offered). It saves through Payload's own REST API as the signed-in user, so access rules, link
+ * checks and the audit log apply exactly as in the full editor, which stays one click away ("Edit").
  */
 type Kind = 'audios' | 'videos'
 
 const COPY = {
   audios: {
-    heading: 'Add audio',
-    icon: Headphones,
-    linkLabel: 'Link',
-    linkHint: 'Spotify link (plays in the player) or a direct https audio link',
-    linkPlaceholder: 'https://open.spotify.com/episode/…',
-    button: 'Add audio',
+    tab: 'Audio',
     noun: 'Audio',
+    linkPlaceholder: 'Paste a Spotify or audio link',
+    all: 'All audio',
   },
   videos: {
-    heading: 'Add video',
-    icon: Video,
-    linkLabel: 'Link',
-    linkHint: 'YouTube link (opens in a popup player)',
-    linkPlaceholder: 'https://www.youtube.com/watch?v=…',
-    button: 'Add video',
+    tab: 'Video',
     noun: 'Video',
+    linkPlaceholder: 'Paste a YouTube link',
+    all: 'All videos',
   },
 } as const
 
@@ -39,11 +34,29 @@ type Result =
   | { tone: 'error'; text: string }
   | null
 
-function AddForm({ kind, api, adminBase }: { kind: Kind; api: string; adminBase: string }) {
-  const copy = COPY[kind]
-  const Icon = copy.icon
+export function QuickAdd({
+  api,
+  adminBase,
+  audio,
+  video,
+}: {
+  /** Payload's REST route, e.g. "/api". */
+  api: string
+  adminBase: string
+  /** The signed-in user may add audio / video. */
+  audio: boolean
+  video: boolean
+}) {
+  const kinds: Kind[] = [
+    ...(audio ? (['audios'] as const) : []),
+    ...(video ? (['videos'] as const) : []),
+  ]
+  const [kind, setKind] = useState<Kind>(kinds[0] ?? 'audios')
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<Result>(null)
+  const uid = useId()
+  if (!kinds.length) return null
+  const copy = COPY[kind]
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -92,50 +105,73 @@ function AddForm({ kind, api, adminBase }: { kind: Kind; api: string; adminBase:
     }
   }
 
+  const choose = (next: Kind) => {
+    setKind(next)
+    setResult(null)
+  }
+
   return (
     <form className="im-quick-add" onSubmit={submit} noValidate>
-      <h3 className="im-quick-add__title">
-        <span className="im-dash__panel-icon">
-          <Icon aria-hidden="true" />
-        </span>
-        {copy.heading}
-        <span className="im-quick-add__optional">all fields optional</span>
-      </h3>
-      <label className="im-quick-add__field">
-        <span>{copy.linkLabel}</span>
+      <div className="im-quick-add__head">
+        <h3 className="im-quick-add__title" id={`${uid}-title`}>
+          Add audio or video
+        </h3>
+        {kinds.length > 1 ? (
+          <div className="im-seg" role="group" aria-labelledby={`${uid}-title`}>
+            {kinds.map((k) => (
+              <button
+                key={k}
+                type="button"
+                className="im-seg__btn"
+                aria-pressed={kind === k}
+                onClick={() => choose(k)}
+              >
+                {COPY[k].tab}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="im-quick-add__line">
         <input
           name="link"
           type="url"
           inputMode="url"
           autoComplete="off"
           maxLength={500}
+          aria-label={`${copy.noun} link`}
           placeholder={copy.linkPlaceholder}
         />
-        <small>{copy.linkHint}</small>
-      </label>
-      <div className="im-quick-add__row">
-        <label className="im-quick-add__field">
-          <span>Title</span>
-          <input name="title" type="text" autoComplete="off" maxLength={200} />
-        </label>
-        <label className="im-quick-add__field">
-          <span>Author</span>
-          <input name="author" type="text" autoComplete="off" maxLength={120} />
-        </label>
-      </div>
-      <div className="im-quick-add__actions">
         <button type="submit" className="im-dash__btn im-dash__btn--primary" disabled={busy}>
           {busy ? (
             <Loader2 className="im-quick-add__spin" aria-hidden="true" />
           ) : (
             <Plus aria-hidden="true" />
           )}
-          {busy ? 'Saving…' : copy.button}
+          {busy ? 'Saving…' : 'Add'}
         </button>
-        <Link href={`${adminBase}/collections/${kind}`} className="im-quick-add__all">
-          All {copy.noun.toLowerCase()}s
-        </Link>
       </div>
+
+      <details className="im-quick-add__more">
+        <summary>Add a title or author</summary>
+        <div className="im-quick-add__row">
+          <label className="im-quick-add__field">
+            <span>Title</span>
+            <input name="title" type="text" autoComplete="off" maxLength={200} />
+          </label>
+          <label className="im-quick-add__field">
+            <span>Author</span>
+            <input name="author" type="text" autoComplete="off" maxLength={120} />
+          </label>
+        </div>
+      </details>
+
+      <p className="im-quick-add__hint">
+        Title and author are optional. New entries appear first on the homepage.{' '}
+        <Link href={`${adminBase}/collections/${kind}`}>{copy.all}</Link>
+      </p>
+
       <p
         className={`im-quick-add__result${result ? ` im-quick-add__result--${result.tone}` : ''}`}
         role={result?.tone === 'error' ? 'alert' : 'status'}
@@ -160,26 +196,5 @@ function AddForm({ kind, api, adminBase }: { kind: Kind; api: string; adminBase:
         ) : null}
       </p>
     </form>
-  )
-}
-
-export function QuickAdd({
-  api,
-  adminBase,
-  audio,
-  video,
-}: {
-  /** Payload's REST route, e.g. "/api". */
-  api: string
-  adminBase: string
-  /** The signed-in user may add audio / video. */
-  audio: boolean
-  video: boolean
-}) {
-  return (
-    <div className={`im-quick-add-grid${audio && video ? ' im-quick-add-grid--two' : ''}`}>
-      {audio ? <AddForm kind="audios" api={api} adminBase={adminBase} /> : null}
-      {video ? <AddForm kind="videos" api={api} adminBase={adminBase} /> : null}
-    </div>
   )
 }

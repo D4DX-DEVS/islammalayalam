@@ -13,7 +13,8 @@ async function load(collection: 'audios' | 'videos', limit: number): Promise<Med
   const payload = await getPayloadClient()
   const res = await payload.find({
     collection,
-    sort: '-createdAt',
+    // The order set in the admin list (top row first); entries not placed yet follow, newest first.
+    sort: ['-_order', '-createdAt'],
     limit: MAX,
     depth: 0,
     pagination: false,
@@ -30,14 +31,14 @@ async function load(collection: 'audios' | 'videos', limit: number): Promise<Med
     .slice(0, Math.max(0, limit))
 }
 
-/** Newest first. Cached; purged when an entry is saved (see payload/hooks/revalidate.ts). */
+/** In the admin's order. Cached; purged when an entry is saved or moved (see payload/hooks/revalidate.ts). */
 export const listAudioEntries = cached(
-  'audios:list:v4',
+  'audios:list:v5',
   [collectionTag('audios')],
   (limit: number) => load('audios', limit),
 )
 export const listVideoEntries = cached(
-  'videos:list:v4',
+  'videos:list:v5',
   [collectionTag('videos')],
   (limit: number) => load('videos', limit),
 )

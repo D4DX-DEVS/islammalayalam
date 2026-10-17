@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, LayoutGrid } from 'lucide-react'
 import { CARD } from '@/components/cards/PostCard'
 import { PostImage } from '@/components/cards/PostImage'
 import { SectionHeading } from '@/components/ui/SectionHeading'
@@ -35,7 +35,7 @@ export async function TopicGrid({ block, half }: { block: TopicGridBlock; half: 
 
   return (
     <section>
-      <SectionHeading title={block.title || 'തിരഞ്ഞെടുക്ക വിഷയങ്ങൾ'} />
+      <SectionHeading title={block.title || 'തിരഞ്ഞെടുക്ക വിഷയങ്ങൾ'} icon={LayoutGrid} />
       <ul className={`grid grid-cols-2 gap-3 sm:gap-4 ${half ? '' : 'lg:grid-cols-4'}`}>
         {tiles.map(({ category, latest, total }) => {
           const own = isCategory(category.image) ? category.image : null

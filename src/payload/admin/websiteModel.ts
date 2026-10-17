@@ -1,5 +1,6 @@
 import { whatsappLink } from '@/lib/whatsapp'
-import type { Category, Footer, Header, Homepage, SiteSetting } from '@/payload-types'
+import { adsRow, shownAds as shown } from '@/payload/admin/adsSummary'
+import type { AdsBanner, Category, Footer, Header, Homepage, SiteSetting } from '@/payload-types'
 
 /**
  * The "Website manager" model: the public site as an ordered list of sections, each with a plain
@@ -25,6 +26,7 @@ export type SectionIcon =
   | 'faq'
   | 'quote'
   | 'reels'
+  | 'shorts'
   | 'links'
   | 'contact'
   | 'social'
@@ -82,7 +84,7 @@ function describeBlock(
   block: Block,
   index: number,
   edit: { href: string | null; label: string },
-  extras: { audiosWithoutAudio?: number | null } = {},
+  extras: { audiosWithoutAudio?: number | null; bottomAds?: number } = {},
 ): SectionRow {
   const base = {
     key: `${block.blockType}-${block.id ?? index}`,
@@ -155,8 +157,8 @@ function describeBlock(
         ...base,
         label: block.title || 'E-Books',
         icon: 'ebook',
-        detail: `Cover shelf · ${scope} · ${plural(block.limit, 'book')} · ${plural(block.banners?.length ?? 0, 'banner ad')} below · ${WIDTH(block)}`,
-        note: 'Add the cover image and the PDF in each E-book post. Banner ads (image + link) are added on this section.',
+        detail: `Cover shelf · ${scope} · ${plural(block.limit, 'book')} · ${plural(extras.bottomAds ?? 0, 'banner ad')} below · ${WIDTH(block)}`,
+        note: 'Add the cover image and the PDF in each E-book post. The banner ads below the shelf are edited under Ads banners → Bottom ads banner.',
       }
     }
     case 'richText':
@@ -201,6 +203,13 @@ function describeBlock(
         icon: 'reels',
         detail: `${plural(block.videos?.length ?? 0, 'short video')} · YouTube Shorts`,
       }
+    case 'shorts':
+      return {
+        ...base,
+        label: block.title || 'Shorts',
+        icon: 'shorts',
+        detail: `Latest YouTube Shorts from ${block.channel || 'a channel'} · loads new ones by itself`,
+      }
     case 'quickLinks':
       return {
         ...base,
@@ -242,6 +251,8 @@ export type WebsiteInput = {
   can: SitePermissions
   homepage: Homepage | null
   header: Header | null
+  /** The Ads banners global (top and bottom ad banners). */
+  ads?: AdsBanner | null
   footer: Footer | null
   settings: SiteSetting | null
   categories: Category[]
@@ -256,7 +267,7 @@ export type WebsiteInput = {
     authors: number | null
     media: number | null
     redirects: number | null
-    /** Active quotes (the daily quote in the homepage sidebar). */
+    /** Active quotes, shown as "Insights" (the homepage sidebar slider and its archive). */
     quotes?: number | null
     /** Published audio posts that have neither a Spotify link nor a hosted audio link. */
     audiosWithoutAudio?: number | null
@@ -271,6 +282,7 @@ export function buildWebsite({
   can,
   homepage,
   header,
+  ads,
   footer,
   settings,
   categories,
@@ -293,10 +305,9 @@ export function buildWebsite({
   const stripShown = categories.filter((c) => c.showInStrip !== false && !c.hidden).length
 
   const layout = (homepage?.layout ?? []) as Block[]
-  const rows: SectionRow[] = layout.map((b, i) =>
-    describeBlock(b, i, homeEdit, { audiosWithoutAudio: counts.audiosWithoutAudio }),
-  )
-  // The strip sits right under the hero; the Daily Quote sidebar is added beside the first lead block
+  const extras = { audiosWithoutAudio: counts.audiosWithoutAudio, bottomAds: shown(ads?.bottom) }
+  const rows: SectionRow[] = layout.map((b, i) => describeBlock(b, i, homeEdit, extras))
+  // The strip sits right under the hero; the Insights sidebar is added beside the first lead block
   // when the editor has not placed a topics block (see HomeBlocks.leadWithAside).
   const heroAt = layout.findIndex((b) => b.blockType === 'featuredSlider')
   rows.splice(heroAt + 1, 0, {
@@ -319,26 +330,24 @@ export function buildWebsite({
       )
       rows.splice(at + 1, 0, {
         key: 'auto-quote-sidebar',
-        label: 'Daily quote sidebar',
+        label: 'Insights sidebar',
         icon: 'quote',
         auto: true,
         detail:
-          'The right-hand 25% beside the lead section: today’s quote poster with the share options (a site card until the first quote is added)',
+          'The right-hand 25% beside the lead section: a slider of the first 5 Insights posters with the share options, and “View More” for the archive (a site card until the first one is added)',
         editHref:
           can.createCollection('quotes') || can.updateCollection('quotes') ? col('quotes') : null,
-        editLabel: 'Manage quotes',
+        editLabel: 'Manage insights',
         viewHref: '/',
       })
     }
   }
 
   const sidebar = ((homepage?.sidebar ?? []) as Block[]).map((b, i) =>
-    describeBlock(b, i, homeEdit, { audiosWithoutAudio: counts.audiosWithoutAudio }),
+    describeBlock(b, i, homeEdit, extras),
   )
 
-  const topBannerOn =
-    Boolean(header?.topBanner?.image || header?.topBanner?.mobileImage) &&
-    !header?.topBanner?.hidden
+  const adsEdit = can.updateGlobal('ads-banners') ? global('ads-banners') : null
 
   const site: SectionRow[] = [
     {
@@ -352,19 +361,22 @@ export function buildWebsite({
       editLabel: 'Edit header',
       viewHref: '/',
     },
-    {
+    adsRow({
       key: 'top-banner',
-      label: 'Top banner',
-      icon: 'banner',
-      detail: topBannerOn
-        ? `Full-width image right below the menu bar${header?.topBanner?.mobileImage ? ' (with a phone version)' : ''}`
-        : header?.topBanner?.hidden
-          ? 'Switched off — tick “Hide the top banner” off in Header & menu → Top banner to show it again'
-          : 'Not shown yet: add an image under Header & menu → Top banner',
-      editHref: can.updateGlobal('header') ? global('header') : null,
-      editLabel: topBannerOn ? 'Edit banner' : 'Add a banner',
-      viewHref: '/',
-    },
+      label: 'Top ads banner',
+      rows: ads?.top,
+      what: 'Wide banner under the menu bar of the homepage',
+      empty: 'Not shown yet: add a banner under Ads banners → Top ads banner',
+      editHref: adsEdit,
+    }),
+    adsRow({
+      key: 'bottom-banners',
+      label: 'Bottom ads banner',
+      rows: ads?.bottom,
+      what: 'Banners below the e-book shelf of the homepage',
+      empty: 'Not shown yet: add a banner under Ads banners → Bottom ads banner',
+      editHref: adsEdit,
+    }),
     {
       key: 'settings',
       label: 'Logo, tagline, contact & social links',
@@ -400,18 +412,18 @@ export function buildWebsite({
     },
     {
       key: 'daily-quote',
-      label: 'Daily quote',
+      label: 'Insights',
       icon: 'quote',
       detail: counts.quotes
-        ? `${plural(counts.quotes, 'active quote')}: one poster a day in the homepage sidebar beside the first lead section, with sharing to every network`
-        : 'Not shown yet: add a quote and a poster appears in the homepage sidebar beside the first lead section',
+        ? `${plural(counts.quotes, 'active insight')}: the first 5 slide in the homepage sidebar beside the first lead section, with sharing to every network; the rest are in the “View More” archive`
+        : 'Not shown yet: add an insight and a poster slider appears in the homepage sidebar beside the first lead section',
       note:
         counts.quotes === 0
           ? 'Until there is a quote, the section beside it keeps the full width.'
           : undefined,
       editHref:
         can.createCollection('quotes') || can.updateCollection('quotes') ? col('quotes') : null,
-      editLabel: counts.quotes ? 'Manage quotes' : 'Add a quote',
+      editLabel: counts.quotes ? 'Manage insights' : 'Add an insight',
       viewHref: '/',
     },
     {

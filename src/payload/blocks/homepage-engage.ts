@@ -1,6 +1,7 @@
 import type { Block, Field } from 'payload'
 import { linkGroup } from '@/payload/fields'
 import { youtubeId } from '@/lib/security/url'
+import { shortsPage } from '@/lib/youtube-shorts'
 
 /**
  * Engagement blocks from the client's revamp brief: quote of the day (flyer), reels
@@ -88,6 +89,39 @@ export const ReelsBlock: Block = {
       ],
     },
     linkGroup('moreLink', { required: false }),
+  ],
+}
+
+export const ShortsBlock: Block = {
+  slug: 'shorts',
+  interfaceName: 'ShortsBlock',
+  labels: { singular: 'YouTube Shorts (new ones appear by themselves)', plural: 'YouTube Shorts' },
+  fields: [
+    heading('Shorts'),
+    {
+      name: 'channel',
+      type: 'text',
+      required: true,
+      defaultValue: '@Dialogue_Media',
+      maxLength: 200,
+      admin: {
+        description:
+          'The YouTube channel the Shorts come from: its @handle, or its address (youtube.com/@… or youtube.com/channel/UC…). Nothing to upload: a Short published on that channel shows here by itself within about 15 minutes.',
+      },
+      validate: (value: unknown) =>
+        typeof value === 'string' && shortsPage(value)
+          ? true
+          : 'Enter a YouTube channel: @handle, or a youtube.com channel address',
+    },
+    {
+      name: 'limit',
+      type: 'number',
+      defaultValue: 12,
+      min: 4,
+      max: 24,
+      required: true,
+      label: 'How many Shorts to show',
+    },
   ],
 }
 

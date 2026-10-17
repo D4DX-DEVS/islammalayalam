@@ -1,7 +1,14 @@
 import { Container } from '@/components/ui/Container'
 import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton'
 
-export type SectionSkeletonVariant = 'hero' | 'split' | 'tiles' | 'grid' | 'list' | 'band'
+export type SectionSkeletonVariant =
+  | 'hero'
+  | 'split'
+  | 'tiles'
+  | 'grid'
+  | 'list'
+  | 'band'
+  | 'shorts'
 
 /** Skeletons mirror the real layouts (same grids, radii and aspect ratios) so nothing jumps on load. */
 const CARD_FRAME = 'rounded-card bg-card shadow-card ring-1 ring-line/70'
@@ -73,6 +80,25 @@ export function SectionSkeleton({ variant = 'split' }: { variant?: SectionSkelet
             ))}
           </div>
         </Container>
+      </div>
+    )
+  }
+  if (variant === 'shorts') {
+    return (
+      <div className="rounded-panel bg-brand-soft/60 px-4 py-6 sm:px-7 sm:py-8">
+        <div className="mb-6 h-8 w-40 animate-pulse rounded-md bg-line" />
+        <div className="flex gap-4 overflow-hidden">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div
+              key={i}
+              className="w-[46%] shrink-0 sm:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-4rem)/5)]"
+            >
+              <div className="aspect-[9/16] animate-pulse rounded-2xl bg-line" />
+              <div className="mt-3 h-4 w-4/5 animate-pulse rounded bg-line" />
+              <div className="mt-2 h-3 w-1/3 animate-pulse rounded bg-line" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }

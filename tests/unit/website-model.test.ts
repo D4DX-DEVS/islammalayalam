@@ -146,6 +146,22 @@ describe('website manager model', () => {
     )
   })
 
+  it('lists the Shorts section where it sits, naming its channel and that it updates by itself', () => {
+    const withShorts = [
+      ...layout.slice(0, 2),
+      { id: 's', blockType: 'shorts', title: 'Shorts', channel: '@Dialogue_Media', limit: 12 },
+      ...layout.slice(2),
+    ]
+    const rows = buildWebsite(input({ homepage: { layout: withShorts } as never })).homepage
+    const shorts = rows.find((r) => r.key === 'shorts-s')
+    expect(shorts).toMatchObject({ label: 'Shorts', icon: 'shorts' })
+    expect(shorts?.detail).toContain('@Dialogue_Media')
+    expect(shorts?.detail).toContain('by itself')
+    // Right above the question-and-answer grid, as the editor placed it.
+    const keys = rows.map((r) => r.key)
+    expect(keys.indexOf('shorts-s')).toBe(keys.indexOf('categoryGrid-b') - 1)
+  })
+
   it('marks hidden sections', () => {
     const hidden = layout.map((b) => (b.id === 'b' ? { ...b, hidden: true } : b))
     const data = buildWebsite(input({ homepage: { layout: hidden } as never }))
@@ -158,7 +174,8 @@ describe('website manager model', () => {
     expect(open.homepage[0]!.editHref).toBe('/admin/globals/homepage')
     expect(open.site.map((r) => r.editHref)).toEqual([
       '/admin/globals/header',
-      '/admin/globals/header', // the top banner lives in Header & menu
+      '/admin/globals/ads-banners', // the top ads banner
+      '/admin/globals/ads-banners', // the bottom ads banner
       '/admin/globals/site-settings',
       '/admin/globals/footer',
       '/admin/globals/site-settings', // WhatsApp number lives in Site settings
@@ -197,14 +214,17 @@ describe('website manager model', () => {
     const none = buildWebsite(input({ counts: counts(0) })).site.find(
       (r) => r.key === 'daily-quote',
     )
-    expect(none).toMatchObject({ editLabel: 'Add a quote', editHref: '/admin/collections/quotes' })
+    expect(none).toMatchObject({
+      editLabel: 'Add an insight',
+      editHref: '/admin/collections/quotes',
+    })
     expect(none?.note).toMatch(/full width/)
 
     const some = buildWebsite(input({ counts: counts(3) })).site.find(
       (r) => r.key === 'daily-quote',
     )
-    expect(some).toMatchObject({ editLabel: 'Manage quotes' })
-    expect(some?.detail).toMatch(/3 active quotes/)
+    expect(some).toMatchObject({ editLabel: 'Manage insights' })
+    expect(some?.detail).toMatch(/3 active insights/)
     expect(some?.note).toBeUndefined()
 
     // A role that cannot touch quotes gets no edit link.
@@ -212,17 +232,52 @@ describe('website manager model', () => {
     expect(locked.find((r) => r.key === 'daily-quote')?.editHref).toBeNull()
   })
 
-  it('describes the top banner and what to do when it is empty or hidden', () => {
-    const find = (header: unknown) =>
-      buildWebsite(input({ header: header as never })).site.find((r) => r.key === 'top-banner')
-    expect(find({ topBanner: { image: 'm1' } })).toMatchObject({ editLabel: 'Edit banner' })
-    expect(find({ topBanner: { image: 'm1', mobileImage: 'm2' } })?.detail).toMatch(/phone version/)
-    expect(find({ topBanner: { image: 'm1', hidden: true } })).toMatchObject({
-      editLabel: 'Add a banner',
-      detail: expect.stringMatching(/Switched off/),
+  it('describes the top and bottom ad banners and what to do when there are none or all are hidden', () => {
+    const rows = (ads: unknown) => {
+      const site = buildWebsite(input({ ads: ads as never })).site
+      return {
+        top: site.find((r) => r.key === 'top-banner'),
+        bottom: site.find((r) => r.key === 'bottom-banners'),
+      }
+    }
+    const on = rows({
+      top: [{ image: 'm1' }, { image: 'm2', active: false }],
+      bottom: [{ image: 'm3' }, { image: 'm4' }],
     })
-    expect(find({})).toMatchObject({ editLabel: 'Add a banner' })
-    expect(find(null)?.editLabel).toBe('Add a banner')
+    expect(on.top).toMatchObject({
+      label: 'Top ads banner',
+      editLabel: 'Edit banners',
+      editHref: '/admin/globals/ads-banners',
+    })
+    expect(on.top?.detail).toMatch(/1 banner \(1 hidden\)/)
+    expect(on.bottom).toMatchObject({ label: 'Bottom ads banner', editLabel: 'Edit banners' })
+    expect(on.bottom?.detail).toMatch(/2 banners/)
+
+    const hidden = rows({ top: [{ image: 'm1', active: false }] })
+    expect(hidden.top).toMatchObject({ editLabel: 'Add a banner' })
+    expect(hidden.top?.detail).toMatch(/All hidden/)
+
+    for (const none of [{}, null, undefined, { top: [], bottom: [] }]) {
+      const empty = rows(none)
+      expect(empty.top).toMatchObject({ editLabel: 'Add a banner' })
+      expect(empty.top?.detail).toMatch(/Not shown yet/)
+      expect(empty.bottom?.detail).toMatch(/Bottom ads banner/)
+    }
+
+    const locked = buildWebsite(
+      input({ can: nothing, ads: { top: [{ image: 'm1' }] } as never }),
+    ).site
+    expect(locked.find((r) => r.key === 'top-banner')?.editHref).toBeNull()
+  })
+
+  it('counts the bottom banners on the e-book section from Ads banners', () => {
+    const ebook = (ads: unknown) =>
+      buildWebsite(input({ ads: ads as never })).homepage.find((r) => r.icon === 'ebook')
+    expect(ebook({ bottom: [{ image: 'a' }, { image: 'b' }] })?.detail).toMatch(
+      /2 banner ads below/,
+    )
+    expect(ebook(null)?.detail).toMatch(/0 banner ads below/)
+    expect(ebook(null)?.note).toMatch(/Ads banners/)
   })
 
   it('warns when audio posts have no audio yet', () => {

@@ -27,8 +27,9 @@ export function mediaDir(env: NodeJS.ProcessEnv = process.env): string {
  */
 export const Media: CollectionConfig = {
   slug: 'media',
+  labels: { singular: 'File', plural: 'Files and images' },
   admin: {
-    group: 'Content',
+    group: 'Library',
     defaultColumns: ['filename', 'alt', 'mimeType', 'filesize', 'updatedAt'],
   },
   custom: totpPublicRead,

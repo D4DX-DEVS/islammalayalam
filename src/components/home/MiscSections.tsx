@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react'
+import { ArrowUpRight, FileText, Link2, Mail, MapPin, Phone, Users } from 'lucide-react'
 import { PANEL } from '@/components/home/CategorySections'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { SmartLink } from '@/components/ui/SmartLink'
@@ -19,7 +19,7 @@ import type {
 export function RichTextSection({ block }: { block: RichTextBlock }) {
   return (
     <section>
-      {block.title ? <SectionHeading title={block.title} /> : null}
+      {block.title ? <SectionHeading title={block.title} icon={FileText} /> : null}
       <RichText data={block.content} />
     </section>
   )
@@ -65,7 +65,7 @@ export function QuickLinksSection({ block }: { block: QuickLinksBlock }) {
   if (!links.length) return null
   return (
     <section className={PANEL}>
-      <SectionHeading title={block.title || 'Quick Links'} />
+      <SectionHeading title={block.title || 'Quick Links'} icon={Link2} />
       <ul className="space-y-1">
         {links.map((l, i) => (
           <li key={i}>
@@ -99,7 +99,7 @@ export function FollowUsSection({
 }) {
   return (
     <section className={PANEL}>
-      <SectionHeading title={block.title || 'Follow Us'} />
+      <SectionHeading title={block.title || 'Follow Us'} icon={Users} />
       <SocialLinks social={settings.social} size="md" variant="solid" className="flex-wrap" />
     </section>
   )
@@ -119,7 +119,7 @@ export function QuickContactSection({
     'mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand'
   return (
     <section className={PANEL}>
-      <SectionHeading title={block.title || 'Quick Contact'} />
+      <SectionHeading title={block.title || 'Quick Contact'} icon={Mail} />
       {block.intro ? <p className="mb-4 text-sm">{block.intro}</p> : null}
       <address className="space-y-3 text-sm not-italic">
         {c?.address ? (

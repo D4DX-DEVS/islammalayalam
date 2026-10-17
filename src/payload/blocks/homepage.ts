@@ -1,7 +1,13 @@
 import type { Block, Field } from 'payload'
 import { linkGroup, validateSpotifyLink } from '@/payload/fields'
 import { simpleEditor } from '@/payload/editor'
-import { CallToActionBlock, FaqBlock, QuoteOfDayBlock, ReelsBlock } from './homepage-engage'
+import {
+  CallToActionBlock,
+  FaqBlock,
+  QuoteOfDayBlock,
+  ReelsBlock,
+  ShortsBlock,
+} from './homepage-engage'
 
 /**
  * Homepage / sidebar layout blocks. Editors compose the homepage from these in the Homepage
@@ -182,28 +188,6 @@ export const MediaShelfBlock: Block = {
           'Your Spotify show or playlist (Share → Copy link in Spotify). It adds the Spotify button to the player. Each audio post can also have its own Spotify link.',
       },
     },
-    {
-      name: 'banners',
-      label: 'Banner ads',
-      type: 'array',
-      maxRows: 4,
-      labels: { singular: 'Banner ad', plural: 'Banner ads' },
-      admin: {
-        condition: (_, sibling) => sibling?.format === 'ebook',
-        description:
-          'Banner images shown in a row below the e-book shelf, each with its own link. Wide images (about 4:1, like 676 × 164) fit best.',
-      },
-      fields: [
-        {
-          name: 'image',
-          type: 'upload',
-          relationTo: 'media',
-          required: true,
-          filterOptions: { mimeType: { contains: 'image' } },
-        },
-        linkGroup('link', { required: false }),
-      ],
-    },
   ],
 }
 
@@ -297,6 +281,7 @@ export const mainColumnBlocks: Block[] = withHide([
   FaqBlock,
   QuoteOfDayBlock,
   ReelsBlock,
+  ShortsBlock,
 ])
 export const sidebarBlocks: Block[] = withHide([
   CategoryListBlock,

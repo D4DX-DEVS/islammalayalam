@@ -67,7 +67,7 @@ export const Posts: CollectionConfig = {
   slug: 'posts',
   admin: {
     useAsTitle: 'title',
-    group: 'Content',
+    group: 'Write',
     defaultColumns: ['title', 'postNumber', 'primaryCategory', '_status', 'publishedAt'],
     listSearchableFields: ['title', 'postNumber'],
   },

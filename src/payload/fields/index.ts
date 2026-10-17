@@ -175,6 +175,13 @@ export function linkGroup(name = 'link', opts: { required?: boolean } = {}): Fie
   }
 }
 
+/** An ad's link: a full web address or a page of this site; empty means "no link". */
+export const validateAdLink: TextFieldSingleValidation = (value) =>
+  !value ||
+  (isSafeHref(value) && (value.trim().startsWith('/') || /^https?:\/\//i.test(value.trim())))
+    ? true
+    : 'Enter a web address that starts with https://, or a page of this site like /about-us/'
+
 /** For a text field that holds a Spotify link (episode, show, playlist, album or track); empty is fine. */
 export const validateSpotifyLink: TextFieldSingleValidation = (value) =>
   !value || spotifyOpenUrl(value)

@@ -48,6 +48,9 @@ const ROW_ACTIONS = new Set([
   'redirects',
   'contact-messages',
   'users',
+  'audios',
+  'videos',
+  'quotes',
 ])
 const rowActionsField: Field = {
   name: 'rowActions',
@@ -149,6 +152,12 @@ export default buildConfig({
         website: {
           Component: '/payload/admin/website/WebsiteView#WebsiteView',
           path: '/website',
+          exact: true,
+        },
+        // Totals and charts, kept off the Today screen.
+        reports: {
+          Component: '/payload/admin/dashboard/ReportsView#ReportsView',
+          path: '/reports',
           exact: true,
         },
       },

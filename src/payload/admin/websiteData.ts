@@ -51,6 +51,7 @@ export async function loadWebsite(
   const [
     homepage,
     header,
+    ads,
     footer,
     settings,
     categories,
@@ -69,6 +70,7 @@ export async function loadWebsite(
   ] = await Promise.all([
     payload.findGlobal({ slug: 'homepage', depth: 1, ...as }).catch(() => null),
     payload.findGlobal({ slug: 'header', depth: 0, ...as }).catch(() => null),
+    payload.findGlobal({ slug: 'ads-banners', depth: 0, ...as }).catch(() => null),
     payload.findGlobal({ slug: 'footer', depth: 0, ...as }).catch(() => null),
     payload.findGlobal({ slug: 'site-settings', depth: 0, ...as }).catch(() => null),
     payload
@@ -108,6 +110,7 @@ export async function loadWebsite(
     can,
     homepage,
     header,
+    ads,
     footer,
     settings,
     categories,

@@ -6,13 +6,14 @@ import type {
 import { isEditor, publicActiveOrStaff, totpPublicRead } from '@/payload/access'
 import { validateOptionalHttps, validateYouTubeLink } from '@/payload/fields'
 import { contentHooks } from '@/payload/hooks'
-import { itemLabel, type MediaKind } from '@/lib/media-items'
+import { labelFor, type MediaKind } from '@/lib/media-items'
 
 /**
  * Quick audio and video entries: a link, a title and an author — every one optional — added in
  * seconds from the admin dashboard (or here). They feed the homepage Audios player and Videos
- * band, newest first, next to the Audio / Video posts. An entry with no usable link is kept in the
- * admin but not shown on the site.
+ * band, in the order set in the admin list (drag a row or use its arrows; new entries start at the
+ * top), next to the Audio / Video posts. An entry with no usable link is kept in the admin but not
+ * shown on the site.
  */
 function mediaLinks(config: {
   slug: string
@@ -23,26 +24,41 @@ function mediaLinks(config: {
   linkHelp: string
   siteHelp: string
 }): CollectionConfig {
-  const setLabel: CollectionBeforeChangeHook = ({ data }) => ({
+  const setLabel: CollectionBeforeChangeHook = ({ data, originalDoc }) => ({
     ...data,
-    label: itemLabel(data ?? {}, config.kind),
+    label: labelFor(data ?? {}, originalDoc, config.kind),
   })
   return {
     slug: config.slug,
     labels: { singular: config.singular, plural: config.plural },
     admin: {
       useAsTitle: 'label',
-      group: 'Content',
-      defaultColumns: ['label', 'author', 'link', 'active', 'createdAt'],
+      group: 'Library',
+      defaultColumns: ['moveArrows', 'label', 'author', 'link', 'active', 'createdAt'],
       listSearchableFields: ['label', 'title', 'author', 'link'],
       description: config.siteHelp,
+      components: {
+        beforeListTable: ['/payload/admin/media/ListOrderHint#ListOrderHint'],
+        edit: { SaveButton: '/payload/admin/media/SaveButtons#SaveButtons' },
+      },
     },
     custom: totpPublicRead,
-    defaultSort: '-createdAt',
+    // Position = order on the site. Drag handles come from `orderable`; the top row is shown first.
+    orderable: true,
+    defaultSort: '-_order',
     access: { read: publicActiveOrStaff, create: isEditor, update: isEditor, delete: isEditor },
     hooks: contentHooks({ beforeChange: [setLabel] }),
     fields: [
-      { name: 'label', type: 'text', admin: { hidden: true } },
+      {
+        name: 'moveArrows',
+        type: 'ui',
+        label: 'Move',
+        admin: {
+          disableBulkEdit: true,
+          components: { Cell: '/payload/admin/media/MoveArrows#MoveArrows' },
+        },
+      },
+      { name: 'label', type: 'text', label: 'Name', admin: { hidden: true } },
       {
         name: 'link',
         type: 'text',
@@ -81,12 +97,12 @@ export const Audios = mediaLinks({
   slug: 'audios',
   kind: 'audio',
   singular: 'Audio',
-  plural: 'Audios',
+  plural: 'Audio',
   validateLink: validateOptionalHttps,
   linkHelp:
     'Optional. A Spotify link (episode, show or playlist — it plays inside the player) or a direct https link to an audio file.',
   siteHelp:
-    'Quick audio entries for the homepage Audios player: just a link, a title and an author — all optional. Newest first.',
+    'Quick audio entries for the homepage Audios player: just a link, a title and an author — all optional. Drag the rows (or use the arrows) to set the order they show in on the site; the top one comes first.',
 })
 
 export const Videos = mediaLinks({
@@ -97,5 +113,5 @@ export const Videos = mediaLinks({
   validateLink: validateYouTubeLink,
   linkHelp: 'Optional. A YouTube link. The video opens in a popup player on the homepage.',
   siteHelp:
-    'Quick video entries for the homepage Videos band: just a link, a title and an author — all optional. Newest first.',
+    'Quick video entries for the homepage Videos band: just a link, a title and an author — all optional. Drag the rows (or use the arrows) to set the order they show in on the site; the top one comes first.',
 })

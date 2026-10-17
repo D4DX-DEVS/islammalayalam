@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Headphones } from 'lucide-react'
+import { Headphones, Layers } from 'lucide-react'
 import { Breadcrumbs } from '@/components/article/Breadcrumbs'
 import { ShareButtons } from '@/components/article/ShareButtons'
 import { PostImage } from '@/components/cards/PostImage'
@@ -54,7 +54,7 @@ async function RelatedPosts({ post, category }: { post: Post; category: Category
   if (!docs.length) return null
   return (
     <section className="mt-20">
-      <SectionHeading title="Related" href={categoryHref(category.slug)} />
+      <SectionHeading title="Related" icon={Layers} href={categoryHref(category.slug)} />
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
         {docs.map((p) => (
           <li key={p.id}>

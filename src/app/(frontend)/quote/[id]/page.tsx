@@ -3,12 +3,12 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { Breadcrumbs } from '@/components/article/Breadcrumbs'
-import { absoluteUrl } from '@/components/quotes/DailyQuoteCard'
 import { QuotePoster } from '@/components/quotes/QuotePoster'
 import { QuoteShare } from '@/components/quotes/QuoteShare'
 import { Container } from '@/components/ui/Container'
 import { getQuoteById } from '@/features/quotes/queries'
 import { getSiteSettings } from '@/features/site/queries'
+import { absoluteUrl } from '@/lib/absolute-url'
 import { formatDate } from '@/lib/format'
 
 type Props = { params: Promise<{ id: string }> }
@@ -18,11 +18,11 @@ const clip = (value: string, max: number) =>
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const quote = await getQuoteById((await params).id)
-  if (!quote) return { title: 'Daily Quote' }
-  const title = quote.text ? clip(quote.text.replace(/\s+/g, ' '), 70) : 'Daily Quote'
+  if (!quote) return { title: 'Insights' }
+  const title = quote.text ? clip(quote.text.replace(/\s+/g, ' '), 70) : 'Insights'
   const description = quote.text
     ? clip([quote.text, quote.source && `— ${quote.source}`].filter(Boolean).join(' '), 200)
-    : 'Daily Quote — Islam Malayalam'
+    : 'Insights — Islam Malayalam'
   return {
     title,
     description,
@@ -44,17 +44,17 @@ export default async function QuotePage({ params }: Props) {
   const [quote, settings] = await Promise.all([getQuoteById((await params).id), getSiteSettings()])
   if (!quote) notFound()
   const shareText = [quote.text, quote.source ? `— ${quote.source}` : ''].filter(Boolean).join(' ')
-  const date = formatDate(quote.showOn)
+  const date = formatDate(quote.date)
 
   return (
     <Container className="py-6 lg:py-10">
-      <Breadcrumbs items={[{ label: 'Daily Quote' }]} />
+      <Breadcrumbs items={[{ label: 'Insights', href: '/insights/' }, { label: 'Insight' }]} />
       <article className="mx-auto max-w-2xl rounded-panel bg-card p-5 shadow-card ring-1 ring-line/70 sm:p-8">
         <header className="mb-6 space-y-1">
-          <h1 className="text-2xl font-bold text-title sm:text-3xl">Daily Quote</h1>
+          <h1 className="text-2xl font-normal text-title sm:text-3xl">Insights</h1>
           {date ? (
             <p className="text-sm text-muted">
-              <time dateTime={quote.showOn ?? undefined} lang="en">
+              <time dateTime={quote.date ?? undefined} lang="en">
                 {date}
               </time>
             </p>
@@ -88,11 +88,11 @@ export default async function QuotePage({ params }: Props) {
       </article>
       <p className="mt-6 text-center">
         <Link
-          href="/"
+          href="/insights/"
           className="inline-flex min-h-11 items-center gap-2 font-semibold text-brand hover:text-brand-strong"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-          Back to home
+          All insights
         </Link>
       </p>
     </Container>

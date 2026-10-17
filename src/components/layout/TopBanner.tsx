@@ -1,36 +1,12 @@
 import { getImageProps } from 'next/image'
 import { Container } from '@/components/ui/Container'
 import { SmartLink } from '@/components/ui/SmartLink'
-import { resolveLink } from '@/lib/links'
-import { mediaSrc } from '@/lib/media'
-import type { Header, Media } from '@/payload-types'
+import type { Ad } from '@/lib/ads'
 
-type Picture = { src: string; width: number; height: number }
-
-const asPicture = (value: unknown): (Picture & { alt: string }) | null => {
-  const media = value && typeof value === 'object' ? (value as Media) : null
-  const src = mediaSrc(media?.sizes?.large?.url ?? media?.url)
-  return media && src && media.width && media.height
-    ? { src, width: media.width, height: media.height, alt: media.alt ?? '' }
-    : null
-}
-
-/**
- * The top banner: an image right below the menu bar, as wide as the page content (the same
- * container as every section) with its height following the image, and an optional link (set in
- * Admin → Header & menu → Top banner). An optional phone version replaces the main image under
- * 640px. The box keeps each image's own proportions, so nothing is cropped and the page does not
- * jump while it loads.
- */
-export function TopBanner({ banner }: { banner: Header['topBanner'] }) {
-  if (!banner || banner.hidden) return null
-  const wide = asPicture(banner.image)
-  const narrow = asPicture(banner.mobileImage)
-  const main = wide ?? narrow
-  if (!main) return null
-  const small = narrow ?? main
-  const link = resolveLink(banner.link)
-
+/** One top ad: as wide as the page content, its height following the image (nothing is cropped). */
+function TopAd({ ad, priority }: { ad: Ad; priority: boolean }) {
+  const main = ad.picture
+  const small = ad.phone ?? main
   const shared = { sizes: '100vw', quality: 90 } as const
   const big = getImageProps({
     ...shared,
@@ -38,16 +14,15 @@ export function TopBanner({ banner }: { banner: Header['topBanner'] }) {
     src: main.src,
     width: main.width,
     height: main.height,
-    priority: true,
+    priority,
   })
   const little = getImageProps({
     ...shared,
-    alt: small.alt,
+    alt: small === main ? main.alt : '',
     src: small.src,
     width: small.width,
     height: small.height,
   })
-
   const picture = (
     <span
       className="shine relative block w-full overflow-hidden rounded-card shadow-card ring-1 ring-line/60"
@@ -68,29 +43,46 @@ export function TopBanner({ banner }: { banner: Header['topBanner'] }) {
           alt={main.alt}
           width={main.width}
           height={main.height}
-          fetchPriority="high"
+          fetchPriority={priority ? 'high' : undefined}
+          loading={priority ? undefined : 'lazy'}
           decoding="async"
           className="size-full object-cover"
         />
       </picture>
     </span>
   )
+  return ad.link ? (
+    <SmartLink
+      href={ad.link.href}
+      external={ad.link.external}
+      newTab={ad.link.newTab}
+      className="block rounded-card transition-opacity hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+    >
+      {picture}
+    </SmartLink>
+  ) : (
+    picture
+  )
+}
 
+/**
+ * The top ad banners, right below the menu bar of the homepage (Admin → Ads banners → Top ads
+ * banner): one below the other, each as wide as the page content with its own link. A phone
+ * version replaces the main image under 640px. The box keeps each image's own proportions, so
+ * nothing is cropped and the page does not jump while it loads.
+ */
+export function TopBanner({ ads }: { ads: Ad[] }) {
+  if (!ads.length) return null
   return (
     <section aria-label="Banner" className="pt-4 sm:pt-5">
       <Container>
-        {link?.href ? (
-          <SmartLink
-            href={link.href}
-            external={link.external}
-            newTab={link.newTab}
-            className="block rounded-card transition-opacity hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-          >
-            {picture}
-          </SmartLink>
-        ) : (
-          picture
-        )}
+        <ul className="space-y-3 sm:space-y-4">
+          {ads.map((ad, i) => (
+            <li key={ad.key}>
+              <TopAd ad={ad} priority={i === 0} />
+            </li>
+          ))}
+        </ul>
       </Container>
     </section>
   )

@@ -1,4 +1,4 @@
-import { Play } from 'lucide-react'
+import { BookOpen, CirclePlay } from 'lucide-react'
 import { BookCard, VideoCard } from '@/components/cards/MediaCards'
 import { AudioShelf } from '@/components/home/AudioShelf'
 import { BannerAds } from '@/components/home/BannerAds'
@@ -6,6 +6,7 @@ import { ScrollRow } from '@/components/ui/ScrollRow'
 import { Container } from '@/components/ui/Container'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { listAudioEntries, listVideoEntries, type MediaEntry } from '@/features/media-items/queries'
+import { getAds } from '@/features/site/queries'
 import { listPosts, type PostCardData } from '@/features/posts/queries'
 import { displayTitle, mergeFirst } from '@/lib/media-items'
 import { youtubeId } from '@/lib/security/url'
@@ -44,16 +45,6 @@ const entryPost = (id: string, title: string, videoId: string): PostCardData =>
 
 const FORMAT_TITLE = { video: 'Videos', audio: 'Audios', ebook: 'E-Books' } as const
 
-/** Gold play badge that replaces the gold bar in the video band's heading. */
-const PlayBadge = (
-  <span
-    className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-accent text-brand-deep"
-    aria-hidden="true"
-  >
-    <Play className="ms-0.5 size-4 fill-current" />
-  </span>
-)
-
 /**
  * Videos → royal-blue band with a swipeable carousel (edge to edge when it has its own row, a
  * rounded panel when it shares one); E-Books → cover shelf; Audios → listen list.
@@ -89,7 +80,7 @@ export async function MediaShelf({
 
   if (block.format === 'video') {
     // Ask YouTube (cached for hours) which videos still play, so the popup can say so for the ones that do not.
-    // Entries come first (newest first), then the Video posts.
+    // Entries come first (in the admin's order), then the Video posts.
     const entryTiles: VideoTile[] = await Promise.all(
       entries.map(async (entry) => {
         const videoId = youtubeId(entry.link) ?? ''
@@ -116,7 +107,7 @@ export async function MediaShelf({
     const tiles = mergeFirst(entryTiles, postTiles, block.limit)
     const items = (
       <>
-        <SectionHeading title={title} href={more} tone="dark" icon={PlayBadge} />
+        <SectionHeading title={title} href={more} tone="dark" icon={CirclePlay} />
         <ScrollRow
           tone="dark"
           arrows="beside"
@@ -154,10 +145,11 @@ export async function MediaShelf({
     // The column is as tall as its neighbour in the row (the Audios player): the shelf takes all the
     // height the banner ads leave, and its cards grow to fill it. On a phone, where the sections
     // stack, the cards keep a sensible height of their own.
+    const { bottom } = await getAds()
     return (
       <div className="flex h-full flex-col gap-6">
         <section className="flex flex-1 flex-col rounded-card bg-card px-4 py-4 shadow-card ring-1 ring-line/60 sm:px-6 sm:py-5">
-          <SectionHeading title={title} href={more} className="!mb-3 sm:!mb-4" />
+          <SectionHeading title={title} href={more} icon={BookOpen} className="!mb-3 sm:!mb-4" />
           {/* Three books at a time; the row scrolls (arrows, swipe) when there are more. */}
           <ScrollRow tone="light" arrows="overlay" label={title} fill listClassName="pb-1">
             {docs.map((post) => (
@@ -170,7 +162,7 @@ export async function MediaShelf({
             ))}
           </ScrollRow>
         </section>
-        <BannerAds banners={block.banners} />
+        <BannerAds ads={bottom} />
       </div>
     )
   }

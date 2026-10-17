@@ -56,7 +56,7 @@ export function QuoteShare({
   // Server and first client render say "no", so hydration always matches; phones then switch on.
   const native = useSyncExternalStore(subscribe, supportsNativeShare, () => false)
   const enc = encodeURIComponent
-  const lead = text || 'Daily Quote — Islam Malayalam'
+  const lead = text || 'Insights — Islam Malayalam'
 
   const hrefs: Record<(typeof NETWORKS)[number]['key'], string> = {
     whatsapp: `https://wa.me/?text=${enc(`${lead}\n${url}`)}`,
@@ -77,7 +77,7 @@ export function QuoteShare({
 
   const shareNative = async () => {
     try {
-      let data: ShareData = { title: 'Daily Quote', text: lead, url }
+      let data: ShareData = { title: 'Insights', text: lead, url }
       if (posterSrc) {
         try {
           const blob = await (await fetch(posterSrc)).blob()
@@ -123,7 +123,7 @@ export function QuoteShare({
           </a>
         ))}
         <a
-          href={`mailto:?subject=${enc('Daily Quote — Islam Malayalam')}&body=${enc(`${lead}\n\n${url}`)}`}
+          href={`mailto:?subject=${enc('Insights — Islam Malayalam')}&body=${enc(`${lead}\n\n${url}`)}`}
           aria-label="Share by email"
           className={TILE}
         >

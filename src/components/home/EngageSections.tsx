@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { ChevronDown, Quote } from 'lucide-react'
+import { ChevronDown, CircleHelp, Clapperboard, Quote } from 'lucide-react'
 import { PANEL } from '@/components/home/CategorySections'
 import { ReelPlayer } from '@/components/home/ReelPlayer'
 import { SectionHeading } from '@/components/ui/SectionHeading'
@@ -29,7 +29,7 @@ export function QuoteOfDaySection({ block }: { block: QuoteOfDayBlock }) {
   const src = mediaSrc(flyer?.sizes?.large?.url ?? flyer?.url)
   return (
     <section className="bg-night relative isolate overflow-hidden rounded-panel p-6 text-white shadow-card ring-1 ring-white/10 sm:p-8">
-      <SectionHeading title={block.title || 'ഇന്നത്തെ ചിന്ത'} tone="dark" />
+      <SectionHeading title={block.title || 'ഇന്നത്തെ ചിന്ത'} tone="dark" icon={Quote} />
       {src && flyer?.width && flyer.height ? (
         <Image
           src={src}
@@ -66,7 +66,7 @@ export function ReelsSection({ block, compact }: { block: ReelsBlock; compact: b
   const more = resolveLink(block.moreLink)
   return (
     <section className={compact ? PANEL : ''}>
-      <SectionHeading title={block.title || 'സംശയനിവാരണം'} href={more?.href} />
+      <SectionHeading title={block.title || 'സംശയനിവാരണം'} href={more?.href} icon={Clapperboard} />
       <ul
         className={
           compact
@@ -90,7 +90,11 @@ export function FaqSection({ block }: { block: FaqBlock }) {
   const more = resolveLink(block.moreLink)
   return (
     <section className={PANEL}>
-      <SectionHeading title={block.title || 'പൊതുവായ ചോദ്യങ്ങള്‍'} href={more?.href} />
+      <SectionHeading
+        title={block.title || 'പൊതുവായ ചോദ്യങ്ങള്‍'}
+        href={more?.href}
+        icon={CircleHelp}
+      />
       <div className="divide-y divide-line overflow-hidden rounded-2xl ring-1 ring-line">
         {items.map((item, i) => (
           <details key={item.id ?? i} className="group">

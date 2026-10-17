@@ -26,7 +26,7 @@ export const Redirects: CollectionConfig = {
   slug: 'redirects',
   admin: {
     useAsTitle: 'from',
-    group: 'Admin',
+    group: 'Team',
     defaultColumns: ['from', 'to', 'code', 'source', 'hits'],
   },
   access: { read: isEditor, create: isEditor, update: isEditor, delete: isEditor },
@@ -81,9 +81,10 @@ export const Redirects: CollectionConfig = {
 
 export const ContactMessages: CollectionConfig = {
   slug: 'contact-messages',
+  labels: { singular: 'Message', plural: 'Messages' },
   admin: {
     useAsTitle: 'subject',
-    group: 'Submissions',
+    group: 'Inbox',
     defaultColumns: ['name', 'subject', 'status', 'createdAt'],
   },
   // Created only by the site's server action (Local API, rate-limited); never via the REST API.
@@ -112,9 +113,10 @@ export const ContactMessages: CollectionConfig = {
 
 export const AuditLogs: CollectionConfig = {
   slug: 'audit-logs',
+  labels: { singular: 'Activity entry', plural: 'Activity log' },
   admin: {
     useAsTitle: 'target',
-    group: 'Admin',
+    group: 'Team',
     defaultColumns: ['createdAt', 'action', 'target', 'docId', 'user'],
   },
   defaultSort: '-createdAt',
@@ -136,6 +138,7 @@ export const AuditLogs: CollectionConfig = {
 
 export const MigrationRuns: CollectionConfig = {
   slug: 'migration-runs',
+  labels: { singular: 'Migration run', plural: 'Migration runs' },
   admin: {
     useAsTitle: 'runId',
     group: 'Migration',
@@ -168,6 +171,7 @@ export const MigrationRuns: CollectionConfig = {
 
 export const MigrationIssues: CollectionConfig = {
   slug: 'migration-issues',
+  labels: { singular: 'Migration issue', plural: 'Migration issues' },
   admin: {
     useAsTitle: 'summary',
     group: 'Migration',

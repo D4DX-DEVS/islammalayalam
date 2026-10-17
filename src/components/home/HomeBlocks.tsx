@@ -9,6 +9,7 @@ import {
 } from '@/components/home/CategorySections'
 import { LeadWithAside } from '@/components/home/LeadWithAside'
 import { MediaShelf } from '@/components/home/MediaShelf'
+import { ShortsSection } from '@/components/home/ShortsSection'
 import { TopicGrid } from '@/components/home/TopicGrid'
 import {
   CallToActionSection,
@@ -37,6 +38,7 @@ const SKELETON: Record<string, SectionSkeletonVariant> = {
   categoryGrid: 'grid',
   mediaShelf: 'band',
   categoryList: 'list',
+  shorts: 'shorts',
 }
 
 const isHalf = (block: AnyBlock) => 'width' in block && block.width === 'half'
@@ -88,6 +90,8 @@ function renderBlock(
       return <QuoteOfDaySection block={block} />
     case 'reels':
       return <ReelsSection block={block} compact={opts.sidebar || opts.half} />
+    case 'shorts':
+      return <ShortsSection block={block} />
     case 'faq':
       return <FaqSection block={block} />
     case 'callToAction':

@@ -69,7 +69,7 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['email', 'name', 'role', 'updatedAt'],
-    group: 'Admin',
+    group: 'Team',
   },
   auth: {
     maxLoginAttempts: 5,

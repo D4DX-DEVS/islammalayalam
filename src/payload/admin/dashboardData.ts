@@ -25,6 +25,10 @@ export type DashboardRow = {
   updatedAt: string
   postNumber: number | null
   status: 'draft' | 'published'
+  /** Flagged by an editor for a second look. */
+  needsReview: boolean
+  /** Name of the post's main category, when it has one. */
+  category: string | null
 }
 
 export type DashboardStats = {
@@ -57,7 +61,7 @@ export type ActivityRow = {
 export type FormatKey = 'standard' | 'video' | 'ebook' | 'audio'
 export type FormatCount = { key: FormatKey; label: string; count: number }
 
-/** Switches editors ask about most: is the homepage fully shown, is chat / AI search on. */
+/** Switches editors ask about most: is the homepage fully shown, is chat / AI search / two-step login on. */
 export type SiteStatus = {
   sectionsShown: number
   sectionsHidden: number
@@ -65,13 +69,33 @@ export type SiteStatus = {
   aiSearchOn: boolean
 }
 
+/**
+ * When the oldest / newest item behind each work-queue row was last touched (ISO strings), so a row
+ * can say "oldest flagged 2 days ago". null when there is nothing waiting.
+ */
+export type QueueEdges = {
+  /** Oldest post flagged for review. */
+  reviewOldest: string | null
+  /** Newest postal library request nobody has handled. */
+  requestNewest: string | null
+  /** Newest message nobody has opened. */
+  messageNewest: string | null
+  /** The draft that has gone longest without an edit. */
+  draftOldest: string | null
+}
+
+/** "today" feeds the home screen; "reports" adds the totals and charts that live on Reports. */
+export type DashboardScope = 'today' | 'reports'
+
 export type DashboardData = {
   /** Authors only see (and are counted on) their own drafts. */
   ownDraftsOnly: boolean
   stats: DashboardStats
+  queue: QueueEdges
+  /** Latest edits across drafts and published posts, newest first. */
+  recent: DashboardRow[]
   drafts: DashboardRow[]
   published: DashboardRow[]
-  review: DashboardRow[]
   categories: CategoryCount[]
   messages: MessageRow[]
   activity: ActivityRow[]
@@ -85,6 +109,8 @@ export type DashboardData = {
   pulse: DayCount[]
   /** null when this role can read neither the homepage nor the site settings. */
   site: SiteStatus | null
+  /** Two-step login is required for staff (from the signed-in user's own `mfaRequired`). */
+  twoStepOn: boolean
 }
 
 export const PULSE_DAYS = 14
@@ -97,17 +123,30 @@ const FORMAT_LABEL: Record<FormatKey, string> = {
   ebook: 'E-books',
   audio: 'Audios',
 }
-const ROW_SELECT = { title: true, updatedAt: true, postNumber: true, _status: true } as const
+const ROW_SELECT = {
+  title: true,
+  updatedAt: true,
+  postNumber: true,
+  _status: true,
+  flags: { needsReview: true },
+  primaryCategory: true,
+} as const
+/** Rows show the category's name only; depth 1 then populates just that field. */
+const ROW_POPULATE = { categories: { name: true } } as const
 
 const str = (value: unknown): string => (typeof value === 'string' ? value : '')
 
 function toRow(doc: Record<string, unknown>): DashboardRow {
+  const category = doc.primaryCategory as { name?: unknown } | string | null | undefined
+  const flags = doc.flags as { needsReview?: unknown } | null | undefined
   return {
     id: String(doc.id),
     title: str(doc.title) || '(untitled)',
     updatedAt: str(doc.updatedAt),
     postNumber: typeof doc.postNumber === 'number' ? doc.postNumber : null,
     status: doc._status === 'published' ? 'published' : 'draft',
+    needsReview: flags?.needsReview === true,
+    category: typeof category === 'object' && category ? str(category.name) || null : null,
   }
 }
 
@@ -241,7 +280,44 @@ async function loadSite(payload: Payload, as: As): Promise<SiteStatus | null> {
   }
 }
 
-export async function loadDashboard(payload: Payload, user: DashboardUser): Promise<DashboardData> {
+/** `updatedAt` / `createdAt` of the first document of a one-item query, or null when there is none. */
+async function edge(
+  payload: Payload,
+  as: As,
+  query: {
+    collection: 'posts' | 'postal-requests' | 'contact-messages'
+    where: Where
+    sort: string
+    field: 'updatedAt' | 'createdAt'
+    draft?: boolean
+  },
+): Promise<string | null> {
+  try {
+    const res = await payload.find({
+      collection: query.collection,
+      where: query.where,
+      sort: query.sort,
+      limit: 1,
+      depth: 0,
+      pagination: false,
+      select: { [query.field]: true },
+      ...(query.draft ? { draft: true } : {}),
+      ...as,
+    })
+    const doc = res.docs[0] as unknown as Record<string, unknown> | undefined
+    return doc ? str(doc[query.field]) || null : null
+  } catch {
+    return null
+  }
+}
+
+export async function loadDashboard(
+  payload: Payload,
+  user: DashboardUser,
+  scope: DashboardScope = 'today',
+): Promise<DashboardData> {
+  const reports = scope === 'reports'
+  const none = Promise.resolve({ totalDocs: 0 })
   const as = { user, overrideAccess: false, disableErrors: true } as const
   const ownDraftsOnly = !hasRole(user as never, 'admin', 'editor')
   const draftWhere: Where = ownDraftsOnly
@@ -251,7 +327,16 @@ export async function loadDashboard(payload: Payload, user: DashboardUser): Prom
   const reviewWhere: Where = { 'flags.needsReview': { equals: true } }
   const newMessagesWhere: Where = { status: { equals: 'new' } }
   const newRequestsWhere: Where = { status: { equals: 'new' } }
-  const rows = { depth: 0, pagination: false, select: ROW_SELECT, sort: '-updatedAt' } as const
+  const recentWhere: Where = ownDraftsOnly
+    ? { or: [publishedWhere, { createdBy: { equals: user.id } }] }
+    : { _status: { exists: true } }
+  const rows = {
+    depth: 1,
+    populate: ROW_POPULATE,
+    pagination: false,
+    select: ROW_SELECT,
+    sort: '-updatedAt',
+  } as const
 
   const [
     published,
@@ -261,23 +346,35 @@ export async function loadDashboard(payload: Payload, user: DashboardUser): Prom
     media,
     newMessages,
     newRequests,
+    recentList,
     draftList,
     publishedList,
-    reviewList,
     messageList,
     activityList,
     categories,
     rollup,
     pulse,
     site,
+    reviewOldest,
+    requestNewest,
+    messageNewest,
+    draftOldest,
   ] = await Promise.all([
-    payload.count({ collection: 'posts', where: publishedWhere, ...as }),
+    reports ? payload.count({ collection: 'posts', where: publishedWhere, ...as }) : none,
     payload.count({ collection: 'posts', where: draftWhere, ...as }),
     payload.count({ collection: 'posts', where: reviewWhere, ...as }),
-    payload.count({ collection: 'pages', ...as }),
-    payload.count({ collection: 'media', ...as }),
+    reports ? payload.count({ collection: 'pages', ...as }) : none,
+    reports ? payload.count({ collection: 'media', ...as }) : none,
     payload.count({ collection: 'contact-messages', where: newMessagesWhere, ...as }),
     payload.count({ collection: 'postal-requests', where: newRequestsWhere, ...as }),
+    payload.find({
+      collection: 'posts',
+      where: recentWhere,
+      limit: LIST_LIMIT,
+      draft: true,
+      ...rows,
+      ...as,
+    }),
     payload.find({
       collection: 'posts',
       where: draftWhere,
@@ -294,7 +391,6 @@ export async function loadDashboard(payload: Payload, user: DashboardUser): Prom
       sort: '-publishedAt',
       ...as,
     }),
-    payload.find({ collection: 'posts', where: reviewWhere, limit: LIST_LIMIT, ...rows, ...as }),
     payload.find({
       collection: 'contact-messages',
       sort: '-createdAt',
@@ -312,14 +408,41 @@ export async function loadDashboard(payload: Payload, user: DashboardUser): Prom
       pagination: false,
       ...as,
     }),
-    loadCategories(payload, as),
-    // The charts are extras: if one cannot load, the rest of the dashboard still shows.
-    loadRollup(payload, as).catch((err) => {
-      payload.logger.warn({ err }, 'Dashboard roll-up could not load')
-      return emptyRollup()
-    }),
+    reports ? loadCategories(payload, as) : Promise.resolve([] as CategoryCount[]),
+    // The charts are extras: if one cannot load, the rest of the page still shows.
+    reports
+      ? loadRollup(payload, as).catch((err) => {
+          payload.logger.warn({ err }, 'Dashboard roll-up could not load')
+          return emptyRollup()
+        })
+      : Promise.resolve(emptyRollup()),
     loadPulse(payload, as).catch(() => dailyCounts([], PULSE_DAYS)),
     loadSite(payload, as),
+    edge(payload, as, {
+      collection: 'posts',
+      where: reviewWhere,
+      sort: 'updatedAt',
+      field: 'updatedAt',
+    }),
+    edge(payload, as, {
+      collection: 'postal-requests',
+      where: newRequestsWhere,
+      sort: '-createdAt',
+      field: 'createdAt',
+    }),
+    edge(payload, as, {
+      collection: 'contact-messages',
+      where: newMessagesWhere,
+      sort: '-createdAt',
+      field: 'createdAt',
+    }),
+    edge(payload, as, {
+      collection: 'posts',
+      where: draftWhere,
+      sort: 'updatedAt',
+      field: 'updatedAt',
+      draft: true,
+    }),
   ])
 
   return {
@@ -333,9 +456,10 @@ export async function loadDashboard(payload: Payload, user: DashboardUser): Prom
       newMessages: newMessages.totalDocs,
       newRequests: newRequests.totalDocs,
     },
+    queue: { reviewOldest, requestNewest, messageNewest, draftOldest },
+    recent: recentList.docs.map((d) => toRow(d as Record<string, unknown>)),
     drafts: draftList.docs.map((d) => toRow(d as Record<string, unknown>)),
     published: publishedList.docs.map((d) => toRow(d as Record<string, unknown>)),
-    review: reviewList.docs.map((d) => toRow(d as Record<string, unknown>)),
     categories,
     messages: messageList.docs.map((d) => {
       const doc = d as Record<string, unknown>
@@ -351,5 +475,6 @@ export async function loadDashboard(payload: Payload, user: DashboardUser): Prom
     ...rollup,
     pulse,
     site,
+    twoStepOn: user.mfaRequired !== false,
   }
 }

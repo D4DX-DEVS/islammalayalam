@@ -1,6 +1,6 @@
 import type { Field, GlobalConfig, TextFieldSingleValidation } from 'payload'
 import { isAdmin, isEditor, totpPublicRead } from '@/payload/access'
-import { linkGroup } from '@/payload/fields'
+import { linkGroup, validateAdLink } from '@/payload/fields'
 import { mainColumnBlocks, sidebarBlocks } from '@/payload/blocks/homepage'
 import { auditGlobalChange } from '@/payload/hooks/auditLog'
 import { guardGlobalContent } from '@/payload/hooks/contentGuard'
@@ -29,7 +29,7 @@ const imageUpload = (name: string, description?: string): Field => ({
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Site settings',
-  admin: { group: 'Settings' },
+  admin: { group: 'Site' },
   custom: totpPublicRead,
   access: { read: publicRead, update: isAdmin },
   hooks,
@@ -89,8 +89,8 @@ const menuItem = (children?: Field): Field[] => [linkGroup('link'), ...(children
 
 export const Header: GlobalConfig = {
   slug: 'header',
-  label: 'Header & menu',
-  admin: { group: 'Settings' },
+  label: 'Header and menu',
+  admin: { group: 'Site' },
   custom: totpPublicRead,
   access: { read: publicRead, update: isEditor },
   hooks,
@@ -120,46 +120,6 @@ export const Header: GlobalConfig = {
       label: 'Show social icons in the header (desktop)',
     },
     {
-      name: 'topBanner',
-      label: 'Top banner',
-      type: 'group',
-      admin: {
-        description:
-          'A full-width image banner right below the menu bar, on every page, with an optional link. With no image, nothing is shown.',
-      },
-      fields: [
-        {
-          name: 'image',
-          type: 'upload',
-          relationTo: 'media',
-          filterOptions: { mimeType: { contains: 'image' } },
-          admin: {
-            description:
-              'Wide image — 1920 × 240 or larger looks sharp on every screen (the banner is shown edge to edge).',
-          },
-        },
-        {
-          name: 'mobileImage',
-          label: 'Image for phones (optional)',
-          type: 'upload',
-          relationTo: 'media',
-          filterOptions: { mimeType: { contains: 'image' } },
-          admin: {
-            description:
-              'A narrower version, e.g. 900 × 360, used on screens under 640 px wide. Without one, the main image is scaled down.',
-          },
-        },
-        linkGroup('link', { required: false }),
-        {
-          name: 'hidden',
-          type: 'checkbox',
-          defaultValue: false,
-          label: 'Hide the top banner',
-          admin: { description: 'Keeps the settings but stops showing the banner on the site.' },
-        },
-      ],
-    },
-    {
       name: 'mainMenu',
       type: 'array',
       maxRows: 14,
@@ -174,10 +134,157 @@ export const Header: GlobalConfig = {
   ],
 }
 
+/** One row of the Ads banners lists. `phone` adds a narrower picture for small screens. */
+const adRows = (opts: {
+  name: string
+  label: string
+  phone: boolean
+  max: number
+  help: string
+}): Field => ({
+  name: opts.name,
+  type: 'array',
+  maxRows: opts.max,
+  labels: { singular: 'Banner', plural: 'Banners' },
+  admin: {
+    description: opts.help,
+    initCollapsed: false,
+    components: { RowLabel: '/payload/admin/ads/BannerRowLabel#BannerRowLabel' },
+  },
+  fields: [
+    {
+      name: 'image',
+      label: 'Banner image',
+      type: 'upload',
+      relationTo: 'media',
+      required: true,
+      filterOptions: { mimeType: { contains: 'image' } },
+      admin: {
+        description:
+          'Shown whole, never cropped. Upload it at 2× the size it appears for a sharp result.',
+      },
+    },
+    ...(opts.phone
+      ? [
+          {
+            name: 'mobileImage',
+            label: 'Image for phones (optional)',
+            type: 'upload',
+            relationTo: 'media',
+            filterOptions: { mimeType: { contains: 'image' } },
+            admin: {
+              description:
+                'A narrower version, e.g. 900 × 360, used on screens under 640 px wide. Without one, the main image is scaled down.',
+            },
+          } satisfies Field,
+        ]
+      : []),
+    {
+      name: 'url',
+      label: 'Link (URL)',
+      type: 'text',
+      maxLength: 500,
+      validate: validateAdLink,
+      admin: {
+        placeholder: 'https://example.com/',
+        description:
+          'Where a click goes: a web address (https://…) or a page of this site (/about-us/). Leave empty for a banner that is not clickable.',
+      },
+    },
+    {
+      name: 'openIn',
+      label: 'Open the link in',
+      type: 'radio',
+      defaultValue: 'new',
+      options: [
+        { label: 'New tab', value: 'new' },
+        { label: 'Same window', value: 'same' },
+      ],
+      admin: { layout: 'horizontal', condition: (_, sibling) => Boolean(sibling?.url) },
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'name',
+          label: 'Name (only for you)',
+          type: 'text',
+          maxLength: 80,
+          admin: { description: 'Helps you tell the banners apart in this list.', width: '50%' },
+        },
+        {
+          name: 'alt',
+          label: 'Description for screen readers',
+          type: 'text',
+          maxLength: 200,
+          admin: {
+            description: 'Optional. Defaults to the image’s own description.',
+            width: '50%',
+          },
+        },
+      ],
+    },
+    {
+      name: 'active',
+      label: 'Show this banner',
+      type: 'checkbox',
+      defaultValue: true,
+      admin: { description: 'Untick to hide it from the site without deleting it.' },
+    },
+  ],
+})
+
+export const AdsBanners: GlobalConfig = {
+  slug: 'ads-banners',
+  label: 'Ads banners',
+  admin: {
+    group: 'Site',
+    description:
+      'The advertisement banners of the homepage. Add as many as you need, delete the ones you no longer want, and choose for each one where it links and whether it opens in the same window or a new tab.',
+  },
+  custom: totpPublicRead,
+  access: { read: publicRead, update: isEditor },
+  hooks,
+  fields: [
+    {
+      type: 'tabs',
+      tabs: [
+        {
+          label: 'Top ads banner',
+          description:
+            'Wide banners right under the menu bar of the homepage, one below the other.',
+          fields: [
+            adRows({
+              name: 'top',
+              label: 'Top banners',
+              phone: true,
+              max: 6,
+              help: 'As wide as the page content, with the height following the image: 1920 × 240 or larger is sharp on every screen.',
+            }),
+          ],
+        },
+        {
+          label: 'Bottom ads banner',
+          description: 'Banners in a column below the e-book shelf on the homepage.',
+          fields: [
+            adRows({
+              name: 'bottom',
+              label: 'Bottom banners',
+              phone: false,
+              max: 6,
+              help: 'Wide images (about 4:1, like 676 × 164, or larger) fit best.',
+            }),
+          ],
+        },
+      ],
+    },
+  ],
+}
+
 export const Homepage: GlobalConfig = {
   slug: 'homepage',
   label: 'Homepage',
-  admin: { group: 'Settings' },
+  admin: { group: 'Site' },
   custom: totpPublicRead,
   access: { read: publicRead, update: isEditor },
   hooks,
@@ -202,7 +309,7 @@ export const Homepage: GlobalConfig = {
 export const Footer: GlobalConfig = {
   slug: 'footer',
   label: 'Footer',
-  admin: { group: 'Settings' },
+  admin: { group: 'Site' },
   custom: totpPublicRead,
   access: { read: publicRead, update: isEditor },
   hooks,
@@ -256,9 +363,9 @@ export const Footer: GlobalConfig = {
 /** Admin-only sign-in policy (src/payload/mfa.ts). Not public: it is never rendered on the site. */
 export const SecuritySettings: GlobalConfig = {
   slug: SECURITY_SETTINGS,
-  label: 'Security',
+  label: 'Two-step login',
   admin: {
-    group: 'Settings',
+    group: 'Team',
     // One self-saving switch (TwoStepSwitch) with its own confirmation: no Save button.
     components: { elements: { SaveButton: '/payload/admin/mfa/NoSaveButton#NoSaveButton' } },
   },
@@ -275,4 +382,11 @@ export const SecuritySettings: GlobalConfig = {
   ],
 }
 
-export const globals: GlobalConfig[] = [SiteSettings, Header, Homepage, Footer, SecuritySettings]
+export const globals: GlobalConfig[] = [
+  SiteSettings,
+  Header,
+  Homepage,
+  AdsBanners,
+  Footer,
+  SecuritySettings,
+]

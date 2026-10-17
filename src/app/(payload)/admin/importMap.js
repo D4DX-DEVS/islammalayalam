@@ -22,7 +22,11 @@ import { MetaTitleComponent as MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c08
 import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
+import { MoveArrows as MoveArrows_431a43ecb1f011fc1106abb46d713581 } from '../../../payload/admin/media/MoveArrows'
+import { ListOrderHint as ListOrderHint_66dae47701afea6363c8f88aa17fcf8b } from '../../../payload/admin/media/ListOrderHint'
+import { SaveButtons as SaveButtons_637b1f49915145960146bfd30ec8bd4c } from '../../../payload/admin/media/SaveButtons'
 import { TOTPField as TOTPField_4eaf6cb33cfb75be01716613e3c9a512 } from 'payload-totp/rsc'
+import { BannerRowLabel as BannerRowLabel_26aeab33fcdb780bad1ef2199780a0a1 } from '../../../payload/admin/ads/BannerRowLabel'
 import { TwoStepSwitch as TwoStepSwitch_0376b53c672cc593bbbb7182da800ca7 } from '../../../payload/admin/mfa/TwoStepSwitch'
 import { NoSaveButton as NoSaveButton_468e712a4a4ae597d52b9393bc65afa4 } from '../../../payload/admin/mfa/NoSaveButton'
 import { AdminNav as AdminNav_74e3fe0496955cab51bfdd544405d262 } from '../../../payload/admin/nav/AdminNav'
@@ -36,6 +40,7 @@ import { TOTPSetup as TOTPSetup_4eaf6cb33cfb75be01716613e3c9a512 } from 'payload
 import { TOTPVerify as TOTPVerify_4eaf6cb33cfb75be01716613e3c9a512 } from 'payload-totp/rsc'
 import { DashboardView as DashboardView_01c7b037f23d5242659990f28a9e7ce6 } from '../../../payload/admin/dashboard/DashboardView'
 import { WebsiteView as WebsiteView_aaafc6918e592ff07194187458f2e9fe } from '../../../payload/admin/website/WebsiteView'
+import { ReportsView as ReportsView_bdc4e80254092243921375f3044ed187 } from '../../../payload/admin/dashboard/ReportsView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
@@ -65,7 +70,11 @@ export const importMap = {
   "@payloadcms/plugin-seo/client#MetaDescriptionComponent": MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#MetaImageComponent": MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#PreviewComponent": PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
+  "/payload/admin/media/MoveArrows#MoveArrows": MoveArrows_431a43ecb1f011fc1106abb46d713581,
+  "/payload/admin/media/ListOrderHint#ListOrderHint": ListOrderHint_66dae47701afea6363c8f88aa17fcf8b,
+  "/payload/admin/media/SaveButtons#SaveButtons": SaveButtons_637b1f49915145960146bfd30ec8bd4c,
   "payload-totp/rsc#TOTPField": TOTPField_4eaf6cb33cfb75be01716613e3c9a512,
+  "/payload/admin/ads/BannerRowLabel#BannerRowLabel": BannerRowLabel_26aeab33fcdb780bad1ef2199780a0a1,
   "/payload/admin/mfa/TwoStepSwitch#TwoStepSwitch": TwoStepSwitch_0376b53c672cc593bbbb7182da800ca7,
   "/payload/admin/mfa/NoSaveButton#NoSaveButton": NoSaveButton_468e712a4a4ae597d52b9393bc65afa4,
   "/payload/admin/nav/AdminNav#AdminNav": AdminNav_74e3fe0496955cab51bfdd544405d262,
@@ -79,6 +88,7 @@ export const importMap = {
   "payload-totp/rsc#TOTPVerify": TOTPVerify_4eaf6cb33cfb75be01716613e3c9a512,
   "/payload/admin/dashboard/DashboardView#DashboardView": DashboardView_01c7b037f23d5242659990f28a9e7ce6,
   "/payload/admin/website/WebsiteView#WebsiteView": WebsiteView_aaafc6918e592ff07194187458f2e9fe,
+  "/payload/admin/dashboard/ReportsView#ReportsView": ReportsView_bdc4e80254092243921375f3044ed187,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

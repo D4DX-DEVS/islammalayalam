@@ -1,22 +1,28 @@
-// Modern admin theme on top of Payload's stock UI. Payload's styles live in
-// `@layer payload-default`, so these unlayered rules win without !important.
-// Brand tokens (--im-*) are defined in custom.scss.
+// Admin theme on top of Payload's stock UI. Payload's styles live in `@layer payload-default`, so
+// these unlayered rules win without !important. The palette (--im-*) is defined in custom.scss;
+// this file maps it onto Payload's own variables and restyles the shared controls.
 
 :root {
-  --style-radius-s: 8px;
+  // Payload sizes everything from a 13px root; 15px reads better for body text and Malayalam.
+  // --base-body-size keeps Payload's own spacing steps (base(1) = 20px) unchanged.
+  --base-body-size: 15;
+  --style-radius-s: 10px;
   --style-radius-m: 10px;
   --style-radius-l: 14px;
-  --im-surface: #fff;
-  --im-canvas: #f6f8fb;
-  --im-border: #e3e8ef;
-  --im-muted: #64748b;
-  --im-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
-  --im-shadow-md: 0 4px 16px rgb(15 23 42 / 0.08), 0 1px 3px rgb(15 23 42 / 0.06);
-  --im-shadow-lg: 0 24px 48px -12px rgb(15 23 42 / 0.22);
-  --im-ring: 0 0 0 3px rgb(26 107 196 / 0.22);
+  // Cards sit flat with a border; only things that float (menus, dialogs) get a shadow.
+  --im-shadow-sm: none;
+  --im-shadow-md: 0 12px 32px rgb(15 27 46 / 0.16);
+  --im-shadow-lg: 0 24px 48px -12px rgb(15 27 46 / 0.28);
+  --im-ring: 0 0 0 3px rgb(10 86 184 / 0.28);
   --theme-bg: var(--im-canvas);
   --theme-input-bg: var(--im-surface);
   --theme-border-color: var(--im-border);
+  --theme-text: var(--im-ink);
+}
+
+html {
+  font-size: 15px;
+  line-height: 1.55;
 }
 
 html[data-theme='dark'] {
@@ -24,17 +30,19 @@ html[data-theme='dark'] {
   --im-canvas: #0b1220;
   --im-border: #1f2a3d;
   --im-muted: #94a3b8;
-  --im-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-  --im-shadow-md: 0 4px 16px rgb(0 0 0 / 0.45);
+  --im-shadow-md: 0 12px 32px rgb(0 0 0 / 0.5);
   --im-shadow-lg: 0 24px 48px -12px rgb(0 0 0 / 0.6);
   --im-ring: 0 0 0 3px rgb(96 165 250 / 0.3);
   --theme-bg: var(--im-canvas);
   --theme-input-bg: var(--im-surface);
   --theme-border-color: var(--im-border);
+  --theme-text: var(--theme-elevation-1000);
 }
 
 body {
   background: var(--im-canvas);
+  font-size: 1rem;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -59,6 +67,12 @@ body {
   }
 }
 
+// Controls are 44px tall so they work with a thumb as well as a mouse.
+.btn--size-medium,
+.btn--size-large {
+  min-height: var(--im-control-h);
+}
+
 .btn--style-primary:not(.btn--disabled) {
   box-shadow: var(--im-shadow-sm);
 }
@@ -68,7 +82,7 @@ body {
   --hover-bg: var(--im-brand-soft);
   --color: var(--theme-text);
   --hover-color: var(--im-brand);
-  --box-shadow: inset 0 0 0 1px var(--im-border);
+  --box-shadow: inset 0 0 0 1px var(--im-border-strong);
   --hover-box-shadow: inset 0 0 0 1px var(--im-brand);
 }
 
@@ -77,7 +91,7 @@ body {
 .field-type textarea,
 .react-select .rs__control {
   border-radius: var(--style-radius-s);
-  border-color: var(--im-border);
+  border-color: var(--im-border-strong);
   background: var(--im-surface);
   box-shadow: var(--im-shadow-sm);
   transition:
@@ -87,6 +101,11 @@ body {
   &:hover {
     border-color: var(--theme-elevation-250);
   }
+}
+
+.field-type input:not([type='checkbox']):not([type='radio']):not([type='file']),
+.react-select .rs__control {
+  min-height: var(--im-control-h);
 }
 
 .field-type input:not([type='checkbox']):not([type='radio']):focus,
@@ -99,6 +118,7 @@ body {
 
 .field-label {
   font-weight: 600;
+  color: var(--im-ink);
 }
 
 .field-description {
@@ -203,7 +223,7 @@ body {
 
   thead th {
     background: var(--theme-elevation-50);
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -295,7 +315,7 @@ body {
   min-height: 100vh;
   background:
     radial-gradient(1200px 600px at 10% -10%, var(--im-brand-soft), transparent 60%),
-    radial-gradient(900px 500px at 110% 110%, rgb(217 119 6 / 0.08), transparent 60%),
+    radial-gradient(900px 500px at 110% 110%, rgb(242 190 78 / 0.14), transparent 60%),
     var(--im-canvas);
 }
 
@@ -315,7 +335,7 @@ body {
 
   .btn {
     width: 100%;
-    min-height: 2.9rem;
+    min-height: var(--im-control-h);
   }
 }
 
@@ -401,9 +421,9 @@ body {
   }
 
   &--danger:hover {
-    border-color: #dc2626;
-    background: rgb(220 38 38 / 0.08);
-    color: #dc2626;
+    border-color: var(--im-danger-line);
+    background: var(--im-danger-soft);
+    color: var(--im-danger);
   }
 
   // Icon-only on small screens; the aria-label keeps the name.
@@ -413,6 +433,131 @@ body {
     span {
       display: none;
     }
+  }
+}
+
+// ---- Order hint above the Audios / Videos lists (ListOrderHint.tsx) -----------------------------
+.im-order-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.9rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--style-radius-m);
+  background: var(--im-brand-soft);
+  color: var(--theme-text);
+  font-size: 0.85rem;
+
+  svg {
+    flex: none;
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--im-brand);
+  }
+
+  p {
+    flex: 1 1 18rem;
+    margin: 0;
+  }
+
+  button {
+    min-height: 2.25rem;
+    padding: 0 0.85rem;
+    border: 1px solid var(--im-brand);
+    border-radius: var(--style-radius-s);
+    background: var(--im-brand);
+    color: var(--im-on-brand);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--im-brand-strong);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--im-ring);
+    }
+  }
+}
+
+.im-order-hint__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  margin-inline-start: auto;
+  padding: 0 0.95rem;
+  border-radius: var(--style-radius-s);
+  background: var(--im-brand);
+  color: var(--im-on-brand);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    color: inherit;
+  }
+
+  &:hover {
+    background: var(--im-brand-strong);
+    color: var(--im-on-brand);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+// ---- Move column of the Audios / Videos lists (MoveArrows.tsx) ----------------------------------
+.im-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.im-move__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--im-border);
+  border-radius: var(--style-radius-s);
+  background: var(--im-surface);
+  color: var(--theme-text);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--im-brand);
+    background: var(--im-brand-soft);
+    color: var(--im-brand);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 }
 

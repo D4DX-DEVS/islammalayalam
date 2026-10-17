@@ -1,9 +1,11 @@
 import Link from 'next/link'
+import { Star } from 'lucide-react'
 import { PostCard, CardMeta, categoryName } from '@/components/cards/PostCard'
 import { PostImage, hasPicture } from '@/components/cards/PostImage'
 import { HeroSlider } from '@/components/home/HeroSlider'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { listPosts, type PostCardData } from '@/features/posts/queries'
+import { categoryIcon } from '@/lib/category-icons'
 import { categoryHref, postHref } from '@/lib/links'
 import type {
   Category,
@@ -20,37 +22,37 @@ const HERO_SLIDES_MAX = 5
 const HERO_SIDE_MAX = 4
 export const PANEL = 'h-full rounded-card bg-card p-4 shadow-card ring-1 ring-line/60 sm:p-6'
 
-/** One hero slide: full-bleed image with the story on a blue gradient. */
+/**
+ * One hero slide: the whole picture on top (never cropped; a blurred copy of it fills any spare
+ * space when the picture is not 16:9), the story on a blue panel under it.
+ */
 function HeroSlide({ post, priority }: { post: PostCardData; priority: boolean }) {
+  const forCard = { ...post, categoryName: categoryName(post) }
   return (
-    <Link
-      href={postHref(post.postNumber) ?? '#'}
-      className="group relative flex h-full flex-col justify-end"
-    >
-      <PostImage
-        post={{ ...post, categoryName: categoryName(post) }}
-        size="large"
-        sizes="(min-width: 1280px) 860px, (min-width: 1024px) 62vw, 100vw"
-        priority={priority}
-        cover
-        className="motion-safe:[[data-active]_&]:animate-kenburns"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#041d4d]/95 via-[#082f70]/45 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#041d4d]/55 via-transparent to-transparent" />
-      <div className="relative space-y-3.5 p-6 pb-[4.5rem] sm:p-8 sm:pb-8 sm:pe-44 lg:p-10 lg:pb-9">
-        <div className="space-y-3.5 motion-safe:[[data-active]_&]:animate-[enter-up_0.8s_0.15s_both]">
+    <Link href={postHref(post.postNumber) ?? '#'} className="group flex h-full flex-col">
+      <div className="relative aspect-[5/3] w-full shrink-0 overflow-hidden bg-[#041d4d]">
+        <div className="absolute inset-0 scale-125 blur-2xl saturate-150" aria-hidden="true">
+          <PostImage post={forCard} size="thumb" sizes="64px" cover className="!bg-transparent" />
+        </div>
+        <PostImage
+          post={forCard}
+          size="large"
+          sizes="(min-width: 1280px) 860px, (min-width: 1024px) 62vw, 100vw"
+          priority={priority}
+          cover
+          fit="contain"
+          className="!bg-transparent"
+        />
+      </div>
+      <div className="relative flex flex-1 flex-col justify-center gap-3 bg-gradient-to-b from-[#082f70] to-[#041d4d] px-5 pb-14 pt-5 sm:px-7 sm:pb-6 sm:pe-44 sm:pt-6 lg:px-8">
+        <h2 className="line-clamp-2 max-w-3xl text-xl font-bold leading-snug text-white sm:text-2xl lg:text-[1.75rem] lg:leading-[1.3]">
+          {post.title}
+        </h2>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {categoryName(post) ? (
             <span className="inline-flex rounded-full bg-brand px-3.5 py-1 text-xs font-semibold text-white shadow-sm">
               {categoryName(post)}
             </span>
-          ) : null}
-          <h2 className="line-clamp-4 max-w-3xl text-2xl font-bold leading-snug text-white sm:text-3xl lg:text-[2.3rem] lg:leading-[1.3]">
-            {post.title}
-          </h2>
-          {post.excerpt ? (
-            <p className="hidden max-w-2xl text-[0.95rem] text-white/85 sm:line-clamp-2">
-              {post.excerpt}
-            </p>
           ) : null}
           <CardMeta post={post} light />
         </div>
@@ -88,7 +90,6 @@ export async function FeaturedSlider({
     >
       <HeroSlider
         label="പ്രധാന വാർത്തകൾ"
-        className="min-h-[26rem] lg:min-h-[30rem]"
         slides={slides.map((post, i) => (
           <HeroSlide key={post.id} post={post} priority={Boolean(priority) && i === 0} />
         ))}
@@ -97,6 +98,7 @@ export async function FeaturedSlider({
         <div className="flex flex-col">
           <SectionHeading
             title={block.sideTitle || 'Featured Post'}
+            icon={Star}
             href={category && block.source === 'category' ? categoryHref(category.slug) : null}
             className="enter"
           />
@@ -123,10 +125,13 @@ export async function CategoryFeature({
   block,
   priority,
   half = false,
+  dense = false,
 }: {
   block: CategoryFeatureBlock
   priority?: boolean
   half?: boolean
+  /** A tighter list (smaller pictures, two-line titles, no repeated category): for a panel that has to match a shorter neighbour. */
+  dense?: boolean
 }) {
   const category = asCategory(block.category)
   if (!category) return null
@@ -140,7 +145,11 @@ export async function CategoryFeature({
   const stacked = block.layout === 'stacked'
   return (
     <section>
-      <SectionHeading title={block.title || category.name} href={more} />
+      <SectionHeading
+        title={block.title || category.name}
+        href={more}
+        icon={categoryIcon(category)}
+      />
       {stacked ? (
         <div
           className={`grid grid-cols-1 gap-4 ${half ? '' : 'lg:grid-cols-[minmax(0,1.12fr)_minmax(0,1fr)] lg:gap-6'}`}
@@ -160,12 +169,12 @@ export async function CategoryFeature({
         <div
           className={`grid grid-cols-1 gap-4 ${half ? 'md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:gap-4' : 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] lg:gap-6'}`}
         >
-          <PostCard post={lead} variant="lead" priority={priority} />
+          <PostCard post={lead} variant="lead" priority={priority} dense={dense} />
           {rest.length ? (
             <ul className="grid grid-cols-1 gap-3 lg:auto-rows-fr">
               {rest.slice(0, 4).map((post) => (
                 <li key={post.id} className="[&>a]:h-full">
-                  <PostCard post={post} variant="row" />
+                  <PostCard post={post} variant="row" dense={dense} hideCategory={dense} />
                 </li>
               ))}
             </ul>
@@ -187,6 +196,7 @@ export async function CategoryGrid({ block }: { block: CategoryGridBlock }) {
       <SectionHeading
         title={block.title || category.name}
         href={block.showMoreLink ? categoryHref(category.slug) : null}
+        icon={categoryIcon(category)}
       />
       <ul
         className={`grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 ${GRID_COLS[block.columns] ?? 'lg:grid-cols-3'}`}
@@ -218,6 +228,7 @@ export async function CategoryList({
       <SectionHeading
         title={block.title || category.name}
         href={block.showMoreLink ? categoryHref(category.slug) : null}
+        icon={categoryIcon(category)}
       />
       {/* Thumbnail rows are cards; the ranked text list keeps hairline dividers. */}
       <ul className={block.showThumbnails ? 'grid grid-cols-1 gap-3' : 'divide-y divide-line'}>

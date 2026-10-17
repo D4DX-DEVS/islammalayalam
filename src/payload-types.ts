@@ -117,6 +117,7 @@ export interface Config {
     'site-settings': SiteSetting;
     header: Header;
     homepage: Homepage;
+    'ads-banners': AdsBanner;
     footer: Footer;
     'security-settings': SecuritySetting;
   };
@@ -124,6 +125,7 @@ export interface Config {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     header: HeaderSelect<false> | HeaderSelect<true>;
     homepage: HomepageSelect<false> | HomepageSelect<true>;
+    'ads-banners': AdsBannersSelect<false> | AdsBannersSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     'security-settings': SecuritySettingsSelect<false> | SecuritySettingsSelect<true>;
   };
@@ -601,16 +603,21 @@ export interface Page {
   createdAt: string;
 }
 /**
- * The homepage shows one quote a day. A quote with a “Show on” date appears that day; quotes without a date take turns, one per day.
+ * Posters and thoughts for the homepage “Insights” slider (the first 5 in this list) and its “View More” archive. Drag the rows or use the arrows to set the order: the top one comes first.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "quotes".
  */
 export interface Quote {
   id: string;
+  _order?: string | null;
   label?: string | null;
   /**
-   * The quote itself. Used for sharing and as the poster’s description.
+   * Upload the poster here: a portrait image (4:5, e.g. 1080 × 1350) or a square one works best, and it is shown whole, never cropped. Without a poster, the text below is shown on a designed card.
+   */
+  poster?: (string | null) | Media;
+  /**
+   * Optional when there is a poster. Sent along when someone shares it, and used as the poster’s description for screen readers.
    */
   text?: string | null;
   /**
@@ -618,11 +625,7 @@ export interface Quote {
    */
   source?: string | null;
   /**
-   * Optional poster image (square or portrait works best). Without one, the text is shown on a designed card.
-   */
-  poster?: (string | null) | Media;
-  /**
-   * India date. Leave empty to put the quote in the daily rotation.
+   * Optional. A future date keeps the insight hidden until that India day; leave empty to show it straight away.
    */
   showOn?: string | null;
   /**
@@ -633,13 +636,14 @@ export interface Quote {
   createdAt: string;
 }
 /**
- * Quick audio entries for the homepage Audios player: just a link, a title and an author — all optional. Newest first.
+ * Quick audio entries for the homepage Audios player: just a link, a title and an author — all optional. Drag the rows (or use the arrows) to set the order they show in on the site; the top one comes first.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "audios".
  */
 export interface Audio {
   id: string;
+  _order?: string | null;
   label?: string | null;
   /**
    * Optional. A Spotify link (episode, show or playlist — it plays inside the player) or a direct https link to an audio file.
@@ -661,13 +665,14 @@ export interface Audio {
   createdAt: string;
 }
 /**
- * Quick video entries for the homepage Videos band: just a link, a title and an author — all optional. Newest first.
+ * Quick video entries for the homepage Videos band: just a link, a title and an author — all optional. Drag the rows (or use the arrows) to set the order they show in on the site; the top one comes first.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "videos".
  */
 export interface Video {
   id: string;
+  _order?: string | null;
   label?: string | null;
   /**
    * Optional. A YouTube link. The video opens in a popup player on the homepage.
@@ -1110,10 +1115,11 @@ export interface AuthorsSelect<T extends boolean = true> {
  * via the `definition` "quotes_select".
  */
 export interface QuotesSelect<T extends boolean = true> {
+  _order?: T;
   label?: T;
+  poster?: T;
   text?: T;
   source?: T;
-  poster?: T;
   showOn?: T;
   active?: T;
   updatedAt?: T;
@@ -1124,6 +1130,7 @@ export interface QuotesSelect<T extends boolean = true> {
  * via the `definition` "audios_select".
  */
 export interface AudiosSelect<T extends boolean = true> {
+  _order?: T;
   label?: T;
   link?: T;
   title?: T;
@@ -1137,6 +1144,7 @@ export interface AudiosSelect<T extends boolean = true> {
  * via the `definition` "videos_select".
  */
 export interface VideosSelect<T extends boolean = true> {
+  _order?: T;
   label?: T;
   link?: T;
   title?: T;
@@ -1476,42 +1484,6 @@ export interface Header {
     | null;
   showSocialInTopBar?: boolean | null;
   /**
-   * A full-width image banner right below the menu bar, on every page, with an optional link. With no image, nothing is shown.
-   */
-  topBanner?: {
-    /**
-     * Wide image — 1920 × 240 or larger looks sharp on every screen (the banner is shown edge to edge).
-     */
-    image?: (string | null) | Media;
-    /**
-     * A narrower version, e.g. 900 × 360, used on screens under 640 px wide. Without one, the main image is scaled down.
-     */
-    mobileImage?: (string | null) | Media;
-    link?: {
-      type?: ('reference' | 'custom' | 'none') | null;
-      newTab?: boolean | null;
-      label?: string | null;
-      reference?:
-        | ({
-            relationTo: 'pages';
-            value: string | Page;
-          } | null)
-        | ({
-            relationTo: 'posts';
-            value: string | Post;
-          } | null)
-        | ({
-            relationTo: 'categories';
-            value: string | Category;
-          } | null);
-      url?: string | null;
-    };
-    /**
-     * Keeps the settings but stops showing the banner on the site.
-     */
-    hidden?: boolean | null;
-  };
-  /**
    * Blue navigation bar. Up to three levels.
    */
   mainMenu?:
@@ -1612,6 +1584,7 @@ export interface Homepage {
         | FaqBlock
         | QuoteOfDayBlock
         | ReelsBlock
+        | ShortsBlock
       )[]
     | null;
   /**
@@ -1775,34 +1748,6 @@ export interface MediaShelfBlock {
    * Your Spotify show or playlist (Share → Copy link in Spotify). It adds the Spotify button to the player. Each audio post can also have its own Spotify link.
    */
   spotifyUrl?: string | null;
-  /**
-   * Banner images shown in a row below the e-book shelf, each with its own link. Wide images (about 4:1, like 676 × 164) fit best.
-   */
-  banners?:
-    | {
-        image: string | Media;
-        link?: {
-          type?: ('reference' | 'custom' | 'none') | null;
-          newTab?: boolean | null;
-          label?: string | null;
-          reference?:
-            | ({
-                relationTo: 'pages';
-                value: string | Page;
-              } | null)
-            | ({
-                relationTo: 'posts';
-                value: string | Post;
-              } | null)
-            | ({
-                relationTo: 'categories';
-                value: string | Category;
-              } | null);
-          url?: string | null;
-        };
-        id?: string | null;
-      }[]
-    | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShelf';
@@ -2051,6 +1996,25 @@ export interface ReelsBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ShortsBlock".
+ */
+export interface ShortsBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  title?: string | null;
+  /**
+   * The YouTube channel the Shorts come from: its @handle, or its address (youtube.com/@… or youtube.com/channel/UC…). Nothing to upload: a Short published on that channel shows here by itself within about 15 minutes.
+   */
+  channel: string;
+  limit: number;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'shorts';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "QuickLinksBlock".
  */
 export interface QuickLinksBlock {
@@ -2124,6 +2088,79 @@ export interface FollowUsBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'followUs';
+}
+/**
+ * The advertisement banners of the homepage. Add as many as you need, delete the ones you no longer want, and choose for each one where it links and whether it opens in the same window or a new tab.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ads-banners".
+ */
+export interface AdsBanner {
+  id: string;
+  /**
+   * As wide as the page content, with the height following the image: 1920 × 240 or larger is sharp on every screen.
+   */
+  top?:
+    | {
+        /**
+         * Shown whole, never cropped. Upload it at 2× the size it appears for a sharp result.
+         */
+        image: string | Media;
+        /**
+         * A narrower version, e.g. 900 × 360, used on screens under 640 px wide. Without one, the main image is scaled down.
+         */
+        mobileImage?: (string | null) | Media;
+        /**
+         * Where a click goes: a web address (https://…) or a page of this site (/about-us/). Leave empty for a banner that is not clickable.
+         */
+        url?: string | null;
+        openIn?: ('new' | 'same') | null;
+        /**
+         * Helps you tell the banners apart in this list.
+         */
+        name?: string | null;
+        /**
+         * Optional. Defaults to the image’s own description.
+         */
+        alt?: string | null;
+        /**
+         * Untick to hide it from the site without deleting it.
+         */
+        active?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Wide images (about 4:1, like 676 × 164, or larger) fit best.
+   */
+  bottom?:
+    | {
+        /**
+         * Shown whole, never cropped. Upload it at 2× the size it appears for a sharp result.
+         */
+        image: string | Media;
+        /**
+         * Where a click goes: a web address (https://…) or a page of this site (/about-us/). Leave empty for a banner that is not clickable.
+         */
+        url?: string | null;
+        openIn?: ('new' | 'same') | null;
+        /**
+         * Helps you tell the banners apart in this list.
+         */
+        name?: string | null;
+        /**
+         * Optional. Defaults to the image’s own description.
+         */
+        alt?: string | null;
+        /**
+         * Untick to hide it from the site without deleting it.
+         */
+        active?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2261,22 +2298,6 @@ export interface HeaderSelect<T extends boolean = true> {
         id?: T;
       };
   showSocialInTopBar?: T;
-  topBanner?:
-    | T
-    | {
-        image?: T;
-        mobileImage?: T;
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              label?: T;
-              reference?: T;
-              url?: T;
-            };
-        hidden?: T;
-      };
   mainMenu?:
     | T
     | {
@@ -2343,6 +2364,7 @@ export interface HomepageSelect<T extends boolean = true> {
         faq?: T | FaqBlockSelect<T>;
         quoteOfDay?: T | QuoteOfDayBlockSelect<T>;
         reels?: T | ReelsBlockSelect<T>;
+        shorts?: T | ShortsBlockSelect<T>;
       };
   sidebar?:
     | T
@@ -2452,21 +2474,6 @@ export interface MediaShelfBlockSelect<T extends boolean = true> {
   title?: T;
   limit?: T;
   spotifyUrl?: T;
-  banners?:
-    | T
-    | {
-        image?: T;
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              label?: T;
-              reference?: T;
-              url?: T;
-            };
-        id?: T;
-      };
   id?: T;
   blockName?: T;
 }
@@ -2612,6 +2619,18 @@ export interface ReelsBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ShortsBlock_select".
+ */
+export interface ShortsBlockSelect<T extends boolean = true> {
+  hidden?: T;
+  title?: T;
+  channel?: T;
+  limit?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "QuickLinksBlock_select".
  */
 export interface QuickLinksBlockSelect<T extends boolean = true> {
@@ -2654,6 +2673,38 @@ export interface FollowUsBlockSelect<T extends boolean = true> {
   title?: T;
   id?: T;
   blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ads-banners_select".
+ */
+export interface AdsBannersSelect<T extends boolean = true> {
+  top?:
+    | T
+    | {
+        image?: T;
+        mobileImage?: T;
+        url?: T;
+        openIn?: T;
+        name?: T;
+        alt?: T;
+        active?: T;
+        id?: T;
+      };
+  bottom?:
+    | T
+    | {
+        image?: T;
+        url?: T;
+        openIn?: T;
+        name?: T;
+        alt?: T;
+        active?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

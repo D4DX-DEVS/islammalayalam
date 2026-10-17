@@ -29,10 +29,10 @@ const answer = (name: string, label: string): Field => ({
 
 export const PostalRequests: CollectionConfig = {
   slug: 'postal-requests',
-  labels: { singular: 'Postal library request', plural: 'Postal library requests' },
+  labels: { singular: 'Postal library request', plural: 'Postal library' },
   admin: {
     useAsTitle: 'name',
-    group: 'Submissions',
+    group: 'Inbox',
     defaultColumns: ['name', 'phone', 'email', 'status', 'createdAt'],
     listSearchableFields: ['name', 'phone', 'email', 'pincode'],
     description: 'Requests to join the postal library. Readers cannot be edited, only triaged.',

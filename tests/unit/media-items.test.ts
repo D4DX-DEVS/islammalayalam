@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { displayTitle, hasAnyField, itemLabel, linkHost, mergeFirst } from '@/lib/media-items'
+import {
+  displayTitle,
+  hasAnyField,
+  itemLabel,
+  labelFor,
+  linkHost,
+  mergeFirst,
+} from '@/lib/media-items'
 import { validateOptionalHttps, validateYouTubeLink } from '@/payload/fields'
 
 const check = (fn: unknown, value: unknown) =>
@@ -100,5 +107,28 @@ describe('link validators (every link is optional)', () => {
     expect(check(validateYouTubeLink, 'https://youtu.be/fvRsB9zkoxM')).toBe(true)
     for (const bad of ['https://vimeo.com/123', 'https://example.org/watch?v=fvRsB9zkoxM', 'nope'])
       expect(check(validateYouTubeLink, bad)).toEqual(expect.stringMatching(/YouTube/))
+  })
+})
+
+describe('labelFor (the name kept after a save)', () => {
+  const saved = { link: 'https://youtu.be/abc', title: 'Light of the Prophet', author: 'G K' }
+
+  it('keeps the saved name when the update only changes the position', () => {
+    // A reorder sends nothing but the new `_order`; the entry must not be renamed "Video".
+    expect(labelFor({}, saved, 'video')).toBe('Light of the Prophet')
+  })
+
+  it('uses what the editor just typed over what was saved', () => {
+    expect(labelFor({ title: 'New title' }, saved, 'video')).toBe('New title')
+  })
+
+  it('lets a cleared title fall back to the author, then the link', () => {
+    expect(labelFor({ title: '' }, saved, 'video')).toBe('G K')
+    expect(labelFor({ title: '', author: '' }, saved, 'video')).toBe('youtu.be')
+  })
+
+  it('names a brand-new entry from its own fields', () => {
+    expect(labelFor({ title: 'Fresh' }, undefined, 'audio')).toBe('Fresh')
+    expect(labelFor({}, null, 'audio')).toBe('Audio')
   })
 })

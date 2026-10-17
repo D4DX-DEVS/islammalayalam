@@ -20,6 +20,8 @@ interface PostCardProps {
   compactOnMobile?: boolean
   /** `list` only: arrow at the end of the row. */
   chevron?: boolean
+  /** `lead` and `row`: tighter (smaller picture, shorter titles) for a panel that must match a shorter neighbour. */
+  dense?: boolean
 }
 
 export const categoryName = (post: PostCardData): string | null =>
@@ -97,6 +99,7 @@ export function PostCard({
   hideCategory,
   compactOnMobile,
   chevron,
+  dense,
 }: PostCardProps) {
   const href = postHref(post.postNumber) ?? '#'
   const cat = hideCategory ? null : categoryName(post)
@@ -108,7 +111,7 @@ export function PostCard({
         href={href}
         data-reveal="zoom"
         suppressHydrationWarning
-        className="group relative isolate flex h-full min-h-[22rem] flex-col justify-end overflow-hidden rounded-card bg-brand-deep shadow-card ring-1 ring-black/5 transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lift focus-visible:-translate-y-0.5 motion-reduce:transform-none"
+        className={`group relative isolate flex h-full ${dense ? 'min-h-[18rem]' : 'min-h-[22rem]'} flex-col justify-end overflow-hidden rounded-card bg-brand-deep shadow-card ring-1 ring-black/5 transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lift focus-visible:-translate-y-0.5 motion-reduce:transform-none`}
       >
         <PostImage
           post={img}
@@ -124,7 +127,11 @@ export function PostCard({
             {post.title}
           </H>
           {post.excerpt ? (
-            <p className="line-clamp-3 text-sm leading-relaxed text-white/85">{post.excerpt}</p>
+            <p
+              className={`text-sm leading-relaxed text-white/85 ${dense ? 'line-clamp-2' : 'line-clamp-3'}`}
+            >
+              {post.excerpt}
+            </p>
           ) : null}
           <CardMeta post={post} light className="border-t border-white/20 pt-3.5" />
         </div>
@@ -139,18 +146,18 @@ export function PostCard({
         href={href}
         data-reveal="up"
         suppressHydrationWarning
-        className={`group flex items-center gap-3.5 p-2 pe-4 sm:gap-5 sm:p-2.5 sm:pe-5 ${CARD}`}
+        className={`group flex items-center gap-3.5 p-2 pe-4 ${dense ? 'sm:gap-4 sm:p-2 sm:pe-4' : 'sm:gap-5 sm:p-2.5 sm:pe-5'} ${CARD}`}
       >
         <PostImage
           post={img}
           size="card"
           sizes="(min-width: 640px) 168px, 112px"
-          className="aspect-[4/3] w-28 shrink-0 rounded-xl sm:w-40"
+          className={`aspect-[4/3] shrink-0 rounded-xl ${dense ? 'w-28 sm:w-32' : 'w-28 sm:w-40'}`}
         />
         <div className="min-w-0 flex-1 space-y-2 py-1">
           <Kicker name={cat} soft />
           <H
-            className={`line-clamp-3 font-display text-[0.97rem] font-semibold leading-snug text-ink sm:text-[1.05rem] ${TITLE_HOVER}`}
+            className={`font-display font-semibold leading-snug text-ink ${dense ? 'line-clamp-2 text-[0.95rem] sm:text-base' : 'line-clamp-3 text-[0.97rem] sm:text-[1.05rem]'} ${TITLE_HOVER}`}
           >
             {post.title}
           </H>

@@ -14,7 +14,8 @@ interface HeroSliderProps {
 }
 
 /**
- * Crossfading hero carousel: dots, previous/next, swipe, autoplay. Autoplay stops on hover, focus,
+ * Crossfading hero carousel: dots, previous/next, swipe, autoplay. The slides share one grid cell, so
+ * the slider is as tall as its tallest slide and the picture in each is shown at its natural shape. Autoplay stops on hover, focus,
  * in a background tab and for visitors who prefer reduced motion; inactive slides are `inert`.
  */
 export function HeroSlider({ slides, label, className = '' }: HeroSliderProps) {
@@ -38,7 +39,7 @@ export function HeroSlider({ slides, label, className = '' }: HeroSliderProps) {
       role="group"
       aria-roledescription="carousel"
       aria-label={label}
-      className={`group/hero relative isolate overflow-hidden rounded-2xl bg-brand-deep shadow-card ring-1 ring-black/5 ${className}`}
+      className={`group/hero relative isolate grid overflow-hidden rounded-2xl bg-brand-deep shadow-card ring-1 ring-black/5 ${className}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -62,14 +63,14 @@ export function HeroSlider({ slides, label, className = '' }: HeroSliderProps) {
           aria-label={`${i + 1} / ${count}`}
           data-active={i === active ? '' : undefined}
           inert={i !== active}
-          className={`absolute inset-0 transition-opacity duration-700 ease-out ${i === active ? 'z-10 opacity-100' : 'pointer-events-none opacity-0'}`}
+          className={`col-start-1 row-start-1 transition-opacity duration-700 ease-out ${i === active ? 'z-10 opacity-100' : 'pointer-events-none opacity-0'}`}
         >
           {slide}
         </div>
       ))}
 
       {count > 1 ? (
-        <div className="absolute bottom-5 end-5 z-20 flex items-center gap-4 sm:bottom-8 sm:end-8">
+        <div className="absolute bottom-5 end-5 z-20 flex items-center gap-4 sm:bottom-6 sm:end-8">
           <div className="flex items-center gap-2" role="tablist" aria-label={label}>
             {slides.map((_, i) => (
               <button
