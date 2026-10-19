@@ -14,7 +14,7 @@ export const REVIEW_ADMIN_EMAIL = 'migration-review@islammalayalam.net'
  */
 export async function ensureLocalReviewAdmin(run: Run): Promise<void> {
   // Own guard, not just the caller's: only ever the local migration database on this machine.
-  const url = process.env.DATABASE_URL ?? ''
+  const url = process.env.MONGODB_URI ?? ''
   const host = /^mongodb:\/\/(?:[^/]*@)?([^/:?]+)/.exec(url)?.[1] ?? ''
   const db = /^mongodb:\/\/[^/]+\/([^?]+)/.exec(url)?.[1] ?? ''
   if (!['127.0.0.1', 'localhost'].includes(host) || db !== LOCAL_MIGRATION_DB)

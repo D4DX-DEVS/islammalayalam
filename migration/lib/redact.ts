@@ -1,19 +1,16 @@
 /** Variables whose values must never reach a log line, report or console. */
 const SECRET_VARS = [
-  'DATABASE_URL',
   'MONGODB_URI',
   'PAYLOAD_SECRET',
   'DO_SPACES_KEY',
   'DO_SPACES_SECRET',
-  'S3_ACCESS_KEY_ID',
-  'S3_SECRET_ACCESS_KEY',
   'MIGRATION_ADMIN_PASSWORD',
   'DEV_ADMIN_PASSWORD',
   'DEV_ADMIN_TOTP_SECRET',
 ]
 
 /** Database hosts (e.g. the managed-MongoDB cluster name) are not secret, but stay out of reports. */
-const HOST_VARS = ['MONGODB_URI', 'DATABASE_URL']
+const HOST_VARS = ['MONGODB_URI']
 
 function mongoHosts(url: string | undefined): string[] {
   const hosts = /^mongodb(?:\+srv)?:\/\/(?:[^/]*@)?([^/?]+)/.exec(url ?? '')?.[1]

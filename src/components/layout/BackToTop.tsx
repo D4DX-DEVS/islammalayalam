@@ -17,8 +17,8 @@ export function BackToTop() {
   return (
     <a
       href="#top"
-      aria-label="മുകളിലേക്ക്"
-      className={`fixed bottom-5 end-5 z-40 inline-flex size-12 items-center justify-center rounded-full bg-brand text-white shadow-lift transition duration-300 hover:bg-brand-strong ${visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'}`}
+      aria-label="Back to top"
+      className={`fixed bottom-4 end-4 z-40 sm:bottom-5 sm:end-5 bg-brand-gradient inline-flex size-12 items-center justify-center rounded-full text-white shadow-lift ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 ${visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'}`}
       tabIndex={visible ? 0 : -1}
     >
       <ArrowUp className="size-5" aria-hidden="true" />

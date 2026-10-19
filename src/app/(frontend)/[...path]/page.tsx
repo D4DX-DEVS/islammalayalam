@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { Container } from '@/components/ui/Container'
 import { PostArticle } from '@/components/article/PostArticle'
 import { KbPage } from '@/components/page/KbPage'
+import { PostalLibraryPage } from '@/components/postal/PostalLibraryPage'
 import { resolvePath } from '@/features/routing/resolve'
 import { getSiteSettings } from '@/features/site/queries'
 import { mediaSrc } from '@/lib/media'
@@ -50,9 +51,11 @@ export default async function CatchAllPage({ params }: Props) {
 
   const settings = await getSiteSettings()
   return (
-    <Container className="py-6 lg:py-10">
+    <Container className="py-4 lg:py-6">
       {res.kind === 'post' ? (
         <PostArticle post={res.post} siteName={settings.siteName} />
+      ) : res.page.template === 'postal-request' ? (
+        <PostalLibraryPage page={res.page} />
       ) : (
         <KbPage page={res.page} />
       )}

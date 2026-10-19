@@ -1,6 +1,7 @@
 import type {
   CollectionBeforeChangeHook,
   CollectionConfig,
+  Field,
   TextFieldSingleValidation,
 } from 'payload'
 import {
@@ -18,6 +19,7 @@ import {
   reviewFlags,
   searchKeyField,
   searchTextField,
+  validateSpotifyLink,
 } from '@/payload/fields'
 import { contentHooks } from '@/payload/hooks'
 import {
@@ -39,6 +41,20 @@ const validateHttps: TextFieldSingleValidation = (value) =>
     : 'Only https:// links are allowed'
 const validateVideo: TextFieldSingleValidation = (value) =>
   !value || youtubeId(value) ? true : 'Enter a YouTube link'
+const validateDuration: TextFieldSingleValidation = (value) =>
+  !value || /^(\d{1,2}:)?[0-5]?\d:[0-5]\d$/.test(value)
+    ? true
+    : 'Use mm:ss or h:mm:ss, for example 18:24'
+/** Optional length of a video or audio, shown as a badge on the site. */
+const durationField: Field = {
+  name: 'duration',
+  type: 'text',
+  maxLength: 8,
+  validate: validateDuration,
+  admin: {
+    description: 'Optional length, e.g. 18:24 — shown on the video tile and next to audio tracks.',
+  },
+}
 
 const setPublishedAt: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
   const status = data?._status ?? originalDoc?._status
@@ -51,7 +67,7 @@ export const Posts: CollectionConfig = {
   slug: 'posts',
   admin: {
     useAsTitle: 'title',
-    group: 'Content',
+    group: 'Write',
     defaultColumns: ['title', 'postNumber', 'primaryCategory', '_status', 'publishedAt'],
     listSearchableFields: ['title', 'postNumber'],
   },
@@ -122,6 +138,7 @@ export const Posts: CollectionConfig = {
               admin: { condition: (data) => data?.format === 'video' },
               fields: [
                 { name: 'url', type: 'text', validate: validateVideo },
+                durationField,
                 {
                   name: 'youtubeId',
                   type: 'text',
@@ -136,9 +153,29 @@ export const Posts: CollectionConfig = {
               admin: {
                 condition: (data) => data?.format === 'audio',
                 description:
-                  'Link to the hosted audio (https only). Audio uploads are not accepted.',
+                  'Add a Spotify link (it plays inside the player on the site), or a link to hosted audio (https only). Audio uploads are not accepted. With both, the hosted audio plays and the Spotify link feeds the Spotify button.',
               },
-              fields: [{ name: 'url', type: 'text', validate: validateHttps }],
+              fields: [
+                {
+                  name: 'spotifyUrl',
+                  label: 'Spotify link',
+                  type: 'text',
+                  maxLength: 300,
+                  validate: validateSpotifyLink,
+                  admin: {
+                    description:
+                      'Episode, show or playlist, e.g. https://open.spotify.com/episode/… (use Share → Copy link in Spotify).',
+                  },
+                },
+                {
+                  name: 'url',
+                  label: 'Hosted audio link',
+                  type: 'text',
+                  validate: validateHttps,
+                  admin: { description: 'Optional: a direct https link to an audio file.' },
+                },
+                durationField,
+              ],
             },
             {
               name: 'attachments',

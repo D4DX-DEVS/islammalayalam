@@ -6,7 +6,7 @@ import type { ServerFunctionClient } from 'payload'
 import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
 import React from 'react'
 
-import { fontVariables } from '@/lib/fonts'
+import { adminFontVariables } from '@/lib/admin-fonts'
 import { importMap } from './admin/importMap.js'
 import './custom.scss'
 
@@ -26,8 +26,8 @@ const serverFunction: ServerFunctionClient = async function (args) {
 const Layout = ({ children }: Args) => (
   <RootLayout
     config={config}
-    // Same typefaces as the site (src/lib/fonts.ts; applied in custom.scss).
-    htmlProps={{ className: fontVariables }}
+    // The admin's own typefaces (src/lib/admin-fonts.ts; applied in custom.scss).
+    htmlProps={{ className: adminFontVariables }}
     importMap={importMap}
     serverFunction={serverFunction}
   >

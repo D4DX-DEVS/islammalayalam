@@ -1,0 +1,149 @@
+// Settings → Security (payload/admin/mfa/TwoStepSwitch.tsx): one self-saving switch instead of a
+// tick box + Save. Tokens come from admin-theme.scss / custom.scss.
+
+// The switch saves itself; the Save bar would only confuse (its button is also removed in config).
+.global-edit--security-settings .doc-controls {
+  display: none;
+}
+
+// ---- Generic switch (reusable for other on/off settings) ---------------------------------------
+.im-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 3.25rem;
+  height: 1.85rem;
+  padding: 0;
+  // Off: a solid grey track, so the control itself is visible (not only the "Off" pill).
+  border: 1px solid var(--im-muted);
+  border-radius: 999px;
+  background: var(--im-muted);
+  cursor: pointer;
+  box-shadow: inset 0 1px 2px rgb(15 23 42 / 0.12);
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+
+  &__thumb {
+    position: absolute;
+    top: 50%;
+    left: 0.2rem;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    background: var(--im-surface);
+    box-shadow: var(--im-shadow-md);
+    transform: translateY(-50%);
+    transition: transform 0.2s;
+  }
+
+  &[aria-checked='true'] {
+    border-color: var(--im-brand);
+    background: var(--im-brand);
+
+    .im-switch__thumb {
+      transform: translate(1.4rem, -50%);
+    }
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--im-brand-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--im-brand);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+// ---- Two-step verification card ----------------------------------------------------------------
+.im-two-step {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem 1.25rem;
+  align-items: start;
+  max-width: 46rem;
+  margin: 1.5rem auto 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--im-border);
+  border-radius: 1rem;
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-sm);
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.85rem;
+    background: var(--im-canvas);
+    color: var(--im-muted);
+
+    svg {
+      width: 1.4rem;
+      height: 1.4rem;
+    }
+  }
+
+  &.is-on &__icon {
+    background: var(--im-brand-soft);
+    color: var(--im-brand);
+  }
+
+  &__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 0.35rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  &__pill {
+    padding: 0.1rem 0.6rem;
+    border-radius: 999px;
+    background: var(--im-canvas);
+    color: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  &.is-on &__pill {
+    background: var(--im-brand-soft);
+    color: var(--im-brand);
+  }
+
+  &__status {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  &__hint {
+    margin: 0.35rem 0 0;
+    color: var(--im-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .im-switch {
+    margin-top: 0.35rem;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: auto 1fr;
+
+    .im-switch {
+      grid-column: 2;
+      justify-self: start;
+      margin-top: 0;
+    }
+  }
+}

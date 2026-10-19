@@ -1,10 +1,11 @@
 import type { Field, GlobalConfig, TextFieldSingleValidation } from 'payload'
 import { isAdmin, isEditor, totpPublicRead } from '@/payload/access'
-import { linkGroup } from '@/payload/fields'
+import { linkGroup, validateAdLink } from '@/payload/fields'
 import { mainColumnBlocks, sidebarBlocks } from '@/payload/blocks/homepage'
 import { auditGlobalChange } from '@/payload/hooks/auditLog'
 import { guardGlobalContent } from '@/payload/hooks/contentGuard'
 import { revalidateGlobal } from '@/payload/hooks/revalidate'
+import { applyMfaSetting, SECURITY_SETTINGS } from '@/payload/mfa'
 
 /**
  * Site-wide, editor-controlled globals: settings, header (top bar + 3-level menu), homepage
@@ -28,7 +29,7 @@ const imageUpload = (name: string, description?: string): Field => ({
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Site settings',
-  admin: { group: 'Settings' },
+  admin: { group: 'Site' },
   custom: totpPublicRead,
   access: { read: publicRead, update: isAdmin },
   hooks,
@@ -43,7 +44,7 @@ export const SiteSettings: GlobalConfig = {
     {
       name: 'social',
       type: 'group',
-      fields: ['facebook', 'x', 'instagram', 'youtube', 'whatsapp', 'telegram'].map(
+      fields: ['facebook', 'x', 'instagram', 'youtube', 'whatsapp', 'telegram', 'spotify'].map(
         (name): Field => ({ name, type: 'text', validate: httpsOnly }),
       ),
     },
@@ -52,7 +53,41 @@ export const SiteSettings: GlobalConfig = {
       type: 'group',
       fields: [
         { name: 'email', type: 'email' },
+        {
+          name: 'secondEmail',
+          type: 'email',
+          label: 'Second email',
+          admin: {
+            description:
+              'Optional. Listed under the first email wherever the contact details appear (footer, Quick Contact, the About page).',
+          },
+        },
         { name: 'phone', type: 'text', maxLength: 40 },
+        {
+          name: 'whatsappNumber',
+          type: 'text',
+          maxLength: 24,
+          label: 'WhatsApp number',
+          validate: (value: string | null | undefined) =>
+            !value || /^\+?[\d\s()-]{8,20}$/.test(value)
+              ? true
+              : 'Enter the number with country code, e.g. +91 98765 43210',
+          admin: {
+            description:
+              'Shows a green “chat on WhatsApp” button at the bottom right of every page. Leave empty to hide it.',
+          },
+        },
+        {
+          name: 'whatsappMessage',
+          type: 'text',
+          maxLength: 200,
+          label: 'WhatsApp greeting',
+          defaultValue: 'അസ്സലാമു അലൈക്കും',
+          admin: {
+            description:
+              'The message that is ready in the chat box when a visitor taps the button.',
+          },
+        },
         { name: 'address', type: 'textarea', maxLength: 400 },
       ],
     },
@@ -63,8 +98,8 @@ const menuItem = (children?: Field): Field[] => [linkGroup('link'), ...(children
 
 export const Header: GlobalConfig = {
   slug: 'header',
-  label: 'Header & menu',
-  admin: { group: 'Settings' },
+  label: 'Header and menu',
+  admin: { group: 'Site' },
   custom: totpPublicRead,
   access: { read: publicRead, update: isEditor },
   hooks,
@@ -78,7 +113,14 @@ export const Header: GlobalConfig = {
         description:
           'Small links beside the logo on desktop and at the bottom of the mobile menu (e.g. About Us · Postal Library).',
       },
-      fields: [linkGroup('link')],
+      fields: [
+        linkGroup('link'),
+        {
+          name: 'highlight',
+          type: 'checkbox',
+          label: 'Show as a highlighted button (e.g. Postal Library, Order the Quran)',
+        },
+      ],
     },
     {
       name: 'showSocialInTopBar',
@@ -101,10 +143,157 @@ export const Header: GlobalConfig = {
   ],
 }
 
+/** One row of the Ads banners lists. `phone` adds a narrower picture for small screens. */
+const adRows = (opts: {
+  name: string
+  label: string
+  phone: boolean
+  max: number
+  help: string
+}): Field => ({
+  name: opts.name,
+  type: 'array',
+  maxRows: opts.max,
+  labels: { singular: 'Banner', plural: 'Banners' },
+  admin: {
+    description: opts.help,
+    initCollapsed: false,
+    components: { RowLabel: '/payload/admin/ads/BannerRowLabel#BannerRowLabel' },
+  },
+  fields: [
+    {
+      name: 'image',
+      label: 'Banner image',
+      type: 'upload',
+      relationTo: 'media',
+      required: true,
+      filterOptions: { mimeType: { contains: 'image' } },
+      admin: {
+        description:
+          'Shown whole, never cropped. Upload it at 2× the size it appears for a sharp result.',
+      },
+    },
+    ...(opts.phone
+      ? [
+          {
+            name: 'mobileImage',
+            label: 'Image for phones (optional)',
+            type: 'upload',
+            relationTo: 'media',
+            filterOptions: { mimeType: { contains: 'image' } },
+            admin: {
+              description:
+                'A narrower version, e.g. 900 × 360, used on screens under 640 px wide. Without one, the main image is scaled down.',
+            },
+          } satisfies Field,
+        ]
+      : []),
+    {
+      name: 'url',
+      label: 'Link (URL)',
+      type: 'text',
+      maxLength: 500,
+      validate: validateAdLink,
+      admin: {
+        placeholder: 'https://example.com/',
+        description:
+          'Where a click goes: a web address (https://…) or a page of this site (/about-us/). Leave empty for a banner that is not clickable.',
+      },
+    },
+    {
+      name: 'openIn',
+      label: 'Open the link in',
+      type: 'radio',
+      defaultValue: 'new',
+      options: [
+        { label: 'New tab', value: 'new' },
+        { label: 'Same window', value: 'same' },
+      ],
+      admin: { layout: 'horizontal', condition: (_, sibling) => Boolean(sibling?.url) },
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'name',
+          label: 'Name (only for you)',
+          type: 'text',
+          maxLength: 80,
+          admin: { description: 'Helps you tell the banners apart in this list.', width: '50%' },
+        },
+        {
+          name: 'alt',
+          label: 'Description for screen readers',
+          type: 'text',
+          maxLength: 200,
+          admin: {
+            description: 'Optional. Defaults to the image’s own description.',
+            width: '50%',
+          },
+        },
+      ],
+    },
+    {
+      name: 'active',
+      label: 'Show this banner',
+      type: 'checkbox',
+      defaultValue: true,
+      admin: { description: 'Untick to hide it from the site without deleting it.' },
+    },
+  ],
+})
+
+export const AdsBanners: GlobalConfig = {
+  slug: 'ads-banners',
+  label: 'Ads banners',
+  admin: {
+    group: 'Site',
+    description:
+      'The advertisement banners of the homepage. Add as many as you need, delete the ones you no longer want, and choose for each one where it links and whether it opens in the same window or a new tab.',
+  },
+  custom: totpPublicRead,
+  access: { read: publicRead, update: isEditor },
+  hooks,
+  fields: [
+    {
+      type: 'tabs',
+      tabs: [
+        {
+          label: 'Top ads banner',
+          description:
+            'Wide banners right under the menu bar of the homepage, one below the other.',
+          fields: [
+            adRows({
+              name: 'top',
+              label: 'Top banners',
+              phone: true,
+              max: 6,
+              help: 'As wide as the page content, with the height following the image: 1920 × 240 or larger is sharp on every screen.',
+            }),
+          ],
+        },
+        {
+          label: 'Bottom ads banner',
+          description: 'Banners in a column below the e-book shelf on the homepage.',
+          fields: [
+            adRows({
+              name: 'bottom',
+              label: 'Bottom banners',
+              phone: false,
+              max: 6,
+              help: 'Wide images (about 4:1, like 676 × 164, or larger) fit best.',
+            }),
+          ],
+        },
+      ],
+    },
+  ],
+}
+
 export const Homepage: GlobalConfig = {
   slug: 'homepage',
   label: 'Homepage',
-  admin: { group: 'Settings' },
+  admin: { group: 'Site' },
   custom: totpPublicRead,
   access: { read: publicRead, update: isEditor },
   hooks,
@@ -129,7 +318,7 @@ export const Homepage: GlobalConfig = {
 export const Footer: GlobalConfig = {
   slug: 'footer',
   label: 'Footer',
-  admin: { group: 'Settings' },
+  admin: { group: 'Site' },
   custom: totpPublicRead,
   access: { read: publicRead, update: isEditor },
   hooks,
@@ -180,4 +369,33 @@ export const Footer: GlobalConfig = {
   ],
 }
 
-export const globals: GlobalConfig[] = [SiteSettings, Header, Homepage, Footer]
+/** Admin-only sign-in policy (src/payload/mfa.ts). Not public: it is never rendered on the site. */
+export const SecuritySettings: GlobalConfig = {
+  slug: SECURITY_SETTINGS,
+  label: 'Two-step login',
+  admin: {
+    group: 'Team',
+    // One self-saving switch (TwoStepSwitch) with its own confirmation: no Save button.
+    components: { elements: { SaveButton: '/payload/admin/mfa/NoSaveButton#NoSaveButton' } },
+  },
+  access: { read: isAdmin, update: isAdmin },
+  hooks: { afterChange: [applyMfaSetting, auditGlobalChange] },
+  fields: [
+    {
+      name: 'requireTwoFactor',
+      type: 'checkbox',
+      label: 'Two-step verification (authenticator app) at sign-in',
+      defaultValue: true,
+      admin: { components: { Field: '/payload/admin/mfa/TwoStepSwitch#TwoStepSwitch' } },
+    },
+  ],
+}
+
+export const globals: GlobalConfig[] = [
+  SiteSettings,
+  Header,
+  Homepage,
+  AdsBanners,
+  Footer,
+  SecuritySettings,
+]

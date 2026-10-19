@@ -23,7 +23,7 @@ export const Pages: CollectionConfig = {
   slug: 'pages',
   admin: {
     useAsTitle: 'title',
-    group: 'Content',
+    group: 'Write',
     defaultColumns: ['title', 'path', 'kind', 'updatedAt'],
     listSearchableFields: ['title', 'path'],
   },
@@ -53,6 +53,20 @@ export const Pages: CollectionConfig = {
         { label: 'Static page', value: 'static' },
       ],
       admin: { position: 'sidebar' },
+    },
+    {
+      name: 'template',
+      type: 'select',
+      defaultValue: 'default',
+      options: [
+        { label: 'Standard', value: 'default' },
+        { label: 'Postal library request form', value: 'postal-request' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description:
+          'Standard shows the body as an article. The request form adds the membership form: Content is the introduction, Sections are the conditions.',
+      },
     },
     { name: 'intro', type: 'richText', editor: simpleEditor },
     { name: 'content', type: 'richText', editor: articleEditor },

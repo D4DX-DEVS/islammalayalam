@@ -8,8 +8,9 @@ const TAGS = [collectionTag('pages'), collectionTag('media')]
 
 export type PageLink = Pick<Page, 'id' | 'title' | 'path'>
 
+// The key carries a version: bump it when the shape of a cached page changes (e.g. a new field).
 export const getPageByPath = cached(
-  'pages:by-path',
+  'pages:by-path:v2',
   TAGS,
   async (path: string): Promise<Page | null> => {
     const payload = await getPayloadClient()

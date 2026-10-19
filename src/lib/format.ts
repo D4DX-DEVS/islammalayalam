@@ -1,23 +1,36 @@
-const DATE = new Intl.DateTimeFormat('ml-IN', {
+const DATE = new Intl.DateTimeFormat('en-IN', {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
   timeZone: 'Asia/Kolkata',
 })
 
-/** "20 സെപ്റ്റംബർ 2026" — day, Malayalam month, year (India time). ICU's own ml order is year-first. */
+/** "20 September 2026" — day, English month, year (India time). */
 export function formatDate(value: string | null | undefined): string {
   if (!value) return ''
   const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return ''
-  const part = (type: Intl.DateTimeFormatPartTypes) =>
-    DATE.formatToParts(d).find((p) => p.type === type)?.value ?? ''
-  return `${part('day')} ${part('month')} ${part('year')}`
+  return Number.isNaN(d.getTime()) ? '' : DATE.format(d)
 }
 
-/** "4 മിനിറ്റ് വായന" */
-export const readingLabel = (minutes: number | null | undefined): string =>
-  minutes && minutes > 0 ? `${minutes} മിനിറ്റ് വായന` : ''
+/**
+ * The footer's copyright line without the site's own name: the logo above already says it, so
+ * "© Islam Malayalam. All rights reserved." reads "© All rights reserved.".
+ */
+export function withoutSiteName(
+  text: string | null | undefined,
+  names: Array<string | null | undefined>,
+): string {
+  let out = text ?? ''
+  for (const name of names) {
+    const n = name?.trim()
+    if (n) out = out.replace(new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '')
+  }
+  return out
+    .replace(/\s+([.,;:])/g, '$1') // "© ." → "©."
+    .replace(/(©)\s*[.,;:]+\s*/g, '$1 ') // "©. All" → "© All"
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
 
 /** Parse ?page= safely: positive integer, capped. Anything else → 1. */
 export function parsePage(value: string | string[] | undefined, max = 10_000): number {

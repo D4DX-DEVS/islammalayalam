@@ -54,6 +54,7 @@ describe('anonymous visitors', () => {
       'audit-logs',
       'redirects',
       'contact-messages',
+      'postal-requests',
       'migration-runs',
       'migration-issues',
     ] as const) {
@@ -62,6 +63,93 @@ describe('anonymous visitors', () => {
         collection,
       ).toBe(403)
     }
+  })
+
+  it('cannot create postal-library requests through the API (only the form action can)', async () => {
+    const data = {
+      name: 'Anyone',
+      age: 30,
+      gender: 'male',
+      address: 'Somewhere',
+      pincode: '673004',
+      phone: '9876543210',
+      email: 'anyone@example.com',
+      education: 'Degree',
+      religion: 'Any',
+      readBefore: 'x',
+      difficulties: 'x',
+      favouriteAspect: 'x',
+      wantsToLearn: 'x',
+      status: 'new',
+    } as const
+    expect(
+      await statusOf(() =>
+        payload.create({ collection: 'postal-requests', data, overrideAccess: false }),
+      ),
+    ).toBe(403)
+    // The form's own path (Local API, trusted) does work.
+    const saved = await payload.create({
+      collection: 'postal-requests',
+      data,
+      overrideAccess: true,
+    })
+    expect(saved.status).toBe('new')
+    // Editors may triage but not rewrite what the reader wrote.
+    const editorView = await payload.findByID({
+      collection: 'postal-requests',
+      id: saved.id,
+      user: editor,
+      overrideAccess: false,
+    })
+    expect(editorView.name).toBe('Anyone')
+    const updated = await payload.update({
+      collection: 'postal-requests',
+      id: saved.id,
+      data: { status: 'member', name: 'Changed' } as never,
+      user: editor,
+      overrideAccess: false,
+    })
+    expect(updated.status).toBe('member')
+    expect(updated.name).toBe('Anyone')
+  })
+
+  it('see active quotes only, and cannot create them (editors can)', async () => {
+    await payload.create({
+      collection: 'quotes',
+      data: { text: 'Visible quote', active: true },
+      overrideAccess: true,
+    })
+    const hidden = await payload.create({
+      collection: 'quotes',
+      data: { text: 'Hidden quote', active: false },
+      overrideAccess: true,
+    })
+    const texts = (await payload.find({ collection: 'quotes', overrideAccess: false })).docs.map(
+      (d) => d.text,
+    )
+    expect(texts).toContain('Visible quote')
+    expect(texts).not.toContain('Hidden quote')
+    expect(
+      await statusOf(() =>
+        payload.findByID({ collection: 'quotes', id: hidden.id, overrideAccess: false }),
+      ),
+    ).toBe(404)
+    expect(
+      await statusOf(() =>
+        payload.create({
+          collection: 'quotes',
+          data: { text: 'Sneaky', active: true },
+          overrideAccess: false,
+        }),
+      ),
+    ).toBe(403)
+    const made = await payload.create({
+      collection: 'quotes',
+      data: { text: 'Written by an editor' },
+      user: editor,
+      overrideAccess: false,
+    })
+    expect(made.label).toBe('Written by an editor')
   })
 
   it('see published posts only — also when asking for drafts', async () => {

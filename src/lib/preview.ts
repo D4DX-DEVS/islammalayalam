@@ -11,7 +11,17 @@ export const EXIT_PREVIEW_ROUTE = '/next/exit-preview/'
 export const PREVIEW_COOKIE = '__prerender_bypass'
 
 export const PREVIEW_COLLECTIONS = ['posts', 'pages'] as const
-export const PREVIEW_GLOBALS = ['homepage'] as const
+/**
+ * The globals that make up the public site (the Site group of the admin). They all preview the home
+ * page, where the header, footer, banners and sections are all on screen.
+ */
+export const PREVIEW_GLOBALS = [
+  'homepage',
+  'header',
+  'footer',
+  'site-settings',
+  'ads-banners',
+] as const
 export type PreviewCollection = (typeof PREVIEW_COLLECTIONS)[number]
 export type PreviewGlobal = (typeof PREVIEW_GLOBALS)[number]
 export type PreviewTarget =

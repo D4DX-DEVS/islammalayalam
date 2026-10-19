@@ -1,6 +1,6 @@
 import type { Field, FieldHook, TextFieldSingleValidation } from 'payload'
 import { normalizeSlug } from '@/lib/text/slug'
-import { isSafeHref } from '@/lib/security/url'
+import { isSafeHref, spotifyOpenUrl, youtubeId } from '@/lib/security/url'
 import { staffFieldOnly } from '@/payload/access'
 
 /** Slug: NFC, zero-width-free, Malayalam-safe. Derived from `source` when left empty. */
@@ -142,7 +142,8 @@ export function linkGroup(name = 'link', opts: { required?: boolean } = {}): Fie
           {
             name: 'type',
             type: 'radio',
-            defaultValue: 'reference',
+            // Optional links (banner, "more" links) start as "no link" so an untouched one is valid.
+            defaultValue: opts.required === false ? 'none' : 'reference',
             options: [
               { label: 'Page / post / category', value: 'reference' },
               { label: 'URL', value: 'custom' },
@@ -173,3 +174,28 @@ export function linkGroup(name = 'link', opts: { required?: boolean } = {}): Fie
     ],
   }
 }
+
+/** An ad's link: a full web address or a page of this site; empty means "no link". */
+export const validateAdLink: TextFieldSingleValidation = (value) =>
+  !value ||
+  (isSafeHref(value) && (value.trim().startsWith('/') || /^https?:\/\//i.test(value.trim())))
+    ? true
+    : 'Enter a web address that starts with https://, or a page of this site like /about-us/'
+
+/** For a text field that holds a Spotify link (episode, show, playlist, album or track); empty is fine. */
+export const validateSpotifyLink: TextFieldSingleValidation = (value) =>
+  !value || spotifyOpenUrl(value)
+    ? true
+    : 'Enter a Spotify link, e.g. https://open.spotify.com/episode/… or /show/… or /playlist/…'
+
+/** Optional https link (Spotify, hosted audio…); empty is fine. */
+export const validateOptionalHttps: TextFieldSingleValidation = (value) =>
+  !value || (isSafeHref(value) && value.trim().startsWith('https://'))
+    ? true
+    : 'Enter a link that starts with https://'
+
+/** Optional YouTube link; empty is fine. */
+export const validateYouTubeLink: TextFieldSingleValidation = (value) =>
+  !value || youtubeId(value)
+    ? true
+    : 'Enter a YouTube link, e.g. https://www.youtube.com/watch?v=… or https://youtu.be/…'

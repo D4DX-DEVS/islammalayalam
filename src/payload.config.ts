@@ -1,14 +1,15 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { buildConfig } from 'payload'
-import type { Plugin } from 'payload'
+import type { CollectionConfig, Field, Plugin } from 'payload'
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { s3Storage } from '@payloadcms/storage-s3'
 import sharp from 'sharp'
 import { payloadTotp } from 'payload-totp'
+import { mfaPolicy } from '@/payload/plugins/mfaPolicy'
 import { totpGuard } from '@/payload/plugins/totpGuard'
-import { getEnv, spacesEnabled } from '@/lib/env'
+import { getEnv, spacesConfig } from '@/lib/env'
 import { MAX_PDF_BYTES } from '@/lib/media/file-policy'
 import { PREVIEW_COLLECTIONS, PREVIEW_GLOBALS, previewTargetFor, previewUrl } from '@/lib/preview'
 import { articleEditor } from '@/payload/editor'
@@ -24,6 +25,9 @@ import {
   MigrationRuns,
   Redirects,
 } from '@/payload/collections/system'
+import { PostalRequests } from '@/payload/collections/PostalRequests'
+import { Audios, Videos } from '@/payload/collections/MediaLinks'
+import { Quotes } from '@/payload/collections/Quotes'
 import { Users } from '@/payload/collections/Users'
 import { globals } from '@/payload/globals'
 
@@ -32,26 +36,68 @@ const dirname = path.dirname(filename)
 const env = getEnv()
 const SITE_NAME = 'Islam Malayalam'
 
-/** DigitalOcean Spaces — only when fully configured AND allowed (see src/lib/env.ts rails). */
+/** Every admin list: 20 rows by default and a 10/20/50/100 rows-per-page picker. */
+const LIST_PAGINATION = { defaultLimit: 20, limits: [10, 20, 50, 100] }
+/** Lists that get an "Actions" column (Edit + Delete with confirmation). Logs stay read-only. */
+const ROW_ACTIONS = new Set([
+  'posts',
+  'pages',
+  'categories',
+  'authors',
+  'media',
+  'redirects',
+  'contact-messages',
+  'users',
+  'audios',
+  'videos',
+  'quotes',
+])
+const rowActionsField: Field = {
+  name: 'rowActions',
+  type: 'ui',
+  label: 'Actions',
+  admin: {
+    disableBulkEdit: true,
+    components: { Cell: '/payload/admin/RowActions#RowActions' },
+  },
+}
+// Admin users are editors, not developers: the API tab and API URL are hidden on every screen.
+const HIDE_API = { hideAPIURL: true } as const
+
+const withListDefaults = (collection: CollectionConfig): CollectionConfig => {
+  const admin = { pagination: LIST_PAGINATION, ...HIDE_API, ...collection.admin }
+  if (!ROW_ACTIONS.has(collection.slug)) return { ...collection, admin }
+  return {
+    ...collection,
+    fields: [...collection.fields, rowActionsField],
+    admin: {
+      ...admin,
+      defaultColumns: admin.defaultColumns && [...admin.defaultColumns, 'rowActions'],
+    },
+  }
+}
+
+/** DigitalOcean Spaces (DO_SPACES_* in .env) — only when fully configured (see src/lib/env.ts). */
 function storagePlugins(): Plugin[] {
-  if (!spacesEnabled(env)) return []
-  const cdn = env.MEDIA_CDN_URL?.replace(/\/$/, '')
+  const spaces = spacesConfig(env)
+  if (!spaces) return []
+  const cdn = spaces.cdnUrl
   return [
     s3Storage({
-      bucket: env.S3_BUCKET!,
+      bucket: spaces.bucket,
       acl: 'public-read',
       config: {
-        endpoint: env.S3_ENDPOINT,
-        region: env.S3_REGION,
+        endpoint: spaces.endpoint,
+        region: spaces.region,
         forcePathStyle: false,
         credentials: {
-          accessKeyId: env.S3_ACCESS_KEY_ID!,
-          secretAccessKey: env.S3_SECRET_ACCESS_KEY!,
+          accessKeyId: spaces.accessKeyId,
+          secretAccessKey: spaces.secretAccessKey,
         },
       },
       collections: {
         media: {
-          prefix: [env.S3_PREFIX, 'media'].filter(Boolean).join('/'),
+          prefix: [spaces.prefix, 'media'].filter(Boolean).join('/'),
           ...(cdn
             ? {
                 disablePayloadAccessControl: true,
@@ -94,7 +140,29 @@ export default buildConfig({
         Logo: '/payload/admin/graphics#AdminLogo',
         Icon: '/payload/admin/graphics#AdminIcon',
       },
-      beforeDashboard: ['/payload/admin/Dashboard#EditorialDashboard'],
+      Nav: '/payload/admin/nav/AdminNav#AdminNav',
+      // Right side of the header: dark-mode switch, then the account dropdown card.
+      actions: [
+        '/payload/admin/header/ThemeSwitch#ThemeSwitch',
+        '/payload/admin/header/AccountMenu#AccountMenu',
+      ],
+      views: {
+        dashboard: { Component: '/payload/admin/dashboard/DashboardView#DashboardView' },
+        // Admin → Website manager: every page and section of the site, with where to edit it.
+        website: {
+          Component: '/payload/admin/website/WebsiteView#WebsiteView',
+          path: '/website',
+          exact: true,
+        },
+        // Totals and charts, kept off the Today screen.
+        reports: {
+          Component: '/payload/admin/dashboard/ReportsView#ReportsView',
+          path: '/reports',
+          exact: true,
+        },
+      },
+      // Confirmations on Publish/Save/Force Unlock + show/hide on password fields.
+      providers: ['/payload/admin/enhancements/AdminEnhancements#AdminEnhancements'],
     },
     // Side-by-side preview while editing. The iframe goes through /next/preview/, which re-checks
     // the staff session (password + TOTP) before showing anything unpublished.
@@ -117,21 +185,25 @@ export default buildConfig({
     },
   },
   editor: articleEditor,
-  db: mongooseAdapter({ url: env.DATABASE_URL }),
+  db: mongooseAdapter({ url: env.MONGODB_URI }),
   collections: [
     Posts,
     Pages,
     Categories,
     Authors,
+    Quotes,
+    Audios,
+    Videos,
     Media,
     Redirects,
     ContactMessages,
+    PostalRequests,
     Users,
     AuditLogs,
     MigrationRuns,
     MigrationIssues,
-  ],
-  globals,
+  ].map(withListDefaults),
+  globals: globals.map((g) => ({ ...g, admin: { ...HIDE_API, ...g.admin } })),
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   sharp,
   plugins: [
@@ -148,11 +220,17 @@ export default buildConfig({
     // Must follow every plugin that adds collections/globals: it wraps the access of everything before it.
     payloadTotp({
       collection: 'users',
+      // Hides "remove authenticator" and keeps POST /api/remove-totp refused. Whether setup is
+      // actually required comes from Settings → Security, applied by mfaPolicy() below.
       forceSetup: true,
+      // mfaPolicy() wraps access instead, following the runtime setting.
+      disableAccessWrapper: true,
       disabled: env.TOTP_DISABLED === 'true' && env.NODE_ENV === 'test',
       totp: { issuer: SITE_NAME, algorithm: 'SHA1', digits: 6, period: 30 },
     }),
-    // Attempt limit + replay protection for payload-totp's code check; must follow payloadTotp().
+    // Both must follow payloadTotp(): runtime on/off switch (access + admin redirects), then the
+    // attempt limit + replay protection for the code check.
+    mfaPolicy(),
     totpGuard(),
   ],
 })

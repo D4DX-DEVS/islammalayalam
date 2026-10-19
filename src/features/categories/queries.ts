@@ -40,7 +40,7 @@ export const getAuthorBySlug = cached(
   },
 )
 
-export type CategoryChip = Pick<Category, 'id' | 'name' | 'slug'>
+export type CategoryChip = Pick<Category, 'id' | 'name' | 'slug' | 'icon' | 'showInStrip'>
 
 /** Visible categories in editor order (topic chips on the homepage). */
 export const listCategories = cached(
@@ -54,10 +54,33 @@ export const listCategories = cached(
       sort: 'order',
       limit: 40,
       depth: 0,
-      select: { name: true, slug: true },
+      select: { name: true, slug: true, icon: true, showInStrip: true },
       pagination: false,
       ...PUBLIC,
     })
     return res.docs as CategoryChip[]
+  },
+)
+
+export type TopicCategory = Pick<Category, 'id' | 'name' | 'slug' | 'image'>
+
+/** Visible categories with their image populated (topic tiles on the homepage). */
+export const listTopicCategories = cached(
+  'categories:topics',
+  [collectionTag('categories'), collectionTag('media')],
+  async (): Promise<TopicCategory[]> => {
+    const payload = await getPayloadClient()
+    const res = await payload.find({
+      collection: 'categories',
+      where: { hidden: { not_equals: true } },
+      sort: 'order',
+      limit: 40,
+      depth: 1,
+      select: { name: true, slug: true, image: true },
+      populate: POPULATE,
+      pagination: false,
+      ...PUBLIC,
+    })
+    return res.docs as TopicCategory[]
   },
 )

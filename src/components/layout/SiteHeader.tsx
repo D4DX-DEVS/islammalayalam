@@ -18,6 +18,8 @@ interface SiteHeaderProps {
   navItems: NavItem[]
   showSocial: boolean
   pathname: string
+  /** Show the AI button in the search boxes. */
+  aiSearch?: boolean
 }
 
 function PartnerLogo({ settings }: { settings: SiteSetting }) {
@@ -61,27 +63,33 @@ export function SiteHeader({
   navItems,
   showSocial,
   pathname,
+  aiSearch = false,
 }: SiteHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-card/90 backdrop-blur-md xl:static xl:bg-card">
+    <header className="sticky top-0 z-40 border-b border-line/60 bg-card/80 backdrop-blur-xl xl:static xl:bg-card">
       <Container className="flex h-16 items-center gap-1.5 sm:h-[4.5rem] xl:h-20 xl:gap-4">
         <MobileNav
           items={navItems}
           pathname={pathname}
           topLinks={topLinks}
           social={settings.social}
+          aiSearch={aiSearch}
         />
         <Brand settings={settings} priority />
         <div className="ms-auto flex items-center gap-1 sm:gap-2 xl:gap-4">
           {topLinks.length ? (
-            <ul className="hidden items-center gap-5 lg:flex">
+            <ul className="hidden items-center divide-x divide-line lg:flex">
               {topLinks.map((l) => (
-                <li key={l.id}>
+                <li key={l.id} className="px-4 first:ps-0 last:pe-0">
                   <SmartLink
                     href={l.href}
                     external={l.external}
                     newTab={l.newTab}
-                    className="text-sm font-medium text-muted transition-colors hover:text-brand"
+                    className={
+                      l.highlight
+                        ? 'inline-flex min-h-10 items-center rounded-full bg-accent-strong px-5 text-sm font-semibold text-on-accent shadow-card ring-1 ring-black/5 transition hover:-translate-y-px hover:shadow-lift'
+                        : 'text-sm font-medium text-muted transition-colors hover:text-brand'
+                    }
                   >
                     {l.label}
                   </SmartLink>
@@ -90,14 +98,14 @@ export function SiteHeader({
             </ul>
           ) : null}
           {showSocial ? (
-            <SocialLinks social={settings.social} className="hidden text-muted xl:flex" />
+            <SocialLinks social={settings.social} variant="brand" className="hidden xl:flex" />
           ) : null}
           <PartnerLogo settings={settings} />
-          <SearchForm className="hidden w-60 md:flex xl:w-72" />
+          <SearchForm ai={aiSearch} className="hidden w-60 md:flex xl:w-80" />
           <Link
             href={SEARCH_PATH}
-            aria-label="തിരയുക"
-            className="inline-flex size-11 items-center justify-center rounded-full text-ink hover:bg-surface hover:text-brand md:hidden"
+            aria-label="Search"
+            className="inline-flex size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-surface hover:text-brand md:hidden"
           >
             <Search className="size-5" aria-hidden="true" />
           </Link>

@@ -42,9 +42,14 @@ export const POPULATE = {
  * (dev seed vs. local migration, staging vs. production). Reveals nothing about the settings.
  */
 function dataSource(): string {
-  const { DATABASE_URL = '', MEDIA_DIR = '', MEDIA_CDN_URL = '', S3_PREFIX = '' } = process.env
+  const {
+    MONGODB_URI = '',
+    MEDIA_DIR = '',
+    DO_SPACES_CDN_ENDPOINT = '',
+    DO_SPACES_FOLDER = '',
+  } = process.env
   return createHash('sha256')
-    .update([DATABASE_URL, MEDIA_DIR, MEDIA_CDN_URL, S3_PREFIX].join('\n'))
+    .update([MONGODB_URI, MEDIA_DIR, DO_SPACES_CDN_ENDPOINT, DO_SPACES_FOLDER].join('\n'))
     .digest('hex')
     .slice(0, 12)
 }

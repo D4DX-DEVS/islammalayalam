@@ -3,20 +3,15 @@ import type { NextConfig } from 'next'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { PREVIEW_COOKIE } from './src/lib/preview'
+import { cdnUrl } from './src/lib/spaces'
 
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 const isProd = process.env.NODE_ENV === 'production'
 
 function cdnPattern(): { protocol: 'https'; hostname: string; pathname: string }[] {
-  try {
-    const url = new URL(process.env.MEDIA_CDN_URL ?? '')
-    return url.protocol === 'https:'
-      ? [{ protocol: 'https', hostname: url.hostname, pathname: '/**' }]
-      : []
-  } catch {
-    return []
-  }
+  const cdn = cdnUrl(process.env.DO_SPACES_CDN_ENDPOINT)
+  return cdn ? [{ protocol: 'https', hostname: new URL(cdn).hostname, pathname: '/**' }] : []
 }
 
 /** Static security headers for every response (the per-request CSP is set in src/proxy.ts). */
@@ -37,15 +32,22 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Keep the dev-only Next badge clear of the admin sidebar's account card (bottom-left).
+  devIndicators: { position: 'bottom-right' },
   // WordPress URLs end in "/" (/1234/, /category/news/). Next would 308 them to no-slash; instead
   // src/proxy.ts adds the slash for public pages only (API/admin paths are left untouched).
   skipTrailingSlashRedirect: true,
   reactStrictMode: true,
   images: {
+    // 75 is the default; banners (ads, the top banner) ask for 90 so text and QR codes stay crisp.
+    qualities: [75, 90],
     localPatterns: [{ pathname: '/api/media/file/**' }, { pathname: '/brand/**' }],
     remotePatterns: [
       ...cdnPattern(),
       { protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' },
+      // Cover art of Spotify episodes (the Audios section).
+      { protocol: 'https', hostname: 'i.scdn.co', pathname: '/image/**' },
+      { protocol: 'https', hostname: '**.spotifycdn.com', pathname: '/image/**' },
     ],
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: false,

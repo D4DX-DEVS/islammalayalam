@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import { BookOpen, FileText, Headphones, CirclePlay } from 'lucide-react'
+import { LazyImage } from '@/components/ui/LazyImage'
 import { mediaSrc } from '@/lib/media'
 import type { Media, Post } from '@/payload-types'
 
@@ -19,8 +19,12 @@ interface PostImageProps {
   cover?: boolean
   /** Fallback artwork shows the title (book covers). */
   titleOnFallback?: boolean
+  /** cover = fill and crop (default) · contain = show the whole picture (book covers). */
+  fit?: 'cover' | 'contain'
 }
 
+/** Shown when a post has no image of its own. */
+const PLACEHOLDER = '/brand/post-placeholder.jpg'
 const FORMAT_ICON = {
   video: CirclePlay,
   audio: Headphones,
@@ -29,10 +33,10 @@ const FORMAT_ICON = {
 } as const
 // Brand-blue family: the designed fallback varies by format, never by random colours.
 const FALLBACK_TONE = {
-  standard: 'from-[#1a6bc4] to-[#0b2447]',
-  video: 'from-[#0f3d7a] to-[#06142b]',
-  audio: 'from-[#1d5fa8] to-[#123a6b]',
-  ebook: 'from-[#13549e] to-[#0b2447]',
+  standard: 'from-[#2f86e6] to-[#0a3f8f]',
+  video: 'from-[#1a5cc0] to-[#072a60]',
+  audio: 'from-[#2a79d6] to-[#0b3a82]',
+  ebook: 'from-[#1f6ccc] to-[#082e6b]',
 } as const
 
 function pickSource(
@@ -56,9 +60,17 @@ function pickSource(
     : null
 }
 
+/** True when the post has a picture of its own (an image, or a YouTube thumbnail), not the placeholder. */
+export function hasPicture(post: PostLike): boolean {
+  const media =
+    post.featuredImage && typeof post.featuredImage === 'object' ? post.featuredImage : null
+  if (media && pickSource(media, 'large')) return true
+  return Boolean(post.format === 'video' && post.video?.youtubeId)
+}
+
 /**
- * Featured image with two fallbacks: the YouTube thumbnail for video posts, then designed artwork
- * (brand gradient + star lattice + format icon). Never an empty grey box (audit §4).
+ * Featured image with two fallbacks: the YouTube thumbnail for video posts, then the site's
+ * placeholder image (public/brand/post-placeholder.jpg). Never an empty grey box (audit §4).
  */
 export function PostImage({
   post,
@@ -68,16 +80,17 @@ export function PostImage({
   className = '',
   cover,
   titleOnFallback,
+  fit = 'cover',
 }: PostImageProps) {
   const media =
     post.featuredImage && typeof post.featuredImage === 'object' ? post.featuredImage : null
   const src = media ? pickSource(media, size) : null
-  const frame = `${cover ? 'absolute inset-0' : 'relative'} isolate overflow-hidden bg-surface ${className}`
+  const frame = `${cover ? 'absolute inset-0' : 'relative'} shine isolate overflow-hidden bg-surface ${className}`
 
   if (media && src) {
     return (
       <div className={frame}>
-        <Image
+        <LazyImage
           src={src.url}
           alt={media.alt ?? ''}
           fill
@@ -88,7 +101,7 @@ export function PostImage({
           fetchPriority={priority ? 'high' : undefined}
           placeholder={media.blurDataURL ? 'blur' : 'empty'}
           blurDataURL={media.blurDataURL ?? undefined}
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+          className={fit === 'contain' ? 'object-contain' : 'object-cover'}
         />
       </div>
     )
@@ -98,45 +111,48 @@ export function PostImage({
   if (ytId) {
     return (
       <div className={frame}>
-        <Image
+        <LazyImage
           src={`https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`}
           alt=""
           fill
           sizes={sizes}
           unoptimized
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+          className="object-cover"
         />
       </div>
     )
   }
 
   const format = post.format ?? 'standard'
-  const Icon = FORMAT_ICON[format] ?? FileText
-  return (
-    <div
-      className={`${frame} bg-gradient-to-br ${FALLBACK_TONE[format] ?? FALLBACK_TONE.standard} text-white`}
-      aria-hidden="true"
-    >
-      <div className="bg-star-lattice absolute inset-0 opacity-[0.14]" />
-      {titleOnFallback && post.title ? (
+  // An e-book without a cover: its title on a plain blue cover.
+  if (titleOnFallback && post.title) {
+    const Icon = FORMAT_ICON[format] ?? FileText
+    return (
+      <div
+        className={`${frame} bg-gradient-to-br ${FALLBACK_TONE[format] ?? FALLBACK_TONE.standard} text-white`}
+        aria-hidden="true"
+      >
         <div className="relative flex h-full flex-col justify-between p-3 sm:p-4">
           <Icon className="size-5 opacity-80" />
           <span className="line-clamp-4 font-display text-sm font-bold leading-snug sm:text-base">
             {post.title}
           </span>
         </div>
-      ) : (
-        <div className="relative flex h-full flex-col items-center justify-center gap-2 px-3 text-center">
-          <span className="inline-flex size-12 items-center justify-center rounded-full bg-white/12 ring-1 ring-white/25 backdrop-blur-sm">
-            <Icon className="size-6" />
-          </span>
-          {post.categoryName ? (
-            <span className="text-xs font-semibold tracking-wide text-white/90">
-              {post.categoryName}
-            </span>
-          ) : null}
-        </div>
-      )}
+      </div>
+    )
+  }
+
+  // No picture at all: the site's own placeholder image, so a card never looks empty.
+  return (
+    <div className={frame} aria-hidden="true">
+      <LazyImage
+        src={PLACEHOLDER}
+        alt=""
+        fill
+        sizes={sizes}
+        loading={priority ? 'eager' : undefined}
+        className="object-cover"
+      />
     </div>
   )
 }

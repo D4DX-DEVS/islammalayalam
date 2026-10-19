@@ -46,7 +46,7 @@ export function Brand({ settings, tone = 'default', priority, className = '' }: 
     <Link
       href="/"
       className={`inline-flex shrink-0 items-center ${className}`}
-      aria-label={`${settings.siteName} — ഹോം`}
+      aria-label={`${settings.siteName} — Home`}
     >
       {uploaded && uploadedSrc && uploaded.width && uploaded.height ? (
         <span className={tone === 'light' ? 'rounded-xl bg-white px-3 py-2' : ''}>

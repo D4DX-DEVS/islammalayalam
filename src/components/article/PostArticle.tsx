@@ -1,61 +1,91 @@
 import Link from 'next/link'
-import { Headphones } from 'lucide-react'
+import { Headphones, Layers } from 'lucide-react'
 import { Breadcrumbs } from '@/components/article/Breadcrumbs'
 import { ShareButtons } from '@/components/article/ShareButtons'
 import { PostImage } from '@/components/cards/PostImage'
 import { PostCard } from '@/components/cards/PostCard'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { SectionHeading } from '@/components/ui/SectionHeading'
-import { PdfLink, RichText, YouTubeEmbed } from '@/components/richtext/RichText'
+import { PdfLink, RichText } from '@/components/richtext/RichText'
+import { YouTubeVideo } from '@/components/richtext/YouTubeVideo'
 import { listPosts } from '@/features/posts/queries'
-import { formatDate, readingLabel } from '@/lib/format'
+import { bodyStartsWith } from '@/lib/text/lexical'
+import { formatDate } from '@/lib/format'
 import { categoryHref, postHref } from '@/lib/links'
+import { trackAudio } from '@/lib/audio'
 import type { Author, Category, Media, Post } from '@/payload-types'
 
 const asObj = <T,>(v: unknown): T | null => (v && typeof v === 'object' ? (v as T) : null)
-const SELF_AUDIO = /\.(mp3|m4a|ogg|wav)(\?.*)?$/i
 const SITE_URL = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3444'
 
-function AudioPlayer({ url }: { url: string }) {
-  // Self-hosted/CDN audio plays inline; anything else opens on its host (CSP media-src stays strict).
-  if (
-    SELF_AUDIO.test(url) &&
-    (url.startsWith('/') || url.startsWith(process.env.MEDIA_CDN_URL ?? '\0'))
-  ) {
-    return <audio controls preload="none" src={url} className="w-full" />
+function AudioPlayer({ audio }: { audio: NonNullable<Post['audio']> }) {
+  const { source } = trackAudio(audio)
+  const url = audio.url ?? ''
+  if (source.kind === 'spotify') {
+    return (
+      <iframe
+        src={source.src}
+        title="Spotify"
+        loading="lazy"
+        allow="encrypted-media; clipboard-write"
+        sandbox="allow-scripts allow-same-origin allow-popups"
+        className={`w-full rounded-xl border-0 ${source.tall ? 'h-[352px]' : 'h-[152px]'}`}
+      />
+    )
   }
+  // Self-hosted/CDN audio plays inline; anything else opens on its host (CSP media-src stays strict).
+  if (source.kind === 'file')
+    return <audio controls preload="none" src={source.src} className="w-full" />
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-brand px-6 font-semibold text-white shadow-card transition-colors hover:bg-brand-strong"
+      className="bg-brand-gradient inline-flex min-h-12 items-center gap-2.5 rounded-full px-7 font-semibold text-white shadow-card transition hover:-translate-y-px hover:shadow-lift"
     >
       <Headphones className="size-5" aria-hidden="true" />
-      ഓഡിയോ കേൾക്കുക
+      Listen to the audio
     </a>
   )
 }
 
-async function RelatedPosts({ post, category }: { post: Post; category: Category | null }) {
-  if (!category) return null
-  const { docs } = await listPosts({ categoryId: category.id, excludeId: post.id, limit: 3 })
+/** How many stories the side column lists. */
+const SIDE_POSTS = 5
+
+/**
+ * The column beside the article (under it on a phone): more from the same category, topped up with
+ * the newest stories when the category has few. Sticks to the screen while a long article scrolls.
+ */
+async function MoreStories({ post, category }: { post: Post; category: Category | null }) {
+  const same = category
+    ? (await listPosts({ categoryId: category.id, excludeId: post.id, limit: SIDE_POSTS })).docs
+    : []
+  const topUp =
+    same.length < SIDE_POSTS
+      ? (await listPosts({ excludeId: post.id, limit: SIDE_POSTS + same.length })).docs
+      : []
+  const seen = new Set(same.map((p) => p.id))
+  const docs = [...same, ...topUp.filter((p) => !seen.has(p.id))].slice(0, SIDE_POSTS)
   if (!docs.length) return null
   return (
-    <section className="mt-16 border-t border-line pt-12">
-      <SectionHeading title="ബന്ധപ്പെട്ടവ" href={categoryHref(category.slug)} />
-      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+    <aside aria-label="More stories" className="lg:sticky lg:top-20">
+      <SectionHeading
+        title={same.length ? 'Related' : 'Latest'}
+        icon={Layers}
+        className="!mb-3 sm:!mb-3"
+      />
+      <ul className="space-y-3">
         {docs.map((p) => (
           <li key={p.id}>
-            <PostCard post={p} variant="grid" />
+            <PostCard post={p} variant="list" hideCategory />
           </li>
         ))}
       </ul>
-    </section>
+    </aside>
   )
 }
 
-/** Single article: breadcrumbs, category, title, byline + share, media (image / YouTube / audio), body, PDFs, related. */
+/** Single article: breadcrumbs, category, title, byline + share, media (image / YouTube / audio), body, PDFs, and a column of related stories beside it. */
 export function PostArticle({ post, siteName }: { post: Post; siteName: string }) {
   const category = asObj<Category>(post.primaryCategory) ?? asObj<Category>(post.categories?.[0])
   const author = asObj<Author>(post.author)
@@ -66,105 +96,126 @@ export function PostArticle({ post, siteName }: { post: Post; siteName: string }
     .filter((a) => a.media)
   const url = new URL(postHref(post.postNumber) ?? '/', SITE_URL).toString()
   const date = formatDate(post.publishedAt)
-  const reading = readingLabel(post.readingMinutes)
+
+  // The excerpt of most imported posts is just the start of the body: show it only when it adds something.
+  const excerpt = post.excerpt && !bodyStartsWith(post.content, post.excerpt) ? post.excerpt : null
 
   return (
     <>
-      <article>
-        <Breadcrumbs
-          items={[
-            ...(category ? [{ label: category.name, href: categoryHref(category.slug) }] : []),
-            { label: post.title },
-          ]}
-        />
-        {/* One card holds the whole article: heading, byline, media, body, downloads and sharing. */}
-        <ContentCard>
-          <header className="space-y-5">
-            {category ? (
-              <Link
-                href={categoryHref(category.slug) ?? '#'}
-                className="inline-flex rounded-full bg-brand-soft px-3.5 py-1 text-sm font-semibold text-brand transition-colors hover:bg-brand hover:text-white"
-              >
-                {category.name}
-              </Link>
-            ) : null}
-            <h1 className="text-[1.8rem] font-bold leading-[1.32] sm:text-4xl lg:text-[2.55rem]">
-              {post.title}
-            </h1>
-            {post.excerpt ? (
-              <p className="text-lg leading-relaxed text-muted">{post.excerpt}</p>
-            ) : null}
-            <div className="flex flex-col gap-4 border-y border-line py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <span
-                  className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-brand font-display text-lg font-bold text-white"
-                  aria-hidden="true"
+      <Breadcrumbs
+        items={[
+          ...(category ? [{ label: category.name, href: categoryHref(category.slug) }] : []),
+          { label: post.title },
+        ]}
+      />
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <article>
+          {/* One card holds the whole article: heading, byline, media, body, downloads and sharing. */}
+          <ContentCard>
+            <header className="space-y-3">
+              {category ? (
+                <Link
+                  href={categoryHref(category.slug) ?? '#'}
+                  className="inline-flex items-center rounded-full bg-brand-soft px-3.5 py-1 text-sm font-semibold text-brand transition-colors hover:bg-brand hover:text-white"
                 >
-                  {Array.from(byline)[0]}
-                </span>
-                <div className="text-sm leading-snug">
-                  {author ? (
-                    <Link
-                      href={`/author/${author.slug}/`}
-                      className="font-semibold text-ink hover:text-brand"
-                    >
-                      {author.name}
-                    </Link>
-                  ) : (
-                    <span className="font-semibold text-ink">{byline}</span>
-                  )}
-                  <p className="mt-0.5 text-muted">
-                    {date ? <time dateTime={post.publishedAt ?? undefined}>{date}</time> : null}
-                    {date && reading ? ' · ' : null}
-                    {reading}
-                  </p>
+                  {category.name}
+                </Link>
+              ) : null}
+              <h1 className="text-2xl font-bold leading-snug sm:text-[1.75rem] lg:text-[2rem] lg:leading-[1.35]">
+                {post.title}
+              </h1>
+              {excerpt ? <p className="text-base leading-relaxed text-muted">{excerpt}</p> : null}
+              <div className="flex flex-col gap-3 border-y border-line py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="bg-brand-gradient inline-flex size-10 shrink-0 items-center justify-center rounded-full font-display text-base font-bold text-white shadow-card"
+                    aria-hidden="true"
+                  >
+                    {Array.from(byline)[0]}
+                  </span>
+                  <div className="text-sm leading-snug">
+                    {author ? (
+                      <Link
+                        href={`/author/${author.slug}/`}
+                        className="font-semibold text-ink hover:text-brand"
+                      >
+                        {author.name}
+                      </Link>
+                    ) : (
+                      <span className="font-semibold text-ink">{byline}</span>
+                    )}
+                    {date ? (
+                      <p className="mt-0.5 text-muted">
+                        <time dateTime={post.publishedAt ?? undefined} lang="en">
+                          {date}
+                        </time>
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
+                <ShareButtons url={url} title={post.title} />
               </div>
+            </header>
+
+            {videoUrl ? (
+              <div className="mt-4">
+                <YouTubeVideo
+                  url={videoUrl}
+                  poster={
+                    post.featuredImage ? (
+                      // No YouTube-thumbnail fallback here: a removed video has none.
+                      <PostImage
+                        post={{ ...post, video: undefined, categoryName: category?.name }}
+                        size="large"
+                        sizes="(min-width: 1024px) 920px, 100vw"
+                        cover
+                      />
+                    ) : null
+                  }
+                />
+              </div>
+            ) : post.featuredImage ? (
+              <PostImage
+                post={{ ...post, categoryName: category?.name }}
+                size="large"
+                sizes="(min-width: 1024px) 920px, 100vw"
+                priority
+                className="mt-4 aspect-[16/9] w-full rounded-2xl shadow-card"
+              />
+            ) : null}
+
+            {post.format === 'audio' && (post.audio?.url || post.audio?.spotifyUrl) ? (
+              <div className="mt-4 rounded-2xl bg-surface p-4 ring-1 ring-line/60">
+                <AudioPlayer audio={post.audio!} />
+              </div>
+            ) : null}
+
+            {/* Body text: 16px / 1.75 on a phone, 17px / 1.8 from `sm` up (Malayalam letters read small at 16px). */}
+            <div className="mt-5">
+              <RichText
+                data={post.content}
+                className="prose-ml text-base leading-[1.75] sm:text-[1.0625rem] sm:leading-[1.8]"
+              />
+            </div>
+
+            {attachments.length ? (
+              <section className="mt-6 space-y-3" aria-label="Downloads">
+                {attachments.map((a, i) => (
+                  <PdfLink key={i} media={a.media!} label={a.label} />
+                ))}
+              </section>
+            ) : null}
+
+            <footer className="mt-6 flex flex-col gap-3 rounded-2xl bg-surface p-4 ring-1 ring-line/60 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-ink">
+                Found this useful? Share it with others
+              </p>
               <ShareButtons url={url} title={post.title} />
-            </div>
-          </header>
-
-          {videoUrl ? (
-            <div className="mx-auto mt-8 max-w-5xl">
-              <YouTubeEmbed url={videoUrl} caption={null} />
-            </div>
-          ) : post.featuredImage ? (
-            <PostImage
-              post={{ ...post, categoryName: category?.name }}
-              size="large"
-              sizes="(min-width: 1024px) 1024px, 100vw"
-              priority
-              className="mx-auto mt-8 aspect-[16/9] max-w-5xl rounded-card"
-            />
-          ) : null}
-
-          {post.format === 'audio' && post.audio?.url ? (
-            <div className="mt-8 rounded-card bg-surface p-5">
-              <AudioPlayer url={post.audio.url} />
-            </div>
-          ) : null}
-
-          <div className="mt-8">
-            <RichText data={post.content} />
-          </div>
-
-          {attachments.length ? (
-            <section className="mt-10 space-y-3" aria-label="ഡൗൺലോഡുകൾ">
-              {attachments.map((a, i) => (
-                <PdfLink key={i} media={a.media!} label={a.label} />
-              ))}
-            </section>
-          ) : null}
-
-          <footer className="mt-12 flex flex-col gap-4 rounded-card bg-surface p-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm font-semibold text-ink">
-              ഈ ലേഖനം ഉപകാരപ്പെട്ടെങ്കിൽ മറ്റുള്ളവരുമായി പങ്കിടുക
-            </p>
-            <ShareButtons url={url} title={post.title} />
-          </footer>
-        </ContentCard>
-      </article>
-      <RelatedPosts post={post} category={category} />
+            </footer>
+          </ContentCard>
+        </article>
+        <MoreStories post={post} category={category} />
+      </div>
     </>
   )
 }

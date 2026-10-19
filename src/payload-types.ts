@@ -71,9 +71,13 @@ export interface Config {
     pages: Page;
     categories: Category;
     authors: Author;
+    quotes: Quote;
+    audios: Audio;
+    videos: Video;
     media: Media;
     redirects: Redirect;
     'contact-messages': ContactMessage;
+    'postal-requests': PostalRequest;
     users: User;
     'audit-logs': AuditLog;
     'migration-runs': MigrationRun;
@@ -89,9 +93,13 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     authors: AuthorsSelect<false> | AuthorsSelect<true>;
+    quotes: QuotesSelect<false> | QuotesSelect<true>;
+    audios: AudiosSelect<false> | AudiosSelect<true>;
+    videos: VideosSelect<false> | VideosSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'contact-messages': ContactMessagesSelect<false> | ContactMessagesSelect<true>;
+    'postal-requests': PostalRequestsSelect<false> | PostalRequestsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
     'migration-runs': MigrationRunsSelect<false> | MigrationRunsSelect<true>;
@@ -109,13 +117,17 @@ export interface Config {
     'site-settings': SiteSetting;
     header: Header;
     homepage: Homepage;
+    'ads-banners': AdsBanner;
     footer: Footer;
+    'security-settings': SecuritySetting;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     header: HeaderSelect<false> | HeaderSelect<true>;
     homepage: HomepageSelect<false> | HomepageSelect<true>;
+    'ads-banners': AdsBannersSelect<false> | AdsBannersSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    'security-settings': SecuritySettingsSelect<false> | SecuritySettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -175,13 +187,28 @@ export interface Post {
   format: 'standard' | 'video' | 'audio' | 'ebook';
   video?: {
     url?: string | null;
+    /**
+     * Optional length, e.g. 18:24 — shown on the video tile and next to audio tracks.
+     */
+    duration?: string | null;
     youtubeId?: string | null;
   };
   /**
-   * Link to the hosted audio (https only). Audio uploads are not accepted.
+   * Add a Spotify link (it plays inside the player on the site), or a link to hosted audio (https only). Audio uploads are not accepted. With both, the hosted audio plays and the Spotify link feeds the Spotify button.
    */
   audio?: {
+    /**
+     * Episode, show or playlist, e.g. https://open.spotify.com/episode/… (use Share → Copy link in Spotify).
+     */
+    spotifyUrl?: string | null;
+    /**
+     * Optional: a direct https link to an audio file.
+     */
     url?: string | null;
+    /**
+     * Optional length, e.g. 18:24 — shown on the video tile and next to audio tracks.
+     */
+    duration?: string | null;
   };
   attachments?:
     | {
@@ -337,6 +364,31 @@ export interface Category {
   description?: string | null;
   image?: (string | null) | Media;
   /**
+   * Icon on the round shortcut tile under the homepage hero. Leave empty to pick one automatically from the name.
+   */
+  icon?:
+    | (
+        | 'newspaper'
+        | 'messages'
+        | 'file-text'
+        | 'eye'
+        | 'video'
+        | 'headphones'
+        | 'book-open'
+        | 'library'
+        | 'landmark'
+        | 'users'
+        | 'heart'
+        | 'lightbulb'
+        | 'scale'
+        | 'star'
+        | 'gift'
+        | 'sparkles'
+        | 'compass'
+      )
+    | null;
+  showInStrip?: boolean | null;
+  /**
    * Lower numbers first
    */
   order?: number | null;
@@ -414,6 +466,7 @@ export interface User {
    * Admin: everything. Editor: all content + publishing. Author: own drafts only.
    */
   role: 'admin' | 'editor' | 'author';
+  mfaRequired?: boolean | null;
   totpSecret?: string | null;
   hasTotp?: boolean | null;
   updatedAt: string;
@@ -444,6 +497,10 @@ export interface Page {
   id: string;
   title: string;
   kind: 'kb' | 'static';
+  /**
+   * Standard shows the body as an article. The request form adds the membership form: Content is the introduction, Sections are the conditions.
+   */
+  template?: ('default' | 'postal-request') | null;
   intro?: {
     root: {
       type: string;
@@ -546,6 +603,97 @@ export interface Page {
   createdAt: string;
 }
 /**
+ * Posters and thoughts for the homepage “Insights” slider (the first 5 in this list) and its “View More” archive. Drag the rows or use the arrows to set the order: the top one comes first.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotes".
+ */
+export interface Quote {
+  id: string;
+  _order?: string | null;
+  label?: string | null;
+  /**
+   * Upload the poster here: a portrait image (4:5, e.g. 1080 × 1350) or a square one works best, and it is shown whole, never cropped. Without a poster, the text below is shown on a designed card.
+   */
+  poster?: (string | null) | Media;
+  /**
+   * Optional when there is a poster. Sent along when someone shares it, and used as the poster’s description for screen readers.
+   */
+  text?: string | null;
+  /**
+   * Who said it or where it is from, e.g. ഖുര്‍ആന്‍ 2:286.
+   */
+  source?: string | null;
+  /**
+   * Optional. A future date keeps the insight hidden until that India day; leave empty to show it straight away.
+   */
+  showOn?: string | null;
+  /**
+   * Untick to hide it without deleting.
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Quick audio entries for the homepage Audios player: just a link, a title and an author — all optional. Drag the rows (or use the arrows) to set the order they show in on the site; the top one comes first.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audios".
+ */
+export interface Audio {
+  id: string;
+  _order?: string | null;
+  label?: string | null;
+  /**
+   * Optional. A Spotify link (episode, show or playlist — it plays inside the player) or a direct https link to an audio file. A Spotify episode link is listed with its picture, date and length, and its title when you leave the title empty.
+   */
+  link?: string | null;
+  /**
+   * Optional. Left empty, the site uses the title the link itself reports.
+   */
+  title?: string | null;
+  /**
+   * Optional. Speaker, channel or presenter.
+   */
+  author?: string | null;
+  /**
+   * Untick to hide it from the site without deleting it.
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Quick video entries for the homepage Videos band: just a link, a title and an author — all optional. Drag the rows (or use the arrows) to set the order they show in on the site; the top one comes first.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "videos".
+ */
+export interface Video {
+  id: string;
+  _order?: string | null;
+  label?: string | null;
+  /**
+   * Optional. A YouTube link. The video opens in a popup player on the homepage.
+   */
+  link?: string | null;
+  /**
+   * Optional. Left empty, the site uses the title the link itself reports.
+   */
+  title?: string | null;
+  /**
+   * Optional. Speaker, channel or presenter.
+   */
+  author?: string | null;
+  /**
+   * Untick to hide it from the site without deleting it.
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -573,6 +721,36 @@ export interface ContactMessage {
   subject?: string | null;
   message: string;
   status?: ('new' | 'read' | 'replied' | 'spam') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Requests to join the postal library. Readers cannot be edited, only triaged.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "postal-requests".
+ */
+export interface PostalRequest {
+  id: string;
+  status: 'new' | 'in-progress' | 'member' | 'closed' | 'spam';
+  /**
+   * Internal. For example the ledger number or which books were sent.
+   */
+  notes?: string | null;
+  name: string;
+  age: number;
+  gender: 'male' | 'female';
+  address: string;
+  pincode: string;
+  phone: string;
+  email: string;
+  education: string;
+  religion: string;
+  orgMember?: ('yes' | 'no') | null;
+  readBefore: string;
+  difficulties: string;
+  favouriteAspect: string;
+  wantsToLearn: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -675,6 +853,18 @@ export interface PayloadLockedDocument {
         value: string | Author;
       } | null)
     | ({
+        relationTo: 'quotes';
+        value: string | Quote;
+      } | null)
+    | ({
+        relationTo: 'audios';
+        value: string | Audio;
+      } | null)
+    | ({
+        relationTo: 'videos';
+        value: string | Video;
+      } | null)
+    | ({
         relationTo: 'media';
         value: string | Media;
       } | null)
@@ -685,6 +875,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'contact-messages';
         value: string | ContactMessage;
+      } | null)
+    | ({
+        relationTo: 'postal-requests';
+        value: string | PostalRequest;
       } | null)
     | ({
         relationTo: 'users';
@@ -758,12 +952,15 @@ export interface PostsSelect<T extends boolean = true> {
     | T
     | {
         url?: T;
+        duration?: T;
         youtubeId?: T;
       };
   audio?:
     | T
     | {
+        spotifyUrl?: T;
         url?: T;
+        duration?: T;
       };
   attachments?:
     | T
@@ -817,6 +1014,7 @@ export interface PostsSelect<T extends boolean = true> {
 export interface PagesSelect<T extends boolean = true> {
   title?: T;
   kind?: T;
+  template?: T;
   intro?: T;
   content?: T;
   sections?:
@@ -870,6 +1068,8 @@ export interface CategoriesSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   image?: T;
+  icon?: T;
+  showInStrip?: T;
   order?: T;
   hidden?: T;
   legacy?:
@@ -907,6 +1107,49 @@ export interface AuthorsSelect<T extends boolean = true> {
         sourceHash?: T;
         migratedAt?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quotes_select".
+ */
+export interface QuotesSelect<T extends boolean = true> {
+  _order?: T;
+  label?: T;
+  poster?: T;
+  text?: T;
+  source?: T;
+  showOn?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audios_select".
+ */
+export interface AudiosSelect<T extends boolean = true> {
+  _order?: T;
+  label?: T;
+  link?: T;
+  title?: T;
+  author?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "videos_select".
+ */
+export interface VideosSelect<T extends boolean = true> {
+  _order?: T;
+  label?: T;
+  link?: T;
+  title?: T;
+  author?: T;
+  active?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1022,11 +1265,36 @@ export interface ContactMessagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "postal-requests_select".
+ */
+export interface PostalRequestsSelect<T extends boolean = true> {
+  status?: T;
+  notes?: T;
+  name?: T;
+  age?: T;
+  gender?: T;
+  address?: T;
+  pincode?: T;
+  phone?: T;
+  email?: T;
+  education?: T;
+  religion?: T;
+  orgMember?: T;
+  readBefore?: T;
+  difficulties?: T;
+  favouriteAspect?: T;
+  wantsToLearn?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  mfaRequired?: T;
   totpSecret?: T;
   hasTotp?: T;
   updatedAt?: T;
@@ -1162,10 +1430,23 @@ export interface SiteSetting {
     youtube?: string | null;
     whatsapp?: string | null;
     telegram?: string | null;
+    spotify?: string | null;
   };
   contact?: {
     email?: string | null;
+    /**
+     * Optional. Listed under the first email wherever the contact details appear (footer, Quick Contact, the About page).
+     */
+    secondEmail?: string | null;
     phone?: string | null;
+    /**
+     * Shows a green “chat on WhatsApp” button at the bottom right of every page. Leave empty to hide it.
+     */
+    whatsappNumber?: string | null;
+    /**
+     * The message that is ready in the chat box when a visitor taps the button.
+     */
+    whatsappMessage?: string | null;
     address?: string | null;
   };
   updatedAt?: string | null;
@@ -1201,6 +1482,7 @@ export interface Header {
               } | null);
           url?: string | null;
         };
+        highlight?: boolean | null;
         id?: string | null;
       }[]
     | null;
@@ -1296,18 +1578,35 @@ export interface Homepage {
     | (
         | FeaturedSliderBlock
         | CategoryFeatureBlock
+        | TopicGridBlock
         | CategoryGridBlock
         | CategoryListBlock
         | MediaShelfBlock
         | RichTextBlock
         | BannerBlock
+        | CallToActionBlock
+        | FaqBlock
+        | QuoteOfDayBlock
+        | ReelsBlock
+        | ShortsBlock
       )[]
     | null;
   /**
    * Right sidebar on desktop; shown after the main column on mobile
    */
   sidebar?:
-    | (CategoryListBlock | QuickLinksBlock | QuickContactBlock | FollowUsBlock | BannerBlock | RichTextBlock)[]
+    | (
+        | CategoryListBlock
+        | QuickLinksBlock
+        | QuickContactBlock
+        | FollowUsBlock
+        | BannerBlock
+        | RichTextBlock
+        | QuoteOfDayBlock
+        | ReelsBlock
+        | CallToActionBlock
+        | FaqBlock
+      )[]
     | null;
   meta?: {
     title?: string | null;
@@ -1325,9 +1624,17 @@ export interface Homepage {
  * via the `definition` "FeaturedSliderBlock".
  */
 export interface FeaturedSliderBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   source?: ('featured' | 'category') | null;
   category?: (string | null) | Category;
   limit: number;
+  /**
+   * Heading of the stories column beside the slider.
+   */
+  sideTitle?: string | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'featuredSlider';
@@ -1337,6 +1644,10 @@ export interface FeaturedSliderBlock {
  * via the `definition` "CategoryFeatureBlock".
  */
 export interface CategoryFeatureBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   category: string | Category;
   /**
@@ -1352,9 +1663,36 @@ export interface CategoryFeatureBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TopicGridBlock".
+ */
+export interface TopicGridBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  width?: ('full' | 'half') | null;
+  /**
+   * Section heading.
+   */
+  title?: string | null;
+  /**
+   * Tiles show the category image, or its latest post image, and the article count. Leave empty to use the first topics automatically (video, audio and e-book shelves are skipped).
+   */
+  categories?: (string | Category)[] | null;
+  limit: number;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'topicGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "CategoryGridBlock".
  */
 export interface CategoryGridBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   category: string | Category;
   /**
@@ -1373,6 +1711,10 @@ export interface CategoryGridBlock {
  * via the `definition` "CategoryListBlock".
  */
 export interface CategoryListBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   category: string | Category;
   /**
@@ -1391,6 +1733,10 @@ export interface CategoryListBlock {
  * via the `definition` "MediaShelfBlock".
  */
 export interface MediaShelfBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   format: 'video' | 'audio' | 'ebook';
   /**
@@ -1402,6 +1748,10 @@ export interface MediaShelfBlock {
    */
   title?: string | null;
   limit: number;
+  /**
+   * Your Spotify show (Share → Copy link in Spotify). Every episode (up to 50) is listed in the card by themselves, first, in a list that scrolls, and a new episode appears within about 15 minutes of publishing it on Spotify, with nothing to upload here. It also adds the Spotify button. A playlist link only adds the button. Each audio post can also have its own Spotify link.
+   */
+  spotifyUrl?: string | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaShelf';
@@ -1411,6 +1761,10 @@ export interface MediaShelfBlock {
  * via the `definition` "RichTextBlock".
  */
 export interface RichTextBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   /**
    * Section heading. Defaults to the category name.
@@ -1440,6 +1794,10 @@ export interface RichTextBlock {
  * via the `definition` "BannerBlock".
  */
 export interface BannerBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   width?: ('full' | 'half') | null;
   image: string | Media;
   link?: {
@@ -1467,9 +1825,207 @@ export interface BannerBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock".
+ */
+export interface CallToActionBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  width?: ('full' | 'half') | null;
+  tone: 'brand' | 'gold' | 'navy' | 'light';
+  /**
+   * Small label above the heading, e.g. "Online course"
+   */
+  eyebrow?: string | null;
+  heading: string;
+  text?: string | null;
+  /**
+   * Optional banner / cover image shown beside the text.
+   */
+  image?: (string | null) | Media;
+  /**
+   * Optional facts, e.g. Duration · 8 weeks, Mode · Online, Fee · Free
+   */
+  details?:
+    | {
+        label: string;
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  buttons?:
+    | {
+        link: {
+          type?: ('reference' | 'custom' | 'none') | null;
+          newTab?: boolean | null;
+          label: string;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: string | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: string | Post;
+              } | null)
+            | ({
+                relationTo: 'categories';
+                value: string | Category;
+              } | null);
+          url?: string | null;
+        };
+        style?: ('primary' | 'secondary') | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'callToAction';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqBlock".
+ */
+export interface FaqBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  width?: ('full' | 'half') | null;
+  title?: string | null;
+  items?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  moreLink?: {
+    type?: ('reference' | 'custom' | 'none') | null;
+    newTab?: boolean | null;
+    label?: string | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: string | Page;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: string | Post;
+        } | null)
+      | ({
+          relationTo: 'categories';
+          value: string | Category;
+        } | null);
+    url?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'faq';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "QuoteOfDayBlock".
+ */
+export interface QuoteOfDayBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  title?: string | null;
+  /**
+   * One is shown per day (India time), cycling through the list. Add a flyer image, a text quote, or both.
+   */
+  quotes?:
+    | {
+        text?: string | null;
+        /**
+         * e.g. ഖുര്‍ആന്‍ 2:286
+         */
+        source?: string | null;
+        /**
+         * Optional flyer image (square or portrait works best).
+         */
+        flyer?: (string | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'quoteOfDay';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ReelsBlock".
+ */
+export interface ReelsBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  title?: string | null;
+  videos?:
+    | {
+        /**
+         * YouTube Shorts or video link
+         */
+        url: string;
+        title: string;
+        id?: string | null;
+      }[]
+    | null;
+  moreLink?: {
+    type?: ('reference' | 'custom' | 'none') | null;
+    newTab?: boolean | null;
+    label?: string | null;
+    reference?:
+      | ({
+          relationTo: 'pages';
+          value: string | Page;
+        } | null)
+      | ({
+          relationTo: 'posts';
+          value: string | Post;
+        } | null)
+      | ({
+          relationTo: 'categories';
+          value: string | Category;
+        } | null);
+    url?: string | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'reels';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ShortsBlock".
+ */
+export interface ShortsBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  title?: string | null;
+  /**
+   * The YouTube channel the Shorts come from: its @handle, or its address (youtube.com/@… or youtube.com/channel/UC…). Nothing to upload: a Short published on that channel shows here by itself within about 15 minutes.
+   */
+  channel: string;
+  limit: number;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'shorts';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "QuickLinksBlock".
  */
 export interface QuickLinksBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
   /**
    * Section heading. Defaults to the category name.
    */
@@ -1508,6 +2064,10 @@ export interface QuickLinksBlock {
  */
 export interface QuickContactBlock {
   /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  /**
    * Section heading. Defaults to the category name.
    */
   title?: string | null;
@@ -1522,12 +2082,89 @@ export interface QuickContactBlock {
  */
 export interface FollowUsBlock {
   /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  /**
    * Links come from Site settings → Social.
    */
   title?: string | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'followUs';
+}
+/**
+ * The advertisement banners of the homepage. Add as many as you need, delete the ones you no longer want, and choose for each one where it links and whether it opens in the same window or a new tab.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ads-banners".
+ */
+export interface AdsBanner {
+  id: string;
+  /**
+   * As wide as the page content, with the height following the image: 1920 × 240 or larger is sharp on every screen.
+   */
+  top?:
+    | {
+        /**
+         * Shown whole, never cropped. Upload it at 2× the size it appears for a sharp result.
+         */
+        image: string | Media;
+        /**
+         * A narrower version, e.g. 900 × 360, used on screens under 640 px wide. Without one, the main image is scaled down.
+         */
+        mobileImage?: (string | null) | Media;
+        /**
+         * Where a click goes: a web address (https://…) or a page of this site (/about-us/). Leave empty for a banner that is not clickable.
+         */
+        url?: string | null;
+        openIn?: ('new' | 'same') | null;
+        /**
+         * Helps you tell the banners apart in this list.
+         */
+        name?: string | null;
+        /**
+         * Optional. Defaults to the image’s own description.
+         */
+        alt?: string | null;
+        /**
+         * Untick to hide it from the site without deleting it.
+         */
+        active?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Wide images (about 4:1, like 676 × 164, or larger) fit best.
+   */
+  bottom?:
+    | {
+        /**
+         * Shown whole, never cropped. Upload it at 2× the size it appears for a sharp result.
+         */
+        image: string | Media;
+        /**
+         * Where a click goes: a web address (https://…) or a page of this site (/about-us/). Leave empty for a banner that is not clickable.
+         */
+        url?: string | null;
+        openIn?: ('new' | 'same') | null;
+        /**
+         * Helps you tell the banners apart in this list.
+         */
+        name?: string | null;
+        /**
+         * Optional. Defaults to the image’s own description.
+         */
+        alt?: string | null;
+        /**
+         * Untick to hide it from the site without deleting it.
+         */
+        active?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1600,6 +2237,16 @@ export interface Footer {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "security-settings".
+ */
+export interface SecuritySetting {
+  id: string;
+  requireTwoFactor?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
@@ -1619,12 +2266,16 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         youtube?: T;
         whatsapp?: T;
         telegram?: T;
+        spotify?: T;
       };
   contact?:
     | T
     | {
         email?: T;
+        secondEmail?: T;
         phone?: T;
+        whatsappNumber?: T;
+        whatsappMessage?: T;
         address?: T;
       };
   updatedAt?: T;
@@ -1648,6 +2299,7 @@ export interface HeaderSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
             };
+        highlight?: T;
         id?: T;
       };
   showSocialInTopBar?: T;
@@ -1707,11 +2359,17 @@ export interface HomepageSelect<T extends boolean = true> {
     | {
         featuredSlider?: T | FeaturedSliderBlockSelect<T>;
         categoryFeature?: T | CategoryFeatureBlockSelect<T>;
+        topicGrid?: T | TopicGridBlockSelect<T>;
         categoryGrid?: T | CategoryGridBlockSelect<T>;
         categoryList?: T | CategoryListBlockSelect<T>;
         mediaShelf?: T | MediaShelfBlockSelect<T>;
         richText?: T | RichTextBlockSelect<T>;
         banner?: T | BannerBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
+        quoteOfDay?: T | QuoteOfDayBlockSelect<T>;
+        reels?: T | ReelsBlockSelect<T>;
+        shorts?: T | ShortsBlockSelect<T>;
       };
   sidebar?:
     | T
@@ -1722,6 +2380,10 @@ export interface HomepageSelect<T extends boolean = true> {
         followUs?: T | FollowUsBlockSelect<T>;
         banner?: T | BannerBlockSelect<T>;
         richText?: T | RichTextBlockSelect<T>;
+        quoteOfDay?: T | QuoteOfDayBlockSelect<T>;
+        reels?: T | ReelsBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        faq?: T | FaqBlockSelect<T>;
       };
   meta?:
     | T
@@ -1739,9 +2401,11 @@ export interface HomepageSelect<T extends boolean = true> {
  * via the `definition` "FeaturedSliderBlock_select".
  */
 export interface FeaturedSliderBlockSelect<T extends boolean = true> {
+  hidden?: T;
   source?: T;
   category?: T;
   limit?: T;
+  sideTitle?: T;
   id?: T;
   blockName?: T;
 }
@@ -1750,6 +2414,7 @@ export interface FeaturedSliderBlockSelect<T extends boolean = true> {
  * via the `definition` "CategoryFeatureBlock_select".
  */
 export interface CategoryFeatureBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   category?: T;
   title?: T;
@@ -1761,9 +2426,23 @@ export interface CategoryFeatureBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TopicGridBlock_select".
+ */
+export interface TopicGridBlockSelect<T extends boolean = true> {
+  hidden?: T;
+  width?: T;
+  title?: T;
+  categories?: T;
+  limit?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "CategoryGridBlock_select".
  */
 export interface CategoryGridBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   category?: T;
   title?: T;
@@ -1778,6 +2457,7 @@ export interface CategoryGridBlockSelect<T extends boolean = true> {
  * via the `definition` "CategoryListBlock_select".
  */
 export interface CategoryListBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   category?: T;
   title?: T;
@@ -1792,11 +2472,13 @@ export interface CategoryListBlockSelect<T extends boolean = true> {
  * via the `definition` "MediaShelfBlock_select".
  */
 export interface MediaShelfBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   format?: T;
   category?: T;
   title?: T;
   limit?: T;
+  spotifyUrl?: T;
   id?: T;
   blockName?: T;
 }
@@ -1805,6 +2487,7 @@ export interface MediaShelfBlockSelect<T extends boolean = true> {
  * via the `definition` "RichTextBlock_select".
  */
 export interface RichTextBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   title?: T;
   content?: T;
@@ -1816,6 +2499,7 @@ export interface RichTextBlockSelect<T extends boolean = true> {
  * via the `definition` "BannerBlock_select".
  */
 export interface BannerBlockSelect<T extends boolean = true> {
+  hidden?: T;
   width?: T;
   image?: T;
   link?:
@@ -1832,9 +2516,130 @@ export interface BannerBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock_select".
+ */
+export interface CallToActionBlockSelect<T extends boolean = true> {
+  hidden?: T;
+  width?: T;
+  tone?: T;
+  eyebrow?: T;
+  heading?: T;
+  text?: T;
+  image?: T;
+  details?:
+    | T
+    | {
+        label?: T;
+        value?: T;
+        id?: T;
+      };
+  buttons?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              label?: T;
+              reference?: T;
+              url?: T;
+            };
+        style?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqBlock_select".
+ */
+export interface FaqBlockSelect<T extends boolean = true> {
+  hidden?: T;
+  width?: T;
+  title?: T;
+  items?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  moreLink?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        label?: T;
+        reference?: T;
+        url?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "QuoteOfDayBlock_select".
+ */
+export interface QuoteOfDayBlockSelect<T extends boolean = true> {
+  hidden?: T;
+  title?: T;
+  quotes?:
+    | T
+    | {
+        text?: T;
+        source?: T;
+        flyer?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ReelsBlock_select".
+ */
+export interface ReelsBlockSelect<T extends boolean = true> {
+  hidden?: T;
+  title?: T;
+  videos?:
+    | T
+    | {
+        url?: T;
+        title?: T;
+        id?: T;
+      };
+  moreLink?:
+    | T
+    | {
+        type?: T;
+        newTab?: T;
+        label?: T;
+        reference?: T;
+        url?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ShortsBlock_select".
+ */
+export interface ShortsBlockSelect<T extends boolean = true> {
+  hidden?: T;
+  title?: T;
+  channel?: T;
+  limit?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "QuickLinksBlock_select".
  */
 export interface QuickLinksBlockSelect<T extends boolean = true> {
+  hidden?: T;
   title?: T;
   links?:
     | T
@@ -1858,6 +2663,7 @@ export interface QuickLinksBlockSelect<T extends boolean = true> {
  * via the `definition` "QuickContactBlock_select".
  */
 export interface QuickContactBlockSelect<T extends boolean = true> {
+  hidden?: T;
   title?: T;
   intro?: T;
   id?: T;
@@ -1868,9 +2674,42 @@ export interface QuickContactBlockSelect<T extends boolean = true> {
  * via the `definition` "FollowUsBlock_select".
  */
 export interface FollowUsBlockSelect<T extends boolean = true> {
+  hidden?: T;
   title?: T;
   id?: T;
   blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ads-banners_select".
+ */
+export interface AdsBannersSelect<T extends boolean = true> {
+  top?:
+    | T
+    | {
+        image?: T;
+        mobileImage?: T;
+        url?: T;
+        openIn?: T;
+        name?: T;
+        alt?: T;
+        active?: T;
+        id?: T;
+      };
+  bottom?:
+    | T
+    | {
+        image?: T;
+        url?: T;
+        openIn?: T;
+        name?: T;
+        alt?: T;
+        active?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1914,6 +2753,16 @@ export interface FooterSelect<T extends boolean = true> {
         id?: T;
       };
   copyright?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "security-settings_select".
+ */
+export interface SecuritySettingsSelect<T extends boolean = true> {
+  requireTwoFactor?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

@@ -6,11 +6,7 @@ import { SearchForm } from '@/components/layout/SearchForm'
 export default function NotFound() {
   return (
     <Container className="py-12 lg:py-20">
-      <div className="relative isolate mx-auto max-w-2xl overflow-hidden rounded-[1.75rem] bg-surface px-6 py-12 text-center sm:px-12 sm:py-16">
-        <div
-          className="mask-star-lattice pointer-events-none absolute inset-0 -z-10 bg-brand opacity-[0.06]"
-          aria-hidden="true"
-        />
+      <div className="relative isolate mx-auto max-w-2xl overflow-hidden rounded-panel bg-surface px-6 py-12 text-center sm:px-12 sm:py-16">
         <p className="font-display text-6xl font-bold text-brand sm:text-7xl">404</p>
         <h1 className="mt-4 text-2xl font-bold sm:text-3xl">ഈ പേജ് കണ്ടെത്താനായില്ല</h1>
         <p className="mx-auto mt-3 max-w-md text-muted">

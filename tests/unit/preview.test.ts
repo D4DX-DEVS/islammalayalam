@@ -5,20 +5,23 @@ import { parsePreviewTarget, previewTargetFor, previewUrl, safeLocalPath } from 
 const ID = '65f1c2a9e4b0a1b2c3d4e5f6'
 
 describe('preview targets', () => {
-  it('only previews posts, pages (by object id) and the homepage', () => {
+  it('only previews posts, pages (by object id) and the globals that make up the public site', () => {
     expect(previewTargetFor({ collection: 'posts', id: ID })).toEqual({
       kind: 'collection',
       collection: 'posts',
       id: ID,
     })
-    expect(previewTargetFor({ global: 'homepage' })).toEqual({ kind: 'global', global: 'homepage' })
+    for (const global of ['homepage', 'header', 'footer', 'site-settings', 'ads-banners'])
+      expect(previewTargetFor({ global })).toEqual({ kind: 'global', global })
     for (const bad of [
       { collection: 'users', id: ID },
       { collection: 'audit-logs', id: ID },
       { collection: 'posts', id: 'not-an-id' },
       { collection: 'posts', id: `${ID}/../x` },
       { collection: 'posts' },
-      { global: 'site-settings' },
+      { global: 'security-settings' },
+      { global: 'users' },
+      { global: '../homepage' },
     ])
       expect(previewTargetFor(bad)).toBeNull()
   })

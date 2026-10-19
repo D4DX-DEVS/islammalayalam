@@ -15,7 +15,8 @@ export const CARD_SELECT = {
   format: true,
   primaryCategory: true,
   video: true,
-  readingMinutes: true,
+  audio: true,
+  author: true,
 } as const
 
 export type PostCardData = Pick<
@@ -29,7 +30,8 @@ export type PostCardData = Pick<
   | 'format'
   | 'primaryCategory'
   | 'video'
-  | 'readingMinutes'
+  | 'audio'
+  | 'author'
 >
 export type PostList = { docs: PostCardData[]; totalDocs: number; totalPages: number; page: number }
 export type PostListQuery = {
@@ -42,32 +44,37 @@ export type PostListQuery = {
   limit?: number
 }
 
-export const listPosts = cached('posts:list', TAGS, async (q: PostListQuery): Promise<PostList> => {
-  const payload = await getPayloadClient()
-  const and: Where[] = [{ _status: { equals: 'published' } }]
-  if (q.categoryId) and.push({ categories: { in: [q.categoryId] } })
-  if (q.format) and.push({ format: { equals: q.format } })
-  if (q.featured) and.push({ featured: { equals: true } })
-  if (q.authorId) and.push({ author: { equals: q.authorId } })
-  if (q.excludeId) and.push({ id: { not_equals: q.excludeId } })
-  const res = await payload.find({
-    collection: 'posts',
-    where: { and },
-    sort: '-publishedAt',
-    page: q.page ?? 1,
-    limit: Math.min(q.limit ?? 12, 48),
-    depth: 1,
-    select: CARD_SELECT,
-    populate: POPULATE,
-    ...PUBLIC,
-  })
-  return {
-    docs: res.docs as PostCardData[],
-    totalDocs: res.totalDocs,
-    totalPages: res.totalPages,
-    page: res.page ?? 1,
-  }
-})
+// The key carries a version: bump it whenever CARD_SELECT changes, so a persisted cache can't serve the old shape.
+export const listPosts = cached(
+  'posts:list:v3',
+  TAGS,
+  async (q: PostListQuery): Promise<PostList> => {
+    const payload = await getPayloadClient()
+    const and: Where[] = [{ _status: { equals: 'published' } }]
+    if (q.categoryId) and.push({ categories: { in: [q.categoryId] } })
+    if (q.format) and.push({ format: { equals: q.format } })
+    if (q.featured) and.push({ featured: { equals: true } })
+    if (q.authorId) and.push({ author: { equals: q.authorId } })
+    if (q.excludeId) and.push({ id: { not_equals: q.excludeId } })
+    const res = await payload.find({
+      collection: 'posts',
+      where: { and },
+      sort: '-publishedAt',
+      page: q.page ?? 1,
+      limit: Math.min(q.limit ?? 12, 48),
+      depth: 1,
+      select: CARD_SELECT,
+      populate: POPULATE,
+      ...PUBLIC,
+    })
+    return {
+      docs: res.docs as PostCardData[],
+      totalDocs: res.totalDocs,
+      totalPages: res.totalPages,
+      page: res.page ?? 1,
+    }
+  },
+)
 
 export const getPostByNumber = cached(
   'posts:by-number',

@@ -51,3 +51,7 @@ npm-debug.log*
 
 # Migration run reports for production (ids and counts only, but kept out of the repository)
 /docs/migration/production-run-latest.md
+
+# Plain-language daily change summary (personal notes, not part of the repo)
+/TODAYS-CHANGES.md
+/TASKS-*.md

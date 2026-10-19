@@ -1,6 +1,13 @@
 import type { Block, Field } from 'payload'
-import { linkGroup } from '@/payload/fields'
+import { linkGroup, validateSpotifyLink } from '@/payload/fields'
 import { simpleEditor } from '@/payload/editor'
+import {
+  CallToActionBlock,
+  FaqBlock,
+  QuoteOfDayBlock,
+  ReelsBlock,
+  ShortsBlock,
+} from './homepage-engage'
 
 /**
  * Homepage / sidebar layout blocks. Editors compose the homepage from these in the Homepage
@@ -60,6 +67,13 @@ export const FeaturedSliderBlock: Block = {
     },
     { ...category(false), admin: { condition: (_, s) => s?.source === 'category' } } as Field,
     limit(6, 10),
+    {
+      name: 'sideTitle',
+      type: 'text',
+      maxLength: 60,
+      defaultValue: 'Featured Post',
+      admin: { description: 'Heading of the stories column beside the slider.' },
+    },
   ],
 }
 
@@ -83,6 +97,28 @@ export const CategoryFeatureBlock: Block = {
     },
     limit(5, 9),
     showMore,
+  ],
+}
+
+export const TopicGridBlock: Block = {
+  slug: 'topicGrid',
+  interfaceName: 'TopicGridBlock',
+  labels: { singular: 'Topics: category tiles', plural: 'Topics: category tiles' },
+  fields: [
+    width,
+    { ...title, defaultValue: 'തിരഞ്ഞെടുക്ക വിഷയങ്ങൾ', admin: { description: 'Section heading.' } },
+    {
+      name: 'categories',
+      type: 'relationship',
+      relationTo: 'categories',
+      hasMany: true,
+      maxRows: 8,
+      admin: {
+        description:
+          'Tiles show the category image, or its latest post image, and the article count. Leave empty to use the first topics automatically (video, audio and e-book shelves are skipped).',
+      },
+    },
+    limit(4, 8),
   ],
 }
 
@@ -139,7 +175,19 @@ export const MediaShelfBlock: Block = {
     },
     { ...category(false), admin: { description: 'Optional: limit to one category' } } as Field,
     title,
-    limit(4),
+    limit(4, 60),
+    {
+      name: 'spotifyUrl',
+      label: 'Spotify link',
+      type: 'text',
+      maxLength: 300,
+      validate: validateSpotifyLink,
+      admin: {
+        condition: (_, sibling) => sibling?.format === 'audio',
+        description:
+          'Your Spotify show (Share → Copy link in Spotify). Every episode (up to 50) is listed in the card by themselves, first, in a list that scrolls, and a new episode appears within about 15 minutes of publishing it on Spotify, with nothing to upload here. It also adds the Spotify button. A playlist link only adds the button. Each audio post can also have its own Spotify link.',
+      },
+    },
   ],
 }
 
@@ -204,20 +252,46 @@ export const QuickContactBlock: Block = {
   ],
 }
 
-export const mainColumnBlocks: Block[] = [
+/** Every homepage section can be switched off without deleting it (and its settings). */
+const hiddenField: Field = {
+  name: 'hidden',
+  type: 'checkbox',
+  defaultValue: false,
+  label: 'Hide this section',
+  admin: { description: 'Keeps the settings but stops showing the section on the site.' },
+}
+const visible = new Map<Block, Block>()
+const withHide = (blocks: Block[]): Block[] =>
+  blocks.map((block) => {
+    const wrapped = visible.get(block) ?? { ...block, fields: [hiddenField, ...block.fields] }
+    visible.set(block, wrapped)
+    return wrapped
+  })
+
+export const mainColumnBlocks: Block[] = withHide([
   FeaturedSliderBlock,
   CategoryFeatureBlock,
+  TopicGridBlock,
   CategoryGridBlock,
   CategoryListBlock,
   MediaShelfBlock,
   RichTextBlock,
   BannerBlock,
-]
-export const sidebarBlocks: Block[] = [
+  CallToActionBlock,
+  FaqBlock,
+  QuoteOfDayBlock,
+  ReelsBlock,
+  ShortsBlock,
+])
+export const sidebarBlocks: Block[] = withHide([
   CategoryListBlock,
   QuickLinksBlock,
   QuickContactBlock,
   FollowUsBlock,
   BannerBlock,
   RichTextBlock,
-]
+  QuoteOfDayBlock,
+  ReelsBlock,
+  CallToActionBlock,
+  FaqBlock,
+])

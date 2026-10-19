@@ -13,32 +13,43 @@
 }
 
 /*
- * Design tokens — "modern news magazine" refresh of the original Soledad palette (#1e73be blue,
- * amber Malayalam wordmark). Colours are semantic CSS variables: dark mode only swaps values.
+ * Design tokens — modern editorial refresh of the original Soledad palette (#1e73be blue, amber
+ * Malayalam wordmark). Colours are semantic CSS variables: dark mode only swaps values.
+ * Surfaces are layered (canvas → surface → card), corners are large and concentric, shadows are
+ * soft and tinted with the brand blue.
  */
 @theme {
-  --color-brand: #1a6bc4;
-  --color-brand-strong: #13549e;
-  --color-brand-soft: #e8f1fc;
-  --color-brand-deep: #0b2447;
-  --color-accent: #d97706;
-  --color-ink: #0f172a;
-  --color-body: #334155;
-  --color-muted: #64748b;
-  --color-line: #e2e8f0;
-  --color-surface: #f3f6fa;
-  --color-canvas: #ffffff;
+  --color-brand: #0b6bd3;
+  --color-brand-strong: #0a53a8;
+  --color-brand-soft: #e6f0fc;
+  --color-brand-deep: #072a60;
+  /* Lighter end of brand gradients and glows. */
+  --color-brand-glow: #3b95f0;
+  /* Gold: section bars, icons, gold-rimmed chips. Decorative; text uses --color-accent-strong. */
+  --color-accent: #f2a900;
+  /* Filled gold buttons (header highlights, promo cards): AA contrast with --color-on-accent. */
+  --color-accent-strong: #b45309;
+  --color-on-accent: #ffffff;
+  --color-ink: #0a1a33;
+  /* Section titles: a clear dark blue (ink is near-black navy). */
+  --color-title: #0a3f8f;
+  --color-body: #3b4a63;
+  --color-muted: #5d6c85;
+  --color-line: #dfe8f4;
+  --color-surface: #eaf1fb;
+  --color-canvas: #f4f8fd;
   --color-card: #ffffff;
 
-  /* English: Poppins. Malayalam: Noto Sans Malayalam, titles Anek Malayalam (src/lib/fonts.ts).
+  /* English: Poppins. Malayalam: Anek Malayalam, text and titles (src/lib/fonts.ts).
      No system fonts in between; `sans-serif` only if a font file itself fails to load. */
   --font-sans: var(--font-poppins), var(--font-malayalam), sans-serif;
-  --font-display: var(--font-poppins), var(--font-display-ml), sans-serif;
+  --font-display: var(--font-poppins), var(--font-malayalam), sans-serif;
 
-  --container-site: 100rem;
-  --radius-card: 0.875rem;
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.05), 0 10px 28px -14px rgb(15 23 42 / 0.18);
-  --shadow-lift: 0 2px 6px rgb(15 23 42 / 0.08), 0 22px 44px -18px rgb(15 23 42 / 0.3);
+  --container-site: 90rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(13 52 120 / 0.05), 0 6px 22px -10px rgb(13 52 120 / 0.14);
+  --shadow-lift: 0 2px 6px rgb(13 52 120 / 0.06), 0 18px 40px -14px rgb(11 107 211 / 0.32);
 
   --animate-shimmer: shimmer 1.4s ease-in-out infinite;
   @keyframes shimmer {
@@ -49,54 +60,118 @@
       background-position: -100% 0;
     }
   }
+  --animate-kenburns: kenburns 9s ease-out both;
+  @keyframes kenburns {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.08);
+    }
+  }
+  --animate-pop: pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  --animate-eq: eq 0.9s ease-in-out infinite;
+  @keyframes eq {
+    0%,
+    100% {
+      transform: scaleY(0.3);
+    }
+    50% {
+      transform: scaleY(1);
+    }
+  }
+  --animate-ping-soft: ping-soft 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+  @keyframes ping-soft {
+    0% {
+      transform: scale(1);
+      opacity: 0.55;
+    }
+    75%,
+    100% {
+      transform: scale(2.6);
+      opacity: 0;
+    }
+  }
 }
 
 @layer base {
+  /* Royal-blue gradient stops for the navy bands (video shelf, footer, promo cards). */
+  :root {
+    --royal-1: #0c53b8;
+    --royal-2: #0a4398;
+    --royal-3: #07316d;
+  }
   :root[data-theme='dark'] {
     color-scheme: dark;
-    --color-brand: #60a5fa;
-    --color-brand-strong: #93c5fd;
-    --color-brand-soft: #132b4d;
-    --color-brand-deep: #06142b;
+    --color-brand: #66a8f7;
+    --color-brand-strong: #9bc6fb;
+    --color-brand-soft: #112a4d;
+    --color-brand-deep: #050f22;
+    --color-brand-glow: #8cc2ff;
+    --royal-1: #0b2f6b;
+    --royal-2: #082550;
+    --royal-3: #051a3a;
     --color-accent: #fbbf24;
+    --color-accent-strong: #fbbf24;
+    --color-on-accent: #1c1206;
     --color-ink: #f1f5f9;
-    --color-body: #cbd5e1;
-    --color-muted: #94a3b8;
-    --color-line: #24344d;
-    --color-surface: #0f1c31;
-    --color-canvas: #0a1426;
-    --color-card: #101d33;
-    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 28px -14px rgb(0 0 0 / 0.6);
-    --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.35), 0 22px 44px -18px rgb(0 0 0 / 0.7);
+    --color-title: #9bc6fb;
+    --color-body: #c3cedd;
+    --color-muted: #8fa0b8;
+    --color-line: #1f2f4a;
+    --color-surface: #0b1527;
+    --color-canvas: #070e1c;
+    --color-card: #0e1a2f;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 12px 30px -16px rgb(0 0 0 / 0.7);
+    --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.4), 0 28px 56px -24px rgb(0 0 0 / 0.85);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
       color-scheme: dark;
-      --color-brand: #60a5fa;
-      --color-brand-strong: #93c5fd;
-      --color-brand-soft: #132b4d;
-      --color-brand-deep: #06142b;
+      --color-brand: #66a8f7;
+      --color-brand-strong: #9bc6fb;
+      --color-brand-soft: #112a4d;
+      --color-brand-deep: #050f22;
+      --color-brand-glow: #8cc2ff;
+      --royal-1: #0b2f6b;
+      --royal-2: #082550;
+      --royal-3: #051a3a;
       --color-accent: #fbbf24;
+      --color-accent-strong: #fbbf24;
+      --color-on-accent: #1c1206;
       --color-ink: #f1f5f9;
-      --color-body: #cbd5e1;
-      --color-muted: #94a3b8;
-      --color-line: #24344d;
-      --color-surface: #0f1c31;
-      --color-canvas: #0a1426;
-      --color-card: #101d33;
-      --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 28px -14px rgb(0 0 0 / 0.6);
-      --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.35), 0 22px 44px -18px rgb(0 0 0 / 0.7);
+      --color-title: #9bc6fb;
+      --color-body: #c3cedd;
+      --color-muted: #8fa0b8;
+      --color-line: #1f2f4a;
+      --color-surface: #0b1527;
+      --color-canvas: #070e1c;
+      --color-card: #0e1a2f;
+      --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 12px 30px -16px rgb(0 0 0 / 0.7);
+      --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.4), 0 28px 56px -24px rgb(0 0 0 / 0.85);
     }
   }
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
-    scroll-padding-top: 5rem;
+    scroll-padding-top: 6rem;
   }
   body {
     @apply bg-canvas font-sans text-body antialiased;
     line-height: 1.7;
     text-rendering: optimizeLegibility;
+    background-image: linear-gradient(180deg, rgb(11 107 211 / 0.07), transparent 520px);
+    background-repeat: no-repeat;
   }
   /* Malayalam glyphs need vertical room: headings stay at ~1.35, never the Latin 1.1. */
   h1,
@@ -105,12 +180,16 @@
   h4 {
     @apply font-display text-ink;
     line-height: 1.38;
-    letter-spacing: -0.005em;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
   }
   :focus-visible {
     outline: 2px solid var(--color-brand);
-    outline-offset: 2px;
-    border-radius: 4px;
+    outline-offset: 3px;
+    border-radius: 6px;
   }
   ::selection {
     background: var(--color-brand-soft);
@@ -130,24 +209,25 @@
 }
 
 @layer components {
-  /* Long-form article typography (rendered Lexical content). */
+  /* Long-form article typography (rendered Lexical content): the standard 16px / 1.7 from `sm` up,
+     a step smaller (15px / 1.65) on phones. */
   .prose-ml {
-    @apply text-[1.075rem] leading-[1.95] text-body sm:text-[1.125rem];
+    @apply text-[0.9375rem] leading-[1.65] text-body sm:text-base sm:leading-[1.7];
   }
   .prose-ml > * + * {
-    margin-top: 1.15em;
+    margin-top: 1em;
   }
   .prose-ml h2 {
-    @apply mt-10 text-2xl font-bold sm:text-[1.7rem];
+    @apply mt-9 text-xl font-bold leading-snug sm:text-2xl;
   }
   .prose-ml h3 {
-    @apply mt-8 text-xl font-bold sm:text-[1.35rem];
+    @apply mt-7 text-lg font-bold leading-snug sm:text-xl;
   }
   .prose-ml h4 {
-    @apply mt-6 text-lg font-bold;
+    @apply mt-5 text-base font-bold leading-snug sm:text-lg;
   }
   .prose-ml a {
-    @apply font-medium text-brand underline decoration-brand/40 decoration-2 underline-offset-4 hover:decoration-brand;
+    @apply font-medium text-brand underline decoration-brand/30 decoration-2 underline-offset-4 transition-colors hover:decoration-brand;
   }
   .prose-ml strong {
     @apply font-semibold text-ink;
@@ -159,30 +239,137 @@
     @apply list-decimal ps-6 marker:font-semibold marker:text-brand;
   }
   .prose-ml li + li {
-    margin-top: 0.4em;
+    margin-top: 0.3em;
   }
   .prose-ml blockquote {
-    @apply rounded-e-xl border-s-4 border-brand bg-brand-soft/60 px-5 py-4 text-ink;
+    @apply relative rounded-2xl bg-brand-soft/70 py-5 ps-7 pe-6 text-ink;
+  }
+  .prose-ml blockquote::before {
+    content: '';
+    @apply absolute inset-y-4 start-0 w-1 rounded-full bg-gradient-to-b from-brand-glow to-accent;
   }
   .prose-ml hr {
-    @apply my-10 border-line;
+    @apply my-9 border-line;
   }
   .prose-ml img {
-    @apply h-auto max-w-full rounded-xl;
+    @apply h-auto max-w-full rounded-2xl;
   }
 
-  /* Eight-point-star lattice (generic Islamic geometry) for designed image fallbacks and bands. */
-  .bg-star-lattice {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cg fill='none' stroke='white' stroke-width='1.2'%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Crect x='16' y='16' width='24' height='24' transform='rotate%2845 28 28%29'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E");
-    background-size: 56px 56px;
+  /* Brand gradient for filled buttons, badges and avatars (works in both themes). */
+  .bg-brand-gradient {
+    background-image: linear-gradient(
+      135deg,
+      var(--color-brand-glow) -20%,
+      var(--color-brand) 45%,
+      var(--color-brand-strong) 120%
+    );
   }
 
-  /* Same lattice as a mask, so it takes any colour (e.g. `bg-brand`) in both themes. */
-  .mask-star-lattice {
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cg fill='none' stroke='white' stroke-width='1.2'%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Crect x='16' y='16' width='24' height='24' transform='rotate%2845 28 28%29'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cg fill='none' stroke='white' stroke-width='1.2'%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Crect x='16' y='16' width='24' height='24' transform='rotate%2845 28 28%29'/%3E%3Ccircle cx='28' cy='28' r='5'/%3E%3C/g%3E%3C/svg%3E");
-    -webkit-mask-size: 56px 56px;
-    mask-size: 56px 56px;
+  /*
+   * Image hover: a soft band of light passes over the picture from left to right. Put `shine` on the
+   * (positioned, overflow-hidden) box around an image. It plays when that box, or a card around it
+   * marked `group`, is hovered or keyboard-focused. Nothing moves or scales, and it is off for
+   * visitors who prefer reduced motion.
+   */
+  .shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      transparent 34%,
+      rgb(255 255 255 / 0.22) 44%,
+      rgb(255 255 255 / 0.5) 50%,
+      rgb(255 255 255 / 0.22) 56%,
+      transparent 66%,
+      transparent 100%
+    );
+    transform: translateX(-100%);
+  }
+  .shine:hover::after,
+  .group:hover .shine::after,
+  .group:focus-visible .shine::after {
+    animation: shine-sweep 0.95s ease-out;
+  }
+  @keyframes shine-sweep {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shine::after {
+      display: none;
+    }
+  }
+
+  /* Royal-blue surface with soft light pools: video shelf, footer, quote and promo cards. */
+  .bg-night {
+    background-color: var(--royal-2);
+    background-image:
+      radial-gradient(52rem 26rem at 100% -12%, rgb(96 170 255 / 0.3), transparent 62%),
+      radial-gradient(40rem 24rem at -8% 112%, rgb(20 90 200 / 0.4), transparent 62%),
+      linear-gradient(135deg, var(--royal-1) 0%, var(--royal-2) 52%, var(--royal-3) 100%);
+  }
+
+  /* Slim white-on-glass range slider (audio progress and volume); --fill is set from the value. */
+  .range-player {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 1rem;
+    background: transparent;
+    cursor: pointer;
+    --fill: 0%;
+  }
+  .range-player::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #fff var(--fill), rgb(255 255 255 / 0.25) var(--fill));
+  }
+  .range-player::-moz-range-track {
+    height: 4px;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.25);
+  }
+  .range-player::-moz-range-progress {
+    height: 4px;
+    border-radius: 9999px;
+    background: #fff;
+  }
+  .range-player::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -4px;
+    border-radius: 9999px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .range-player::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 0;
+    border-radius: 9999px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .range-player:hover::-webkit-slider-thumb,
+  .range-player:focus-visible::-webkit-slider-thumb {
+    opacity: 1;
+  }
+  .range-player:hover::-moz-range-thumb,
+  .range-player:focus-visible::-moz-range-thumb {
+    opacity: 1;
   }
 
   /* Horizontal scrollers (chips, mobile shelves) without a visible scrollbar. */
@@ -191,5 +378,109 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Soft fade on the trailing edge of a horizontal scroller, so it reads as "more this way". */
+  .fade-x {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+  }
+  .fade-x:dir(rtl) {
+    -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent);
+    mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent);
+  }
+}
+
+/*
+ * Lazy sections: rows below the fold are not laid out or painted until the visitor scrolls near
+ * them (`content-visibility`); `auto` remembers each row's real height once seen, so the scrollbar
+ * does not jump.
+ */
+.lazy-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 38rem;
+}
+
+/*
+ * Lazy-load entrance animations.
+ *
+ * - `data-reveal` (below the fold): <ScrollReveal> arms the hidden state only after hydration, so
+ *   server-rendered HTML, no-JS visitors and crawlers always see the content. An IntersectionObserver
+ *   adds `data-revealed` as each element nears the viewport (elements that appear together stagger)
+ *   and `data-reveal-done` once it has played or was already on screen, which turns the effect off for it.
+ * - `.enter` (above the fold): a pure-CSS fade-up that plays on first paint, delayed with
+ *   `--enter-delay`; it always ends visible, so it needs no script.
+ * Both are off for visitors who prefer reduced motion.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-ready [data-reveal]:not([data-revealed], [data-reveal-done]) {
+    opacity: 0;
+    transform: translateY(1.1rem);
+  }
+  .reveal-ready [data-reveal='fade']:not([data-revealed], [data-reveal-done]) {
+    transform: none;
+  }
+  .reveal-ready [data-reveal='zoom']:not([data-revealed], [data-reveal-done]) {
+    transform: scale(0.88);
+  }
+  .reveal-ready [data-reveal='left']:not([data-revealed], [data-reveal-done]) {
+    transform: translateX(-1.5rem);
+  }
+  .reveal-ready [data-reveal='right']:not([data-revealed], [data-reveal-done]) {
+    transform: translateX(1.5rem);
+  }
+  .reveal-ready [data-reveal][data-revealed]:not([data-reveal-done]) {
+    transition:
+      opacity 0.65s ease-out,
+      transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  /* Section titles: the icon badge pops in, the text wipes in, the "see all" link slides in. Plays when
+     <ScrollReveal> marks the heading as revealed (headings already on screen at load stay still). */
+  [data-revealed] .title-icon {
+    animation: pop 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.4) 0.05s both;
+  }
+  [data-revealed] .title-text {
+    animation: title-wipe 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
+  }
+  [data-revealed] .title-link {
+    animation: title-slide 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s both;
+  }
+  /* Insets are negative at the top/bottom so tall Malayalam glyphs are never clipped. */
+  @keyframes title-wipe {
+    from {
+      clip-path: inset(-0.4em 100% -0.4em 0);
+      transform: translateX(-0.6rem);
+      opacity: 0;
+    }
+    to {
+      clip-path: inset(-0.4em -0.6em -0.4em 0);
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes title-slide {
+    from {
+      opacity: 0;
+      transform: translateX(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes enter-up {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .enter {
+    animation: enter-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: var(--enter-delay, 0ms);
   }
 }

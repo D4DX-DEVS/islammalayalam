@@ -7,7 +7,16 @@ import {
   CategoryList,
   FeaturedSlider,
 } from '@/components/home/CategorySections'
+import { LeadWithAside } from '@/components/home/LeadWithAside'
 import { MediaShelf } from '@/components/home/MediaShelf'
+import { ShortsSection } from '@/components/home/ShortsSection'
+import { TopicGrid } from '@/components/home/TopicGrid'
+import {
+  CallToActionSection,
+  FaqSection,
+  QuoteOfDaySection,
+  ReelsSection,
+} from '@/components/home/EngageSections'
 import {
   BannerSection,
   FollowUsSection,
@@ -15,7 +24,8 @@ import {
   QuickLinksSection,
   RichTextSection,
 } from '@/components/home/MiscSections'
-import type { Homepage, SiteSetting } from '@/payload-types'
+import { Container } from '@/components/ui/Container'
+import type { CategoryFeatureBlock, Homepage, SiteSetting } from '@/payload-types'
 
 type LayoutBlock = NonNullable<Homepage['layout']>[number]
 type SidebarBlock = NonNullable<Homepage['sidebar']>[number]
@@ -24,27 +34,48 @@ type AnyBlock = LayoutBlock | SidebarBlock
 const SKELETON: Record<string, SectionSkeletonVariant> = {
   featuredSlider: 'hero',
   categoryFeature: 'split',
+  topicGrid: 'tiles',
   categoryGrid: 'grid',
   mediaShelf: 'band',
   categoryList: 'list',
+  shorts: 'shorts',
+}
+
+const isHalf = (block: AnyBlock) => 'width' in block && block.width === 'half'
+/** A full-width video shelf is a band that runs edge to edge, outside the page container. */
+const isBand = (block: AnyBlock) =>
+  block.blockType === 'mediaShelf' && block.format === 'video' && !isHalf(block)
+
+/**
+ * The first "lead + list" section gets the daily-quote sidebar beside it (75% / 25%) — unless
+ * editors placed a topics block themselves, in which case the layout is exactly what they built.
+ */
+function leadWithAside(blocks: LayoutBlock[]): CategoryFeatureBlock | null {
+  if (blocks.some((b) => b.blockType === 'topicGrid')) return null
+  const lead = blocks.find(
+    (b) => b.blockType === 'categoryFeature' && b.layout !== 'stacked' && !isHalf(b),
+  )
+  return (lead as CategoryFeatureBlock | undefined) ?? null
 }
 
 function renderBlock(
   block: AnyBlock,
   settings: SiteSetting,
-  opts: { priority: boolean; half: boolean; sidebar: boolean },
+  opts: { priority: boolean; half: boolean; sidebar: boolean; bleed: boolean },
 ): ReactNode {
   switch (block.blockType) {
     case 'featuredSlider':
       return <FeaturedSlider block={block} priority={opts.priority} />
     case 'categoryFeature':
-      return <CategoryFeature block={block} priority={opts.priority} />
+      return <CategoryFeature block={block} priority={opts.priority} half={opts.half} />
+    case 'topicGrid':
+      return <TopicGrid block={block} half={opts.half || opts.sidebar} />
     case 'categoryGrid':
       return <CategoryGrid block={block} />
     case 'categoryList':
       return <CategoryList block={block} panel={opts.sidebar || opts.half} />
     case 'mediaShelf':
-      return <MediaShelf block={block} half={opts.half || opts.sidebar} />
+      return <MediaShelf block={block} half={opts.half || opts.sidebar} bleed={opts.bleed} />
     case 'richText':
       return <RichTextSection block={block} />
     case 'banner':
@@ -55,6 +86,16 @@ function renderBlock(
       return <FollowUsSection block={block} settings={settings} />
     case 'quickContact':
       return <QuickContactSection block={block} settings={settings} />
+    case 'quoteOfDay':
+      return <QuoteOfDaySection block={block} />
+    case 'reels':
+      return <ReelsSection block={block} compact={opts.sidebar || opts.half} />
+    case 'shorts':
+      return <ShortsSection block={block} />
+    case 'faq':
+      return <FaqSection block={block} />
+    case 'callToAction':
+      return <CallToActionSection block={block} compact={opts.sidebar || opts.half} />
     default:
       return null
   }
@@ -73,35 +114,81 @@ function groupRows<T extends AnyBlock>(blocks: T[]): T[][] {
   return rows
 }
 
-/** Each section streams independently behind a skeleton shaped like it. */
+interface HomeBlocksProps {
+  blocks: AnyBlock[]
+  settings: SiteSetting
+  /** Rendering the sidebar column: compact variants, no page-width rows. */
+  sidebar?: boolean
+  /** The caller already provides the page container (main column beside a sidebar). */
+  contained?: boolean
+  /** Rendered in its own container row right after the first row (the category icon strip). */
+  afterFirst?: ReactNode
+}
+
+/**
+ * Each section streams independently behind a skeleton shaped like it. In the page layout every
+ * row sits in the site container, except the video band, which spans the full screen width.
+ */
 export function HomeBlocks({
   blocks,
   settings,
   sidebar = false,
-}: {
-  blocks: AnyBlock[]
-  settings: SiteSetting
-  sidebar?: boolean
-}) {
+  contained = false,
+  afterFirst,
+}: HomeBlocksProps) {
+  const page = !sidebar && !contained
+  const shown = blocks.filter((b) => !b.hidden)
+  const asideBlock = page ? leadWithAside(shown as LayoutBlock[]) : null
+  const rows = groupRows(shown)
   return (
-    <div className={sidebar ? 'space-y-8' : 'space-y-14 lg:space-y-16'}>
-      {groupRows(blocks).map((row, r) => {
-        const half = row.length > 1 || ('width' in row[0]! && row[0]!.width === 'half')
+    <div className={sidebar ? 'space-y-8' : 'space-y-10 lg:space-y-12'}>
+      {rows.flatMap((row, r) => {
+        const half = row.length > 1 || isHalf(row[0]!)
+        const bleed = page && row.length === 1 && isBand(row[0]!)
         const cells = row.map((block, i) => (
           <Suspense
             key={block.id ?? `${r}-${i}`}
             fallback={<SectionSkeleton variant={SKELETON[block.blockType] ?? 'list'} />}
           >
-            {renderBlock(block, settings, { priority: !sidebar && r < 2, half, sidebar })}
+            {block === asideBlock ? (
+              <LeadWithAside
+                block={asideBlock}
+                priority={!sidebar && r < 2}
+                siteName={settings.siteName}
+                tagline={settings.tagline}
+              />
+            ) : (
+              renderBlock(block, settings, { priority: !sidebar && r < 2, half, sidebar, bleed })
+            )}
           </Suspense>
         ))
-        return half ? (
-          <div key={r} className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            {cells}
-          </div>
+        const content = half ? (
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">{cells}</div>
         ) : (
-          <div key={r}>{cells}</div>
+          <div>{cells}</div>
         )
+        // Rows after the first two are rendered lazily (see .lazy-section in globals.css).
+        const lazy = page && r >= 2 ? 'lazy-section' : ''
+        const out: ReactNode[] = [
+          page && !bleed ? (
+            <Container key={`row-${r}`} className={lazy}>
+              {content}
+            </Container>
+          ) : (
+            <div key={`row-${r}`} className={lazy}>
+              {content}
+            </div>
+          ),
+        ]
+        if (r === 0 && afterFirst)
+          out.push(
+            page ? (
+              <Container key="after-first">{afterFirst}</Container>
+            ) : (
+              <div key="after-first">{afterFirst}</div>
+            ),
+          )
+        return out
       })}
     </div>
   )

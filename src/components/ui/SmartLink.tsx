@@ -8,6 +8,7 @@ interface SmartLinkProps {
   className?: string
   children: ReactNode
   'aria-current'?: 'page' | 'true' | undefined
+  title?: string
 }
 
 /** Internal → next/link, external → hardened <a>, no href → plain text (menu group labels). */

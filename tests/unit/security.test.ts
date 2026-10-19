@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { findIocs, IOC_PATTERNS } from '@/lib/security/ioc'
-import { isSafeHref, youtubeId } from '@/lib/security/url'
+import { isSafeHref, spotifyEmbedUrl, youtubeId } from '@/lib/security/url'
 import { buildCsp } from '@/lib/security/csp'
 import { needsTrailingSlash } from '@/lib/routing'
 
@@ -94,6 +94,37 @@ describe('buildCsp', () => {
     expect(buildCsp('n', 'site', prod, { previewFrame: true })).toContain("frame-ancestors 'self'")
     expect(buildCsp('n', 'site', prod, { previewFrame: false })).toContain("frame-ancestors 'none'")
     expect(buildCsp('n', 'admin', prod, { previewFrame: true })).toContain("frame-ancestors 'none'")
+  })
+})
+
+describe('spotifyEmbedUrl', () => {
+  const id = '4rOoJ6Egrf8K2IrywzwOMk'
+  it('turns Spotify share links into the official embed', () => {
+    expect(spotifyEmbedUrl(`https://open.spotify.com/episode/${id}?si=abc`)).toBe(
+      `https://open.spotify.com/embed/episode/${id}`,
+    )
+    expect(spotifyEmbedUrl(`https://open.spotify.com/intl-en/show/${id}`)).toBe(
+      `https://open.spotify.com/embed/show/${id}`,
+    )
+    expect(spotifyEmbedUrl(`https://open.spotify.com/embed/playlist/${id}`)).toBe(
+      `https://open.spotify.com/embed/playlist/${id}`,
+    )
+  })
+  it('rejects anything that is not a Spotify content link', () => {
+    for (const bad of [
+      `http://open.spotify.com/episode/${id}`,
+      `https://open.spotify.com.attacker.invalid/episode/${id}`,
+      `https://attacker.invalid/open.spotify.com/episode/${id}`,
+      `https://open.spotify.com/user/${id}`,
+      'https://open.spotify.com/episode/short',
+      'javascript:alert(1)',
+      'not a url',
+    ])
+      expect(spotifyEmbedUrl(bad)).toBeNull()
+  })
+  it('is the only extra player the site CSP may frame', () => {
+    const site = buildCsp('n', 'site', { dev: false, prod: true, mediaOrigin: '' })
+    expect(site).toContain('frame-src https://www.youtube-nocookie.com https://open.spotify.com')
   })
 })
 

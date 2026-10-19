@@ -11,7 +11,7 @@ interface ShareButtonsProps {
 }
 
 const BUTTON =
-  'inline-flex size-10 items-center justify-center rounded-full border border-line text-body transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand'
+  'inline-flex size-9 items-center justify-center rounded-full bg-card text-body ring-1 ring-line transition hover:-translate-y-0.5 hover:bg-brand hover:text-white hover:ring-brand'
 
 /** Plain share links (no third-party scripts or trackers) + copy-link. */
 export function ShareButtons({ url, title, className = '' }: ShareButtonsProps) {
@@ -47,20 +47,20 @@ export function ShareButtons({ url, title, className = '' }: ShareButtonsProps) 
 
   return (
     <div className={`flex items-center gap-1.5 ${className}`}>
-      <span className="me-1 text-xs font-semibold text-muted">പങ്കിടുക</span>
+      <span className="me-1 text-sm font-semibold text-muted">Share this</span>
       {targets.map((t) => (
         <a
           key={t.network}
           href={t.href}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`${t.label} വഴി പങ്കിടുക`}
+          aria-label={`Share on ${t.label}`}
           className={BUTTON}
         >
           <SocialIcon network={t.network} className="size-4" />
         </a>
       ))}
-      <button type="button" onClick={copy} aria-label="ലിങ്ക് പകർത്തുക" className={BUTTON}>
+      <button type="button" onClick={copy} aria-label="Copy link" className={BUTTON}>
         {copied ? (
           <Check className="size-4 text-brand" aria-hidden="true" />
         ) : (
@@ -68,7 +68,7 @@ export function ShareButtons({ url, title, className = '' }: ShareButtonsProps) 
         )}
       </button>
       <span role="status" className="sr-only">
-        {copied ? 'ലിങ്ക് പകർത്തി' : ''}
+        {copied ? 'Link copied' : ''}
       </span>
     </div>
   )

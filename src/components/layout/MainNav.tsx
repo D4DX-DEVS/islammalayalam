@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, House } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
 import { SmartLink } from '@/components/ui/SmartLink'
 import { isActive, isCurrent, type NavItem } from '@/lib/nav'
@@ -10,10 +10,10 @@ interface MainNavProps {
 
 const RIGHT_ALIGNED = 3 // last N top-level menus open leftwards so they never overflow the viewport
 const PANEL =
-  'invisible absolute z-40 min-w-60 rounded-xl border border-line bg-card p-1.5 opacity-0 shadow-lift transition duration-150'
+  'invisible absolute z-40 min-w-64 rounded-2xl border border-line/70 bg-card p-2 opacity-0 shadow-lift ring-1 ring-black/[0.03] transition duration-200'
 // Panels touch their trigger (no margins): crossing a gap would drop :hover and close the menu.
 const PANEL_LINK =
-  'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-body transition-colors hover:bg-surface hover:text-brand'
+  'flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm text-body transition-colors hover:bg-brand-soft hover:text-brand'
 
 /**
  * Desktop menu bar (from `xl`, 1280px — the 11 Malayalam menus need ~1150px). Sticky, white, with an
@@ -21,24 +21,42 @@ const PANEL_LINK =
  * works — and is crawlable — without JavaScript. Below `xl` the MobileNav drawer is used instead.
  */
 export function MainNav({ items, pathname }: MainNavProps) {
+  // The Home icon stays at the left; the first text menu takes the free space on its left side
+  // (`ms-auto`), which pushes it and every menu after it to the right edge of the bar.
+  const isHome = (item: NavItem) =>
+    item.href === '/' && !item.external && item.children.length === 0
+  const firstTextAt = items.findIndex((item) => !isHome(item))
   return (
-    <div className="sticky top-0 z-30 hidden border-b border-line bg-card/90 backdrop-blur-md xl:block">
+    <div className="sticky top-0 z-30 hidden border-b border-line/60 bg-card/80 backdrop-blur-xl xl:block">
       <Container>
-        <nav aria-label="പ്രധാന മെനു">
+        <nav aria-label="Main menu">
           <ul className="-mx-2 flex">
             {items.map((item, index) => {
               const alignRight = index >= items.length - RIGHT_ALIGNED
               const active = isActive(item, pathname)
+              // The link to the homepage is a house icon (its label stays for screen readers).
+              const home = isHome(item)
               return (
-                <li key={item.id} className="group relative">
+                <li
+                  key={item.id}
+                  className={`group relative ${index === firstTextAt ? 'ms-auto' : ''}`}
+                >
                   <SmartLink
                     href={item.href}
                     external={item.external}
                     newTab={item.newTab}
                     aria-current={isCurrent(item, pathname) ? 'page' : undefined}
-                    className={`relative flex min-h-12 items-center gap-0.5 whitespace-nowrap px-2 text-[0.84rem] font-semibold transition-colors after:absolute after:inset-x-2 after:bottom-0 after:h-[3px] after:rounded-t-full after:transition-colors hover:text-brand ${active ? 'text-brand after:bg-brand' : 'text-ink after:bg-transparent'}`}
+                    title={home ? item.label : undefined}
+                    className={`relative my-1.5 flex min-h-10 items-center gap-0.5 whitespace-nowrap rounded-lg text-[0.84rem] font-semibold transition-colors ${home ? 'px-3' : 'px-2'} ${active ? 'bg-brand text-white shadow-card' : 'text-ink hover:bg-brand-soft hover:text-brand'}`}
                   >
-                    {item.label}
+                    {home ? (
+                      <>
+                        <House className="size-[1.15rem]" aria-hidden="true" />
+                        <span className="sr-only">{item.label}</span>
+                      </>
+                    ) : (
+                      item.label
+                    )}
                     {item.children.length ? (
                       <ChevronDown
                         className="size-3 opacity-60 transition-transform group-hover:rotate-180"
