@@ -13,10 +13,10 @@ import { bodyStartsWith } from '@/lib/text/lexical'
 import { formatDate } from '@/lib/format'
 import { categoryHref, postHref } from '@/lib/links'
 import { trackAudio } from '@/lib/audio'
+import { SITE_URL } from '@/lib/site-url'
 import type { Author, Category, Media, Post } from '@/payload-types'
 
 const asObj = <T,>(v: unknown): T | null => (v && typeof v === 'object' ? (v as T) : null)
-const SITE_URL = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3444'
 
 function AudioPlayer({ audio }: { audio: NonNullable<Post['audio']> }) {
   const { source } = trackAudio(audio)
