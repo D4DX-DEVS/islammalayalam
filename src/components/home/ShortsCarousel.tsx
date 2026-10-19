@@ -5,12 +5,14 @@ import Image from 'next/image'
 import { Eye, Play, Smartphone } from 'lucide-react'
 import { ShortsLightbox } from '@/components/home/ShortsLightbox'
 import { ScrollRow } from '@/components/ui/ScrollRow'
-import type { Short } from '@/lib/youtube-shorts'
+import { thumbFallbacks, type Short } from '@/lib/youtube-shorts'
 
 /** One Short: a vertical poster that lifts on hover, with its title, speaker and views underneath. */
 function ShortCard({ short, onOpen }: { short: Short; onOpen: () => void }) {
-  // A Short without a poster of its own falls back to the first frame of the video.
-  const [thumb, setThumb] = useState(short.thumb)
+  // YouTube's own thumbnail first; if it will not load, the other pictures YouTube keeps for it.
+  const [sources] = useState(() => [short.thumb, ...thumbFallbacks(short.id)])
+  const [tried, setTried] = useState(0)
+  const thumb = sources[tried]!
   return (
     <button
       type="button"
@@ -25,7 +27,7 @@ function ShortCard({ short, onOpen }: { short: Short; onOpen: () => void }) {
           alt=""
           fill
           sizes="(min-width: 1024px) 15rem, (min-width: 640px) 30vw, 46vw"
-          onError={() => setThumb(`https://i.ytimg.com/vi/${short.id}/frame0.jpg`)}
+          onError={() => setTried((n) => Math.min(n + 1, sources.length - 1))}
           className="object-cover transition duration-500 ease-out group-hover:scale-[1.04] motion-reduce:transform-none"
         />
         <span

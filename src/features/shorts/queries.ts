@@ -29,7 +29,7 @@ async function load(page: string): Promise<Short[]> {
   return shorts
 }
 
-const loadCached = unstable_cache(load, ['shorts:channel:v1'], {
+const loadCached = unstable_cache(load, ['shorts:channel:v2'], {
   revalidate: REFRESH_SECONDS,
   tags: ['shorts'],
 })

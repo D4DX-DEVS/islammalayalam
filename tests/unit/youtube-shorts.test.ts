@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { parseShortsPage, shortsPage, splitTitle } from '@/lib/youtube-shorts'
+import { parseShortsPage, shortsPage, splitTitle, thumbFallbacks } from '@/lib/youtube-shorts'
 import { ShortsBlock } from '@/payload/blocks/homepage-engage'
 
+/** The thumbnail sources YouTube lists for a Short (the same picture, largest first, then a cropped one). */
+const sources = (id: string) => [
+  { url: `https://i.ytimg.com/vi/${id}/oar1.jpg?sqp=AAA&rs=BBB`, width: 405, height: 720 },
+  { url: `https://i.ytimg.com/vi/${id}/oar1.jpg?sqp=CCC&rs=DDD`, width: 405, height: 608 },
+]
 const lockup = (id: string, title: string, views = '2.2K views') => ({
   shortsLockupViewModel: {
     entityId: `shorts-shelf-item-${id}`,
+    thumbnailViewModel: { thumbnailViewModel: { image: { sources: sources(id) } } },
     onTap: { innertubeCommand: { reelWatchEndpoint: { videoId: id } } },
     overlayMetadata: { primaryText: { content: title }, secondaryText: { content: views } },
   },
@@ -103,14 +109,14 @@ describe('parseShortsPage', () => {
         title: 'ഇത് സൂഫിസമല്ല !',
         subtitle: 'ജി.കെ എടത്തനാട്ടുകര',
         views: '2.2K views',
-        thumb: 'https://i.ytimg.com/vi/YOL6PkLUAmo/oar2.jpg',
+        thumb: 'https://i.ytimg.com/vi/YOL6PkLUAmo/oar1.jpg?sqp=AAA&rs=BBB',
       },
       {
         id: 'd5CSwPVsAzg',
         title: "'പ്രവാചകന്‍മാര്‍ മനുഷ്യരാണ്'",
         subtitle: 'ടി മുഹമ്മദ് വേളം',
         views: '784 views',
-        thumb: 'https://i.ytimg.com/vi/d5CSwPVsAzg/oar2.jpg',
+        thumb: 'https://i.ytimg.com/vi/d5CSwPVsAzg/oar1.jpg?sqp=AAA&rs=BBB',
       },
     ])
   })
@@ -126,6 +132,58 @@ describe('parseShortsPage', () => {
       ),
     )
     expect(shorts.map((s) => s.id)).toEqual(['YOL6PkLUAmo', 'Wkl0sxNbTwU'])
+  })
+
+  describe('thumbnails', () => {
+    const thumbOf = (view: unknown) =>
+      parseShortsPage(
+        page({
+          shortsLockupViewModel: {
+            entityId: 'shorts-shelf-item-Wkl0sxNbTwU',
+            overlayMetadata: { primaryText: { content: 'Two' } },
+            ...(view as object),
+          },
+        }),
+      )[0]!.thumb
+
+    it('is the picture YouTube gives for the Short, in its largest size, address and signature as given', () => {
+      const view = {
+        thumbnailViewModel: {
+          thumbnailViewModel: { image: { sources: [...sources('Wkl0sxNbTwU')].reverse() } },
+        },
+      }
+      expect(thumbOf(view)).toBe('https://i.ytimg.com/vi/Wkl0sxNbTwU/oar1.jpg?sqp=AAA&rs=BBB')
+    })
+
+    it('also reads the older { thumbnail: { sources } } shape', () => {
+      expect(thumbOf({ thumbnail: { sources: sources('Wkl0sxNbTwU') } })).toContain(
+        '/oar1.jpg?sqp=AAA',
+      )
+    })
+
+    it.each([
+      ['another host', 'https://evil.example/vi/Wkl0sxNbTwU/oar1.jpg'],
+      ['a lookalike host', 'https://i.ytimg.com.evil.example/vi/Wkl0sxNbTwU/oar1.jpg'],
+      ['plain http', 'http://i.ytimg.com/vi/Wkl0sxNbTwU/oar1.jpg'],
+      ['another video', 'https://i.ytimg.com/vi/d5CSwPVsAzg/oar1.jpg'],
+      ['not an address', 'oar1.jpg'],
+    ])('is not taken from %s: the standard vertical thumbnail is used', (_, url) => {
+      const view = {
+        thumbnailViewModel: { thumbnailViewModel: { image: { sources: [{ url, height: 720 }] } } },
+      }
+      expect(thumbOf(view)).toBe('https://i.ytimg.com/vi/Wkl0sxNbTwU/oar1.jpg')
+    })
+
+    it('is the standard vertical thumbnail when YouTube lists none', () => {
+      expect(thumbOf({})).toBe('https://i.ytimg.com/vi/Wkl0sxNbTwU/oar1.jpg')
+    })
+
+    it('has other places to look if the first fails, ending with the video’s first frame', () => {
+      const list = thumbFallbacks('Wkl0sxNbTwU')
+      expect(list[0]).toBe('https://i.ytimg.com/vi/Wkl0sxNbTwU/oar1.jpg')
+      expect(list.at(-1)).toBe('https://i.ytimg.com/vi/Wkl0sxNbTwU/frame0.jpg')
+      expect(new Set(list).size).toBe(list.length)
+    })
   })
 
   it('finds the video id from the entity when the tap command is missing', () => {

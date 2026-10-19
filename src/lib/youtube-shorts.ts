@@ -11,7 +11,7 @@ export type Short = {
   subtitle: string | null
   /** As YouTube words it, e.g. "2.2K views". */
   views: string | null
-  /** The vertical poster. */
+  /** The vertical thumbnail, at the address YouTube itself gives for it. */
   thumb: string
 }
 
@@ -74,6 +74,46 @@ const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null
 const text = (v: unknown): string | null =>
   isObject(v) && typeof v.content === 'string' ? v.content : null
 
+/**
+ * The thumbnail address YouTube gives for a Short on its Shorts page (the picture it shows there,
+ * signature included), largest first. Only an `i.ytimg.com/vi/<this video>/…` address is used: the
+ * site's image optimizer fetches nothing else, and an unknown host would break the page.
+ */
+function youtubeThumb(item: Json, id: string): string | null {
+  const view = isObject(item.thumbnailViewModel) ? item.thumbnailViewModel : null
+  const nested = view && isObject(view.thumbnailViewModel) ? view.thumbnailViewModel : view
+  const image = nested && isObject(nested.image) ? nested.image : null
+  const plain = isObject(item.thumbnail) ? item.thumbnail : null
+  const sources = image?.sources ?? plain?.sources
+  const best = (Array.isArray(sources) ? sources : [])
+    .filter(isObject)
+    .map((source) => ({
+      url: typeof source.url === 'string' ? source.url : '',
+      height: Number(source.height) || 0,
+    }))
+    .filter(({ url }) => {
+      try {
+        const u = new URL(url)
+        return (
+          u.protocol === 'https:' &&
+          u.hostname === 'i.ytimg.com' &&
+          u.pathname.startsWith(`/vi/${id}/`)
+        )
+      } catch {
+        return false
+      }
+    })
+    .sort((a, b) => b.height - a.height)[0]
+  return best?.url ?? null
+}
+
+/**
+ * Where else to look for a Short's thumbnail if the first address fails to load: the unsigned
+ * vertical ones YouTube keeps for every Short, then the first frame of the video.
+ */
+export const thumbFallbacks = (id: string): string[] =>
+  ['oar1', 'oardefault', 'oar2', 'frame0'].map((name) => `https://i.ytimg.com/vi/${id}/${name}.jpg`)
+
 /** Every `shortsLockupViewModel` in the page data, in page order. */
 function lockups(node: unknown, out: Json[] = []): Json[] {
   if (Array.isArray(node)) for (const item of node) lockups(item, out)
@@ -118,7 +158,7 @@ export function parseShortsPage(html: string): Short[] {
       title,
       subtitle,
       views: text(overlay.secondaryText),
-      thumb: `https://i.ytimg.com/vi/${id}/oar2.jpg`,
+      thumb: youtubeThumb(item, id) ?? thumbFallbacks(id)[0]!,
     })
   }
   return shorts
