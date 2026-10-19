@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hasBlocks, plainText, withoutLeadingTitle } from '@/lib/text/lexical'
+import { bodyStartsWith, hasBlocks, plainText, withoutLeadingTitle } from '@/lib/text/lexical'
 
 const text = (value: string) => ({ type: 'text', text: value })
 const heading = (value: string, tag = 'h2') => ({ type: 'heading', tag, children: [text(value)] })
@@ -79,5 +79,42 @@ describe('plainText / hasBlocks', () => {
     expect(hasBlocks(doc(paragraph('x')))).toBe(true)
     expect(hasBlocks(doc())).toBe(false)
     expect(hasBlocks(null)).toBe(false)
+  })
+})
+
+describe('bodyStartsWith', () => {
+  const body = doc(
+    paragraph('Question: സമ്പന്നർ കൂടുതൽ സമ്പന്നരാവുകയും പട്ടിണി കിടക്കുന്നവർ'),
+    paragraph('Answer: സകാത്ത് ഇസ്‌ലാമിന്റെ അടിത്തറയാണെന്നതുകൊണ്ട്'),
+  )
+
+  it('is true for an excerpt cut from the start of the body', () => {
+    const excerpt =
+      'Question: സമ്പന്നർ കൂടുതൽ സമ്പന്നരാവുകയും പട്ടിണി കിടക്കുന്നവർ Answer: സകാത്ത്…'
+    expect(bodyStartsWith(body, excerpt)).toBe(true)
+  })
+
+  it('ignores case, spacing and zero-width joiners', () => {
+    expect(bodyStartsWith(body, '  QUESTION:   സമ്പന്നർ  കൂടുതൽ സമ്പന്നരാവുകയും പട്ടിണി')).toBe(
+      true,
+    )
+    expect(
+      bodyStartsWith(
+        doc(paragraph('ഇസ്‌ലാം ഒരു ജീവിത വ്യവസ്ഥയാണ്, അതിന്റെ അടിസ്ഥാനം')),
+        'ഇസ്ലാം ഒരു ജീവിത വ്യവസ്ഥയാണ്, അതിന്റെ',
+      ),
+    ).toBe(true)
+  })
+
+  it('is false for an excerpt written separately from the body', () => {
+    expect(bodyStartsWith(body, 'A short summary written by the editor for the cards')).toBe(false)
+  })
+
+  it('is false for a very short excerpt (it could match by chance), or nothing at all', () => {
+    expect(bodyStartsWith(body, 'Question:')).toBe(false)
+    expect(bodyStartsWith(body, '')).toBe(false)
+    expect(bodyStartsWith(body, null)).toBe(false)
+    expect(bodyStartsWith(null, 'Question: സമ്പന്നർ കൂടുതൽ സമ്പന്നരാവുകയും')).toBe(false)
+    expect(bodyStartsWith(doc(), 'Question: സമ്പന്നർ കൂടുതൽ സമ്പന്നരാവുകയും')).toBe(false)
   })
 })

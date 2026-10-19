@@ -46,7 +46,9 @@ function Unavailable({
         <VideoOff className="size-6" aria-hidden="true" />
       </span>
       <p className="relative max-w-md text-base font-semibold leading-relaxed sm:text-lg">
-        {external ? 'ഈ വീഡിയോ YouTube-ൽ മാത്രമേ കാണാനാകൂ' : 'ഈ വീഡിയോ ഇപ്പോൾ YouTube-ൽ ലഭ്യമല്ല'}
+        {external
+          ? 'This video can only be watched on YouTube'
+          : 'This video is no longer available on YouTube'}
       </p>
       {external ? (
         <a
@@ -55,7 +57,7 @@ function Unavailable({
           rel="noopener noreferrer"
           className="relative inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-ink transition-colors hover:bg-brand-soft"
         >
-          YouTube-ൽ കാണുക
+          Watch on YouTube
           <ExternalLink className="size-4" aria-hidden="true" />
         </a>
       ) : null}

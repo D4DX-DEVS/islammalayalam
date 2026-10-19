@@ -88,7 +88,7 @@ export function HeroSlider({ slides, label, className = '' }: HeroSliderProps) {
             <button
               type="button"
               onClick={() => go(active - 1)}
-              aria-label="മുമ്പത്തേത്"
+              aria-label="Previous"
               className="inline-flex size-10 items-center justify-center rounded-lg bg-white/10 text-white ring-1 ring-white/60 backdrop-blur-sm transition hover:bg-white hover:text-brand-deep active:scale-95"
             >
               <ChevronLeft className="size-5 rtl:rotate-180" aria-hidden="true" />
@@ -96,7 +96,7 @@ export function HeroSlider({ slides, label, className = '' }: HeroSliderProps) {
             <button
               type="button"
               onClick={() => go(active + 1)}
-              aria-label="അടുത്തത്"
+              aria-label="Next"
               className="inline-flex size-10 items-center justify-center rounded-lg bg-white/10 text-white ring-1 ring-white/60 backdrop-blur-sm transition hover:bg-white hover:text-brand-deep active:scale-95"
             >
               <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />

@@ -85,11 +85,11 @@ export async function FeaturedSlider({
   const side = latest.docs.filter((p) => !shown.has(p.id)).slice(0, HERO_SIDE_MAX)
   return (
     <section
-      aria-label="പ്രധാന വാർത്തകൾ"
+      aria-label="Top stories"
       className={`grid grid-cols-1 gap-6 ${side.length ? 'lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] lg:gap-7' : ''}`}
     >
       <HeroSlider
-        label="പ്രധാന വാർത്തകൾ"
+        label="Top stories"
         slides={slides.map((post, i) => (
           <HeroSlide key={post.id} post={post} priority={Boolean(priority) && i === 0} />
         ))}

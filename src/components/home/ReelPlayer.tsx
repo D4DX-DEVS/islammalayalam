@@ -27,7 +27,7 @@ export function ReelPlayer({ id, title }: { id: string; title: string }) {
         <button
           type="button"
           onClick={() => setPlaying(true)}
-          aria-label={`പ്ലേ ചെയ്യുക: ${title}`}
+          aria-label={`Play: ${title}`}
           className="group shine absolute inset-0 size-full overflow-hidden text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         >
           {thumbFailed ? (

@@ -51,7 +51,7 @@ export default async function CatchAllPage({ params }: Props) {
 
   const settings = await getSiteSettings()
   return (
-    <Container className="py-6 lg:py-10">
+    <Container className="py-4 lg:py-6">
       {res.kind === 'post' ? (
         <PostArticle post={res.post} siteName={settings.siteName} />
       ) : res.page.template === 'postal-request' ? (

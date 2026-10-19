@@ -53,6 +53,15 @@ export const SiteSettings: GlobalConfig = {
       type: 'group',
       fields: [
         { name: 'email', type: 'email' },
+        {
+          name: 'secondEmail',
+          type: 'email',
+          label: 'Second email',
+          admin: {
+            description:
+              'Optional. Listed under the first email wherever the contact details appear (footer, Quick Contact, the About page).',
+          },
+        },
         { name: 'phone', type: 'text', maxLength: 40 },
         {
           name: 'whatsappNumber',

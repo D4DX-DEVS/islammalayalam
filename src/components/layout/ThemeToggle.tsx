@@ -21,7 +21,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
     <button
       type="button"
       onClick={toggle}
-      aria-label="ഇരുണ്ട / തെളിഞ്ഞ മോഡ്"
+      aria-label="Dark / light mode"
       className={`inline-flex size-11 items-center justify-center rounded-xl text-brand-deep transition hover:bg-brand-soft hover:text-brand dark:text-ink sm:bg-surface sm:ring-1 sm:ring-line ${className}`}
     >
       <Moon className="size-5 dark:hidden" aria-hidden="true" />

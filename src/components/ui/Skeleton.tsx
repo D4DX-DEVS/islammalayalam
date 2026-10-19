@@ -14,7 +14,7 @@ export function Skeleton({ className = '' }: SkeletonProps) {
 
 /** Wraps a skeleton layout so assistive tech announces loading once. */
 export function LoadingRegion({
-  label = 'ലോഡ് ചെയ്യുന്നു…',
+  label = 'Loading…',
   children,
 }: {
   label?: string

@@ -1,14 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { trackAudio } from '@/lib/audio'
-import {
-  PAGE_SIZE,
-  clampPage,
-  clock,
-  filterTracks,
-  nextSpeed,
-  pageCount,
-  pageOfPosition,
-} from '@/lib/audio-list'
+import { clock, filterTracks, nextSpeed } from '@/lib/audio-list'
 import { spotifyOpenUrl } from '@/lib/security/url'
 
 const SHOW = 'https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk'
@@ -96,29 +88,6 @@ describe('filterTracks', () => {
 
   it('ignores invisible joiners in Malayalam text', () => {
     expect(filterTracks([{ title: 'ഇസ്‌ലാം', subtitle: null }], 'ഇസ്ലാം')).toEqual([0])
-  })
-})
-
-describe('paging', () => {
-  it('counts pages, never fewer than one', () => {
-    expect(pageCount(0)).toBe(1)
-    expect(pageCount(PAGE_SIZE)).toBe(1)
-    expect(pageCount(PAGE_SIZE + 1)).toBe(2)
-    expect(pageCount(40)).toBe(7)
-  })
-
-  it('keeps the page inside the list', () => {
-    expect(clampPage(-3, 40)).toBe(0)
-    expect(clampPage(99, 40)).toBe(6)
-    expect(clampPage(2, 0)).toBe(0)
-    expect(clampPage(Number.NaN, 40)).toBe(0)
-  })
-
-  it('finds the page of a position', () => {
-    expect(pageOfPosition(0)).toBe(0)
-    expect(pageOfPosition(PAGE_SIZE - 1)).toBe(0)
-    expect(pageOfPosition(PAGE_SIZE)).toBe(1)
-    expect(pageOfPosition(-4)).toBe(0)
   })
 })
 

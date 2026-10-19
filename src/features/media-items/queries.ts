@@ -33,7 +33,7 @@ async function load(collection: 'audios' | 'videos', limit: number): Promise<Med
 
 /** In the admin's order. Cached; purged when an entry is saved or moved (see payload/hooks/revalidate.ts). */
 export const listAudioEntries = cached(
-  'audios:list:v5',
+  'audios:list:v6',
   [collectionTag('audios')],
   (limit: number) => load('audios', limit),
 )

@@ -25,13 +25,13 @@ const EDGE = `${IDLE} bg-card ring-1 ring-line shadow-card`
 export function Pagination({ basePath, page, totalPages, query }: PaginationProps) {
   if (totalPages <= 1) return null
   return (
-    <nav aria-label="പേജുകൾ" className="mt-14 flex flex-wrap items-center justify-center gap-2">
+    <nav aria-label="Pages" className="mt-14 flex flex-wrap items-center justify-center gap-2">
       {page > 1 ? (
         <Link
           href={pageHref(basePath, page - 1, query)}
           rel="prev"
           className={EDGE}
-          aria-label="മുൻ പേജ്"
+          aria-label="Previous page"
         >
           <ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />
         </Link>
@@ -57,7 +57,7 @@ export function Pagination({ basePath, page, totalPages, query }: PaginationProp
           href={pageHref(basePath, page + 1, query)}
           rel="next"
           className={EDGE}
-          aria-label="അടുത്ത പേജ്"
+          aria-label="Next page"
         >
           <ChevronRight className="size-4 rtl:rotate-180" aria-hidden="true" />
         </Link>

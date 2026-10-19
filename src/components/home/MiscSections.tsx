@@ -1,9 +1,10 @@
 import Image from 'next/image'
-import { ArrowUpRight, FileText, Link2, Mail, MapPin, Phone, Users } from 'lucide-react'
+import { ArrowUpRight, FileText, Link2, Mail, Users } from 'lucide-react'
 import { PANEL } from '@/components/home/CategorySections'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { SmartLink } from '@/components/ui/SmartLink'
 import { RichText } from '@/components/richtext/RichText'
+import { ContactDetails } from '@/components/layout/ContactDetails'
 import { SocialLinks } from '@/components/layout/SocialLinks'
 import { resolveLink } from '@/lib/links'
 import { mediaSrc } from '@/lib/media'
@@ -113,47 +114,11 @@ export function QuickContactSection({
   block: QuickContactBlock
   settings: SiteSetting
 }) {
-  const c = settings.contact
-  const row = 'flex gap-3'
-  const icon =
-    'mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand'
   return (
     <section className={PANEL}>
       <SectionHeading title={block.title || 'Quick Contact'} icon={Mail} />
       {block.intro ? <p className="mb-4 text-sm">{block.intro}</p> : null}
-      <address className="space-y-3 text-sm not-italic">
-        {c?.address ? (
-          <p className={`${row} whitespace-pre-line`}>
-            <span className={icon}>
-              <MapPin className="size-4" aria-hidden="true" />
-            </span>
-            {c.address}
-          </p>
-        ) : null}
-        {c?.phone ? (
-          <p className={`${row} items-center`}>
-            <span className={icon}>
-              <Phone className="size-4" aria-hidden="true" />
-            </span>
-            <a
-              href={`tel:${c.phone.replace(/[^\d+]/g, '')}`}
-              className="font-medium hover:text-brand"
-            >
-              {c.phone}
-            </a>
-          </p>
-        ) : null}
-        {c?.email ? (
-          <p className={`${row} items-center`}>
-            <span className={icon}>
-              <Mail className="size-4" aria-hidden="true" />
-            </span>
-            <a href={`mailto:${c.email}`} className="font-medium hover:text-brand">
-              {c.email}
-            </a>
-          </p>
-        ) : null}
-      </address>
+      <ContactDetails contact={settings.contact} />
     </section>
   )
 }

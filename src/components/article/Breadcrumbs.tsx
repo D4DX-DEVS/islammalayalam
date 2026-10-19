@@ -5,9 +5,9 @@ export type Crumb = { label: string; href?: string | null }
 
 /** Home › … › current. The last crumb is the current page (not a link). */
 export function Breadcrumbs({ items, className = '' }: { items: Crumb[]; className?: string }) {
-  const all: Crumb[] = [{ label: 'ഹോം', href: '/' }, ...items]
+  const all: Crumb[] = [{ label: 'Home', href: '/' }, ...items]
   return (
-    <nav aria-label="ബ്രെഡ്ക്രംബ്" className={`mb-5 text-sm text-muted ${className}`}>
+    <nav aria-label="Breadcrumb" className={`mb-3 text-sm text-muted sm:mb-4 ${className}`}>
       <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
         {all.map((c, i) => {
           const last = i === all.length - 1

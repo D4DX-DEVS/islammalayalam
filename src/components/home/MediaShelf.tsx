@@ -6,9 +6,11 @@ import { ScrollRow } from '@/components/ui/ScrollRow'
 import { Container } from '@/components/ui/Container'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { listAudioEntries, listVideoEntries, type MediaEntry } from '@/features/media-items/queries'
+import { getShowFeed } from '@/features/spotify/queries'
 import { getAds } from '@/features/site/queries'
 import { listPosts, type PostCardData } from '@/features/posts/queries'
 import { displayTitle, mergeFirst } from '@/lib/media-items'
+import { spotifyShowId, type Episode, type Show } from '@/lib/spotify-show'
 import { youtubeId } from '@/lib/security/url'
 import { youtubeDetails, youtubeStatus, type VideoStatus } from '@/lib/youtube'
 import { categoryHref } from '@/lib/links'
@@ -43,6 +45,9 @@ const entryPost = (id: string, title: string, videoId: string): PostCardData =>
     author: null,
   }) as unknown as PostCardData
 
+/** Every episode of the show is listed in the Audios card (Spotify's API gives 50 at most). */
+const MAX_EPISODES = 50
+
 const FORMAT_TITLE = { video: 'Videos', audio: 'Audios', ebook: 'E-Books' } as const
 
 /**
@@ -74,7 +79,19 @@ export async function MediaShelf({
       : block.format === 'video'
         ? await listVideoEntries(block.limit)
         : await listAudioEntries(block.limit)
-  if (!docs.length && !entries.length) return null
+  // The episodes of the Spotify show set on an Audios section come straight from Spotify, so a
+  // new episode appears here by itself.
+  const feed: { show: Show | null; episodes: Episode[] } =
+    block.format === 'audio'
+      ? await getShowFeed(block.spotifyUrl, MAX_EPISODES)
+      : { show: null, episodes: [] }
+  const { episodes } = feed
+  const showMore = spotifyShowId(block.spotifyUrl)
+    ? episodes.length > 1
+      ? { href: '/audios/', external: false }
+      : { href: feed.show?.url ?? block.spotifyUrl ?? null, external: true }
+    : { href: null, external: false }
+  if (!docs.length && !entries.length && !episodes.length) return null
   const title = block.title || category?.name || FORMAT_TITLE[block.format]
   const more = category ? categoryHref(category.slug) : null
 
@@ -171,11 +188,15 @@ export async function MediaShelf({
     <AudioShelf
       docs={docs}
       entries={entries}
+      episodes={episodes}
+      show={feed.show}
       limit={block.limit}
       title={title}
-      more={more}
+      // With a Spotify show behind the section, "View More" opens every episode: on this site's
+      // /audios/ page when there are several to list, else on the show's own page on Spotify.
+      more={showMore.href ?? more}
+      moreExternal={showMore.external}
       half={half}
-      spotifyUrl={block.spotifyUrl}
     />
   )
 }

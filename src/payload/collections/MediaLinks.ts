@@ -100,7 +100,7 @@ export const Audios = mediaLinks({
   plural: 'Audio',
   validateLink: validateOptionalHttps,
   linkHelp:
-    'Optional. A Spotify link (episode, show or playlist — it plays inside the player) or a direct https link to an audio file.',
+    'Optional. A Spotify link (episode, show or playlist — it plays inside the player) or a direct https link to an audio file. A Spotify episode link is listed with its picture, date and length, and its title when you leave the title empty.',
   siteHelp:
     'Quick audio entries for the homepage Audios player: just a link, a title and an author — all optional. Drag the rows (or use the arrows) to set the order they show in on the site; the top one comes first.',
 })

@@ -104,7 +104,7 @@ export function SiteHeader({
           <SearchForm ai={aiSearch} className="hidden w-60 md:flex xl:w-80" />
           <Link
             href={SEARCH_PATH}
-            aria-label="തിരയുക"
+            aria-label="Search"
             className="inline-flex size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-surface hover:text-brand md:hidden"
           >
             <Search className="size-5" aria-hidden="true" />

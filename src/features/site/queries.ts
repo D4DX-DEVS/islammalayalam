@@ -8,7 +8,7 @@ import type { Footer, Header, Homepage, SiteSetting } from '@/payload-types'
 const LINK_TAGS = [collectionTag('pages'), collectionTag('posts'), collectionTag('categories')]
 
 export const getSiteSettings = cached(
-  'site-settings',
+  'site-settings:v2',
   [globalTag('site-settings'), collectionTag('media')],
   async (): Promise<SiteSetting> => {
     const payload = await getPayloadClient()
@@ -36,7 +36,7 @@ export const getFooter = cached(
 
 // The key carries a version: bump it when the homepage's defaults or shape change (see features/shared).
 export const getHomepage = cached(
-  'homepage:v5',
+  'homepage:v6',
   [globalTag('homepage'), ...LINK_TAGS, collectionTag('media')],
   async (): Promise<Homepage> => {
     const payload = await getPayloadClient()

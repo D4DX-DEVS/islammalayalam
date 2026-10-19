@@ -1,160 +1,79 @@
 'use client'
 
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Search, SlidersHorizontal } from 'lucide-react'
+import { EpisodeRow } from '@/components/home/audio/EpisodeRow'
+import { PlayBar } from '@/components/home/audio/PlayBar'
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from 'react'
-import Link from 'next/link'
-import { SocialIcon } from '@/components/layout/SocialLinks'
-import {
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  Pause,
-  Play,
-  Search,
-  SkipBack,
-  SkipForward,
-} from 'lucide-react'
-import {
-  PAGE_SIZE,
-  clampPage,
-  clock,
-  filterTracks,
-  nextSpeed,
-  pageCount,
-  pageOfPosition,
-} from '@/lib/audio-list'
+  isPlayable,
+  SpotifyMark,
+  type PlayerShow,
+  type PlayerTrack,
+} from '@/components/home/audio/parts'
+import { embedUri, useSpotifyEmbed } from '@/components/home/audio/spotify-embed'
+import { filterTracks, nextSpeed } from '@/lib/audio-list'
 
-export interface PlayerTrack {
-  id: string
-  title: string
-  subtitle: string | null
-  /** The post page; null for a quick entry that has none. */
-  href: string | null
-  /**
-   * file = plays here · spotify = Spotify's own player, here · link = audio that cannot play inline
-   * (opens in a new tab) · none = no audio added yet.
-   */
-  kind: 'file' | 'spotify' | 'link' | 'none'
-  /** Audio file URL, the Spotify embed URL, or the external link. */
-  src: string | null
-  tallEmbed?: boolean
-  /** Length entered by the editor ("18:24"); the real length replaces it once the file loads. */
-  duration: string | null
-  /** Cover URL for the lock screen / media keys. */
-  art: string | null
-  /** Server-rendered square artwork (placeholder and lazy loading included). */
-  cover: ReactNode
-  /** This episode on Spotify (feeds the Spotify button), if the editor added one. */
-  spotifyLink: string | null
-}
-
-const SPOTIFY_GREEN = '#1ed760'
-
-/** Spotify's icon (the Spotify button is named and drawn in Spotify's green). */
-function SpotifyMark({ className }: { className: string }) {
-  return <SocialIcon network="spotify" className={className} />
-}
-
-const CONTROL =
-  'inline-flex items-center justify-center rounded-full text-white/80 transition hover:text-white active:scale-95 disabled:pointer-events-none disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70'
-
-function Equalizer() {
-  return (
-    <span className="flex h-4 items-end justify-center gap-0.5" aria-hidden="true">
-      {[0, 0.2, 0.4].map((delay) => (
-        <span
-          key={delay}
-          className="h-full w-[3px] origin-bottom rounded-full motion-safe:animate-eq"
-          style={{ animationDelay: `${delay}s`, backgroundColor: SPOTIFY_GREEN }}
-        />
-      ))}
-    </span>
-  )
-}
+export type { PlayerShow, PlayerTrack }
 
 /**
- * The Audios player (podcast style): the current episode's cover, title and progress with speed,
- * ±seek, previous / next and a Spotify button; below it a searchable, paged list of episodes. Audio
- * hosted on this site or the media CDN plays right here, Spotify links play in Spotify's own
- * embed, and an episode with no playable audio opens its article. Media keys and the lock screen
- * are wired through the Media Session API.
+ * The Audios card: the section heading on a blue wash, then every episode in a scrolling list
+ * (newest or oldest first, searchable) where each has its picture, title, blurb, date and length
+ * and its own Share, Save, menu and Play buttons, as on a Spotify show page. Pressing Play opens
+ * the player under the heading, at the top of the card, and starts the episode there: Spotify's
+ * own player for a Spotify episode (driven from the Play button), or our controls (speed, ±seek,
+ * previous / next, lock-screen keys) for audio hosted on this site or the media CDN. The card
+ * keeps its size whatever it is doing, so the section beside it never moves. This component holds
+ * the playback state; the pieces live in components/home/audio/.
  */
 export function AudioPlayer({
   tracks,
   label,
   heading,
-  spotifyUrl,
+  show = null,
 }: {
   tracks: PlayerTrack[]
-  half: boolean
   label: string
-  /** The section heading, drawn inside the player's header. */
+  /** The section heading, drawn at the top of the card. */
   heading?: ReactNode
-  /** The show or playlist on Spotify, used when an episode has no Spotify link of its own. */
-  spotifyUrl?: string | null
+  show?: PlayerShow | null
 }) {
   const audio = useRef<HTMLAudioElement>(null)
+  const list = useRef<HTMLUListElement>(null)
+  const spotifyHost = useRef<HTMLDivElement>(null)
+  const top = useRef<HTMLDivElement>(null)
   const wantPlay = useRef(false)
   const [current, setCurrent] = useState(0)
+  const [started, setStarted] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [time, setTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [rate, setRate] = useState(1)
   const [failed, setFailed] = useState(false)
   const [query, setQuery] = useState('')
-  const [page, setPage] = useState(0)
+  const [newestFirst, setNewestFirst] = useState(true)
+  const [menu, setMenu] = useState<{ id: string; top: number; left: number } | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   const track = tracks[current]!
-  const playable = useMemo(
-    () => tracks.flatMap((t, i) => (t.kind === 'file' || t.kind === 'spotify' ? [i] : [])),
-    [tracks],
-  )
-  const results = useMemo(() => filterTracks(tracks, query), [tracks, query])
-  const pages = pageCount(results.length)
-  const shownPage = clampPage(page, results.length)
-  const visible = results.slice(shownPage * PAGE_SIZE, (shownPage + 1) * PAGE_SIZE)
-  const spotifyHref = track.spotifyLink ?? spotifyUrl ?? null
-  /** Only hosted audio is controlled by our own buttons; Spotify has its own player. */
-  const canPlay = track.kind === 'file'
+  const results = useMemo(() => {
+    const found = filterTracks(tracks, query)
+    return newestFirst ? found : [...found].reverse()
+  }, [tracks, query, newestFirst])
+  // Previous / next and "play the next one" follow the order on screen.
+  const playable = useMemo(() => results.filter((i) => isPlayable(tracks[i])), [results, tracks])
 
-  /** Switch episode: clear the clock and any error. */
   const select = useCallback((index: number) => {
     setTime(0)
     setDuration(0)
     setFailed(false)
+    setPlaying(false)
     setCurrent(index)
   }, [])
-
-  /** Turn to the list page that holds this episode (when the search still shows it). */
-  const reveal = useCallback(
-    (index: number) => {
-      const at = results.indexOf(index)
-      if (at >= 0) setPage(pageOfPosition(at))
-    },
-    [results],
-  )
-
-  const toggle = useCallback(() => {
-    const a = audio.current
-    if (!a || track.kind !== 'file') return
-    if (a.paused) {
-      wantPlay.current = true
-      a.play().catch(() => setPlaying(false))
-    } else a.pause()
-  }, [track.kind])
 
   const step = useCallback(
     (direction: 1 | -1, auto = false) => {
       if (!playable.length) return
-      const at = playable.indexOf(current)
-      const to = at + direction
+      const to = playable.indexOf(current) + direction
       let next: number | undefined
       if (to >= 0 && to < playable.length) next = playable[to]
       else if (!auto) next = playable[(to + playable.length) % playable.length]
@@ -162,12 +81,39 @@ export function AudioPlayer({
         setPlaying(false)
         return
       }
-      wantPlay.current = true
+      wantPlay.current = isPlayable(tracks[next])
       select(next)
-      reveal(next)
     },
-    [current, playable, reveal, select],
+    [current, playable, select, tracks],
   )
+
+  const spotify = useSpotifyEmbed({
+    host: spotifyHost,
+    uri: started && track.kind === 'spotify' ? embedUri(track.src) : null,
+    tall: Boolean(track.tallEmbed),
+    wantPlay,
+    onState: (state) => {
+      setPlaying(state.playing)
+      setTime(state.position)
+      setDuration(state.duration)
+    },
+    onEnd: () => step(1, true),
+  })
+  const { toggle: toggleSpotify, pause: pauseSpotify } = spotify
+
+  const toggle = useCallback(() => {
+    if (track.kind === 'spotify') {
+      wantPlay.current = true
+      toggleSpotify()
+      return
+    }
+    const a = audio.current
+    if (!a || track.kind !== 'file') return
+    if (a.paused) {
+      wantPlay.current = true
+      a.play().catch(() => setPlaying(false))
+    } else a.pause()
+  }, [track.kind, toggleSpotify])
 
   const skip = (seconds: number) => {
     const a = audio.current
@@ -176,13 +122,34 @@ export function AudioPlayer({
     a.currentTime = Math.min(Math.max(0, a.currentTime + seconds), end)
   }
 
+  /** Play button of an episode. */
   const choose = (index: number) => {
-    if (index === current) {
+    const t = tracks[index]
+    if (!t || t.kind === 'none') return
+    if (t.kind === 'link') {
+      if (t.src) window.open(t.src, '_blank', 'noopener,noreferrer')
+      return
+    }
+    setStarted(true)
+    // The player is at the top of the card: bring it into view if the page is scrolled past it.
+    const head = top.current?.getBoundingClientRect()
+    if (head && head.top < 0) window.scrollBy({ top: head.top - 88, behavior: 'smooth' }) // 88 = the sticky site header
+    // The episode already in the player: pause / resume it. (A closed Spotify player starts again
+    // through its own effect.)
+    if (index === current && (t.kind === 'file' || started)) {
       toggle()
       return
     }
-    wantPlay.current = tracks[index]?.kind === 'file'
+    wantPlay.current = true
     select(index)
+  }
+
+  const closeBar = () => {
+    audio.current?.pause()
+    pauseSpotify()
+    wantPlay.current = false
+    setPlaying(false)
+    setStarted(false)
   }
 
   // A different episode was picked: start it if the visitor asked for playback, else stop the
@@ -202,6 +169,18 @@ export function AudioPlayer({
     a.defaultPlaybackRate = rate
     a.playbackRate = rate
   }, [rate, current])
+
+  // Keep the episode that is playing in view in the list (scrolling the list, never the page).
+  useEffect(() => {
+    const box = list.current
+    const row = box?.querySelector<HTMLElement>(
+      `[data-track="${CSS.escape(tracks[current]?.id ?? '')}"]`,
+    )
+    if (!started || !box || !row) return
+    if (row.offsetTop < box.scrollTop) box.scrollTo({ top: row.offsetTop })
+    else if (row.offsetTop + row.offsetHeight > box.scrollTop + box.clientHeight)
+      box.scrollTo({ top: row.offsetTop + row.offsetHeight - box.clientHeight })
+  }, [current, started, tracks])
 
   // Media keys / lock screen.
   const handlers = useRef({ toggle, step })
@@ -226,20 +205,69 @@ export function AudioPlayer({
     }
   }, [track])
 
-  const fill = duration > 0 ? `${Math.min(100, (time / duration) * 100)}%` : '0%'
-  // "speaker · show · N episodes" — without repeating the show's name when the episode's category is the same.
-  const meta = [
-    ...new Set(
-      [
-        track.subtitle,
-        label,
-        `${tracks.length} ${tracks.length === 1 ? 'episode' : 'episodes'}`,
-      ].filter((part): part is string => Boolean(part)),
-    ),
-  ].join(' · ')
+  // The ⋮ menu closes on a click elsewhere or Escape.
+  useEffect(() => {
+    if (menu === null) return
+    const close = () => setMenu(null)
+    const away = (e: PointerEvent) => {
+      if (!(e.target as Element | null)?.closest('[data-menu]')) setMenu(null)
+    }
+    const escape = (e: KeyboardEvent) => e.key === 'Escape' && setMenu(null)
+    document.addEventListener('pointerdown', away)
+    document.addEventListener('keydown', escape)
+    // A floating menu would be left behind by a scroll or a resize: close it.
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
+    return () => {
+      document.removeEventListener('pointerdown', away)
+      document.removeEventListener('keydown', escape)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
+  }, [menu])
+
+  useEffect(() => {
+    if (!notice) return
+    const timer = window.setTimeout(() => setNotice(null), 2200)
+    return () => window.clearTimeout(timer)
+  }, [notice])
+
+  /** Under the ⋮ button, or above it when there is no room below; kept inside the screen. */
+  const placeMenu = (id: string, button: DOMRect) => {
+    const width = 208
+    const height = 150
+    const below = button.bottom + 6
+    return {
+      id,
+      top: below + height > window.innerHeight ? Math.max(8, button.top - height - 6) : below,
+      left: Math.min(Math.max(8, button.left), window.innerWidth - width - 8),
+    }
+  }
+
+  const linkOf = (t: PlayerTrack): string | null =>
+    t.spotifyLink ?? (t.href ? new URL(t.href, window.location.origin).toString() : null)
+
+  const copy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setNotice('Link copied')
+    } catch {
+      setNotice('Could not copy: use the address bar instead')
+    }
+  }
+
+  const share = async (title: string, url: string | null) => {
+    if (!url) return
+    if (typeof navigator.share !== 'function') return copy(url)
+    try {
+      await navigator.share({ title, url })
+    } catch {
+      // Closed without sharing: nothing to report.
+    }
+  }
 
   return (
-    <div className="text-white">
+    <div className="flex h-full min-h-0 flex-col text-white">
       <audio
         ref={audio}
         src={track.kind === 'file' ? (track.src ?? undefined) : undefined}
@@ -256,281 +284,130 @@ export function AudioPlayer({
         onEnded={() => step(1, true)}
       />
 
-      {/* Header: cover, title, progress and controls on a blue wash that fades into the list. */}
-      <div className="bg-gradient-to-b from-[#1d4fb0] via-[#142f6b] to-[#121212] px-4 pb-5 pt-5 sm:px-6 sm:pt-6">
-        {heading ? <div className="-mb-1">{heading}</div> : null}
-        <div className="flex items-end gap-4 sm:gap-5">
-          <div
-            className={`relative size-24 shrink-0 overflow-hidden rounded-md bg-white shadow-[0_14px_30px_-10px_rgb(0_0_0/0.7)] ring-1 ring-black/10 transition-transform duration-500 sm:size-36 ${playing ? 'scale-100' : 'scale-[0.97]'}`}
-          >
-            {track.cover}
-          </div>
-          <div className="min-w-0 flex-1 pb-0.5">
-            <p className="text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-white/70 sm:text-[0.7rem]">
-              Audio · Episode {current + 1}
-            </p>
-            <h3 className="mt-1 line-clamp-3 text-lg font-extrabold leading-snug text-white sm:text-[1.7rem] sm:leading-[1.25]">
-              {track.title}
-            </h3>
-            <p className="mt-1.5 truncate text-xs text-white/70 sm:text-sm">{meta}</p>
-          </div>
-        </div>
-
-        {track.kind === 'spotify' && track.src ? (
-          <div className="mt-5">
-            <iframe
-              src={track.src}
-              title={track.title}
-              loading="lazy"
-              allow="encrypted-media; clipboard-write"
-              sandbox="allow-scripts allow-same-origin allow-popups"
-              className={`w-full rounded-xl border-0 ${track.tallEmbed ? 'h-[352px]' : 'h-[152px]'}`}
-            />
-          </div>
-        ) : track.kind === 'link' && track.src ? (
-          <a
-            href={track.src}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-6 text-sm font-bold text-[#0b1426] transition hover:scale-105 active:scale-95"
-          >
-            <ExternalLink className="size-4" aria-hidden="true" />
-            Open audio
-          </a>
-        ) : (
-          <div className="mt-5 flex items-center gap-3">
-            <span className="w-11 shrink-0 text-xs tabular-nums text-white/75">{clock(time)}</span>
-            <input
-              type="range"
-              className="range-player min-w-0 flex-1"
-              aria-label="Progress"
-              min={0}
-              max={duration || 1}
-              step={0.1}
-              value={Math.min(time, duration || 1)}
-              disabled={!duration}
-              style={{ '--fill': fill } as CSSProperties}
-              onChange={(e) => {
-                const t = Number(e.target.value)
-                setTime(t)
-                if (audio.current) audio.current.currentTime = t
-              }}
-            />
-            <span className="w-11 shrink-0 text-end text-xs tabular-nums text-white/75">
-              {duration ? clock(duration) : (track.duration ?? '--:--')}
-            </span>
-          </div>
-        )}
-
-        <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <div>
-            {track.kind === 'file' ? (
-              <button
-                type="button"
-                onClick={() => setRate((r) => nextSpeed(r))}
-                aria-label={`Playback speed ${rate}×. Change speed`}
-                className={`${CONTROL} h-8 min-w-11 border border-white/30 px-3 text-xs font-bold`}
-              >
-                {rate}×
-              </button>
-            ) : null}
-          </div>
-
-          <div className="flex items-center gap-1 sm:gap-2.5">
-            <button
-              type="button"
-              onClick={() => step(-1)}
-              aria-label="Previous episode"
-              disabled={playable.length < 2}
-              className={`${CONTROL} size-9`}
-            >
-              <SkipBack className="size-[1.1rem] fill-current" aria-hidden="true" />
-            </button>
-            {track.kind === 'file' || track.kind === 'none' ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => skip(-10)}
-                  disabled={!canPlay}
-                  aria-label="Back 10 seconds"
-                  className={`${CONTROL} h-9 px-1.5 text-xs font-semibold`}
-                >
-                  −10s
-                </button>
-                <button
-                  type="button"
-                  onClick={toggle}
-                  disabled={!canPlay}
-                  aria-label={playing ? 'Pause' : 'Play'}
-                  className="inline-flex size-14 items-center justify-center rounded-full text-[#0b0b0b] shadow-lg transition hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:pointer-events-none disabled:opacity-40"
-                  style={{ backgroundColor: SPOTIFY_GREEN }}
-                >
-                  {playing ? (
-                    <Pause className="size-6 fill-current" aria-hidden="true" />
-                  ) : (
-                    <Play className="ms-0.5 size-6 fill-current" aria-hidden="true" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => skip(30)}
-                  disabled={!canPlay}
-                  aria-label="Forward 30 seconds"
-                  className={`${CONTROL} h-9 px-1.5 text-xs font-semibold`}
-                >
-                  +30s
-                </button>
-              </>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => step(1)}
-              aria-label="Next episode"
-              disabled={playable.length < 2}
-              className={`${CONTROL} size-9`}
-            >
-              <SkipForward className="size-[1.1rem] fill-current" aria-hidden="true" />
-            </button>
-          </div>
-
-          <div className="flex justify-end">
-            {spotifyHref ? (
-              <a
-                href={spotifyHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open on Spotify"
-                title="Open on Spotify"
-                className={`${CONTROL} size-9`}
-              >
-                <SpotifyMark className="size-6" />
-              </a>
-            ) : null}
-          </div>
-        </div>
-        {track.kind === 'none' ? (
-          <p role="status" className="mt-3 text-center text-xs text-white/60">
-            The audio for this episode is not available yet.
-          </p>
-        ) : null}
-        {failed ? (
-          <p role="alert" className="mt-3 text-xs text-amber-300">
-            ഈ ഓഡിയോ ലോഡ് ചെയ്യാനായില്ല.{' '}
-            {track.href ? (
-              <Link href={track.href} className="underline">
-                ലേഖനം തുറക്കുക
-              </Link>
-            ) : null}
-          </p>
-        ) : null}
+      {/* The heading, and under it the player once an episode is played. */}
+      <div
+        ref={top}
+        className="shrink-0 bg-gradient-to-b from-[#1d4fb0] via-[#142f6b] to-[#121212] px-4 pb-4 pt-5 sm:px-6 sm:pt-6"
+      >
+        {heading}
+        <PlayBar
+          open={started}
+          track={track}
+          showName={show?.name ?? null}
+          canSkip={playable.length > 1}
+          playing={playing}
+          time={time}
+          duration={duration}
+          rate={rate}
+          failed={failed}
+          host={spotifyHost}
+          embedFallback={spotify.unavailable}
+          embedBlocked={spotify.blocked}
+          onClose={closeBar}
+          onStep={(direction) => step(direction)}
+          onSkip={skip}
+          onToggle={toggle}
+          onSeek={(seconds) => {
+            setTime(seconds)
+            if (audio.current) audio.current.currentTime = seconds
+          }}
+          onRate={() => setRate((r) => nextSpeed(r))}
+        />
       </div>
 
-      {/* Episodes: search, the list (one page at a time) and paging. */}
-      <div className="px-4 pb-5 sm:px-6 sm:pb-6">
+      {/* Sort and search. */}
+      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 px-4 pb-1 sm:px-6">
+        <button
+          type="button"
+          onClick={() => setNewestFirst((v) => !v)}
+          aria-label={`Sort episodes: ${newestFirst ? 'newest' : 'oldest'} first. Change`}
+          className="inline-flex min-h-10 items-center gap-2.5 rounded-md text-start text-[0.95rem] font-bold text-white transition hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        >
+          <SlidersHorizontal className="size-5" aria-hidden="true" />
+          <span>
+            All episodes <span aria-hidden="true">·</span> {newestFirst ? 'Newest' : 'Oldest'}
+          </span>
+        </button>
         {tracks.length > 1 ? (
-          <label className="relative block">
+          <label className="relative block min-w-[9rem] flex-1">
             <span className="sr-only">Search episodes</span>
             <Search
-              className="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-white/45"
+              className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-white/45"
               aria-hidden="true"
             />
             <input
               type="search"
               value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
-                setPage(0)
-              }}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder="Search episodes"
-              className="h-11 w-full rounded-full border border-white/15 bg-[#1c1c1c] ps-10 pe-4 text-sm text-white placeholder:text-white/45 focus:border-white/45 focus:outline-none"
+              className="h-10 w-full rounded-full border border-white/15 bg-[#1c1c1c] ps-9 pe-4 text-sm text-white placeholder:text-white/45 focus:border-white/45 focus:outline-none"
             />
           </label>
         ) : null}
-
-        <ul className="mt-3">
-          {visible.map((index) => {
-            const t = tracks[index]!
-            const active = index === current
-            return (
-              <li key={t.id}>
-                <button
-                  type="button"
-                  aria-current={active ? 'true' : undefined}
-                  onClick={() => choose(index)}
-                  className={`group flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-start transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${active ? 'bg-white/[0.07]' : ''} ${t.kind === 'none' ? 'opacity-60' : ''}`}
-                >
-                  <span className="w-7 shrink-0 text-center text-sm tabular-nums text-white/55">
-                    {active && playing ? (
-                      <Equalizer />
-                    ) : (
-                      <>
-                        <span className="group-hover:hidden">{index + 1}</span>
-                        <Play
-                          className="mx-auto hidden size-4 fill-current text-white group-hover:block"
-                          aria-hidden="true"
-                        />
-                      </>
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span
-                      className="block truncate text-[0.95rem] font-medium"
-                      style={active ? { color: SPOTIFY_GREEN } : undefined}
-                    >
-                      {t.title}
-                    </span>
-                    {t.subtitle ? (
-                      <span className="block truncate text-xs text-white/55">{t.subtitle}</span>
-                    ) : null}
-                  </span>
-                  <span className="shrink-0 text-xs tabular-nums text-white/55">
-                    {t.kind === 'spotify' ? (
-                      <SpotifyMark className="size-4" />
-                    ) : t.kind === 'link' ? (
-                      <ExternalLink className="size-4" aria-hidden="true" />
-                    ) : t.kind === 'none' ? (
-                      'Soon'
-                    ) : active && duration ? (
-                      clock(duration)
-                    ) : (
-                      (t.duration ?? '')
-                    )}
-                  </span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-        {!visible.length ? (
-          <p className="py-6 text-center text-sm text-white/55">No episodes found.</p>
-        ) : null}
-
-        {pages > 1 ? (
-          <div className="mt-3 flex items-center justify-center gap-3 text-xs text-white/60">
-            <button
-              type="button"
-              onClick={() => setPage(shownPage - 1)}
-              disabled={shownPage === 0}
-              className="inline-flex h-9 items-center gap-1 rounded-full border border-white/20 px-4 font-semibold text-white transition hover:bg-white/10 disabled:pointer-events-none disabled:opacity-35"
-            >
-              <ChevronLeft className="size-4" aria-hidden="true" />
-              Prev
-            </button>
-            <span className="tabular-nums">
-              {shownPage + 1} / {pages} · {results.length} episodes
-            </span>
-            <button
-              type="button"
-              onClick={() => setPage(shownPage + 1)}
-              disabled={shownPage >= pages - 1}
-              className="inline-flex h-9 items-center gap-1 rounded-full border border-white/20 px-4 font-semibold text-white transition hover:bg-white/10 disabled:pointer-events-none disabled:opacity-35"
-            >
-              Next
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </button>
-          </div>
-        ) : null}
       </div>
+
+      {/* Every episode; the list scrolls inside the card. */}
+      <ul
+        ref={list}
+        aria-label={label}
+        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 [scrollbar-width:thin] sm:px-6"
+      >
+        {results.map((index) => {
+          const t = tracks[index]!
+          const active = started && index === current
+          return (
+            <EpisodeRow
+              key={t.id}
+              track={t}
+              active={active}
+              playing={active && playing}
+              loadedSeconds={t.kind === 'file' ? duration : 0}
+              url={linkOf(t)}
+              menuPos={menu?.id === t.id ? menu : null}
+              onMenu={(button) => setMenu(menu?.id === t.id ? null : placeMenu(t.id, button))}
+              onMenuClose={() => setMenu(null)}
+              onChoose={() => choose(index)}
+              onShare={() => void share(t.title, linkOf(t))}
+              onCopy={() => {
+                setMenu(null)
+                const url = linkOf(t)
+                if (url) void copy(url)
+              }}
+            />
+          )
+        })}
+        {!results.length ? (
+          <li className="py-8 text-center text-sm text-white/55">No episodes found.</li>
+        ) : null}
+      </ul>
+
+      {/* The channel itself: every episode, and Follow, on Spotify. */}
+      {show ? (
+        <a
+          href={show.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex shrink-0 items-center gap-3 border-t border-white/10 bg-[#181818] px-4 py-3 transition-colors hover:bg-[#202020] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/60 sm:px-6"
+        >
+          <SpotifyMark className="size-7 shrink-0 text-[#1ed760]" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-bold">{show.name}</span>
+            <span className="block truncate text-xs text-white/60">All episodes on Spotify</span>
+          </span>
+          <span className="inline-flex h-8 shrink-0 items-center rounded-full border border-white/50 px-4 text-xs font-bold">
+            Follow
+          </span>
+        </a>
+      ) : null}
+
+      <span role="status" className="sr-only">
+        {notice ?? ''}
+      </span>
+      {notice ? (
+        <p className="pointer-events-none absolute inset-x-0 bottom-20 mx-auto w-fit rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[#0b0b0b] shadow-lg">
+          {notice}
+        </p>
+      ) : null}
     </div>
   )
 }

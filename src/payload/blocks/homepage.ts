@@ -185,7 +185,7 @@ export const MediaShelfBlock: Block = {
       admin: {
         condition: (_, sibling) => sibling?.format === 'audio',
         description:
-          'Your Spotify show or playlist (Share → Copy link in Spotify). It adds the Spotify button to the player. Each audio post can also have its own Spotify link.',
+          'Your Spotify show (Share → Copy link in Spotify). Every episode (up to 50) is listed in the card by themselves, first, in a list that scrolls, and a new episode appears within about 15 minutes of publishing it on Spotify, with nothing to upload here. It also adds the Spotify button. A playlist link only adds the button. Each audio post can also have its own Spotify link.',
       },
     },
   ],

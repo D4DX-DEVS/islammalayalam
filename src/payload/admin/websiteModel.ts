@@ -1,4 +1,5 @@
 import { whatsappLink } from '@/lib/whatsapp'
+import { spotifyShowId } from '@/lib/spotify-show'
 import { adsRow, shownAds as shown } from '@/payload/admin/adsSummary'
 import type { AdsBanner, Category, Footer, Header, Homepage, SiteSetting } from '@/payload-types'
 
@@ -146,12 +147,14 @@ function describeBlock(
           ...base,
           label: block.title || 'Audios',
           icon: 'audio',
-          detail: `Podcast-style player with search and paging · ${scope} · up to ${plural(block.limit, 'episode')} · ${block.spotifyUrl ? 'Spotify button on' : 'no Spotify button'} · ${WIDTH(block)}`,
-          note: extras.audiosWithoutAudio
-            ? `${plural(extras.audiosWithoutAudio, 'Audio post')} ${extras.audiosWithoutAudio === 1 ? 'has' : 'have'} no audio yet. Add real audio in seconds from the dashboard (Add audio: link, title, author — all optional), or open the post → Media & files → Audio and add a Spotify link.`
-            : block.spotifyUrl
-              ? 'Each Audio post can have its own Spotify link (plays in the player) or a hosted audio link.'
-              : 'Add your Spotify show or playlist link to this section for the Spotify button, and a Spotify link or hosted audio link in each Audio post.',
+          detail: `Podcast-style player with search and a scrolling list · ${scope} · ${spotifyShowId(block.spotifyUrl) ? 'every episode of your Spotify show (up to 50), updated automatically' : `up to ${plural(block.limit, 'episode')} · ${block.spotifyUrl ? 'Spotify button on' : 'no Spotify button'}`} · ${WIDTH(block)}`,
+          note: spotifyShowId(block.spotifyUrl)
+            ? 'New episodes of the Spotify show appear here by themselves, within about 15 minutes. Until the site developer adds Spotify app keys on the server, Spotify only hands over the newest episode: add each other episode by pasting its link under Audio (Admin → Library), and it is listed in full.'
+            : extras.audiosWithoutAudio
+              ? `${plural(extras.audiosWithoutAudio, 'Audio post')} ${extras.audiosWithoutAudio === 1 ? 'has' : 'have'} no audio yet. Add real audio in seconds from the dashboard (Add audio: link, title, author — all optional), or open the post → Media & files → Audio and add a Spotify link.`
+              : block.spotifyUrl
+                ? 'Each Audio post can have its own Spotify link (plays in the player) or a hosted audio link.'
+                : 'Add your Spotify show link to this section and its episodes are listed here by themselves; or add a Spotify link or hosted audio link in each Audio post.',
         }
       return {
         ...base,

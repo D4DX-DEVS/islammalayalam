@@ -19,7 +19,7 @@ export type InsightSlide = {
 const SWIPE_PX = 40
 
 const ARROW =
-  'inline-flex size-9 items-center justify-center rounded-full bg-card text-ink shadow-card ring-1 ring-line transition hover:bg-brand hover:text-white hover:ring-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand active:scale-95'
+  'absolute top-1/2 z-10 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-lift ring-1 ring-white/30 backdrop-blur-sm transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95'
 
 /**
  * The Insights card as a poster slider (up to 5): the heading with "View More", one
@@ -69,7 +69,7 @@ export function InsightsSlider({
         className="!mb-4 sm:!mb-4"
       />
       <div
-        className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-brand-deep ring-1 ring-line/60 lg:aspect-auto lg:min-h-[20rem] lg:flex-1"
+        className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-brand-deep ring-1 ring-line/60 lg:aspect-auto lg:min-h-[27rem] lg:flex-1"
         onTouchStart={(e) => {
           touchX.current = e.touches[0]?.clientX ?? null
         }}
@@ -104,40 +104,46 @@ export function InsightsSlider({
             </div>
           ))}
         </div>
+        {count > 1 ? (
+          <>
+            <button
+              type="button"
+              onClick={() => go(active - 1)}
+              aria-label="Previous insight"
+              className={`${ARROW} start-2.5`}
+            >
+              <ChevronLeft className="size-5 rtl:rotate-180" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => go(active + 1)}
+              aria-label="Next insight"
+              className={`${ARROW} end-2.5`}
+            >
+              <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />
+            </button>
+            <div className="absolute inset-x-0 bottom-3 z-10 flex justify-center">
+              <div
+                className="flex items-center gap-2 rounded-full bg-black/40 px-3 py-1.5 backdrop-blur-sm"
+                role="tablist"
+                aria-label={label}
+              >
+                {slides.map((slide, i) => (
+                  <button
+                    key={slide.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={i === active}
+                    aria-label={`${i + 1} / ${count}`}
+                    onClick={() => go(i)}
+                    className={`h-2 rounded-full transition-all duration-300 ${i === active ? 'w-6 bg-white' : 'w-2 bg-white/55 hover:bg-white/85'}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        ) : null}
       </div>
-      {count > 1 ? (
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => go(active - 1)}
-            aria-label="Previous insight"
-            className={ARROW}
-          >
-            <ChevronLeft className="size-5 rtl:rotate-180" aria-hidden="true" />
-          </button>
-          <div className="flex items-center justify-center gap-2" role="tablist" aria-label={label}>
-            {slides.map((slide, i) => (
-              <button
-                key={slide.key}
-                type="button"
-                role="tab"
-                aria-selected={i === active}
-                aria-label={`${i + 1} / ${count}`}
-                onClick={() => go(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${i === active ? 'w-6 bg-brand' : 'w-2 bg-line hover:bg-brand/50'}`}
-              />
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => go(active + 1)}
-            aria-label="Next insight"
-            className={ARROW}
-          >
-            <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />
-          </button>
-        </div>
-      ) : null}
       <QuoteShare
         compact
         className="mt-4"

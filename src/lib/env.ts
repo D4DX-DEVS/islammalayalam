@@ -46,6 +46,12 @@ const schema = z
     DO_SPACES_FOLDER: optional(z.string()),
     /** Turns on AI search (“AI ഉത്തരം”). Without it the AI buttons stay hidden and search works as before. */
     ANTHROPIC_API_KEY: optional(z.string().min(20, 'ANTHROPIC_API_KEY looks too short')),
+    /**
+     * A Spotify app (free, developer.spotify.com): lets the Audios section list every episode of a
+     * Spotify show and keep it up to date. Without it only the newest episode is picked up.
+     */
+    SPOTIFY_CLIENT_ID: optional(z.string().min(16, 'SPOTIFY_CLIENT_ID looks too short')),
+    SPOTIFY_CLIENT_SECRET: optional(z.string().min(16, 'SPOTIFY_CLIENT_SECRET looks too short')),
     /** Claude model that writes AI search answers (default: claude-opus-5-5). */
     AI_SEARCH_MODEL: optional(
       z.string().regex(/^claude-[a-z0-9.-]+$/, 'AI_SEARCH_MODEL must be a Claude model id'),
@@ -61,6 +67,8 @@ const schema = z
       const missing = SPACES_KEYS.filter((k) => !env[k]).join(', ')
       issue('DO_SPACES_BUCKET', `Spaces config is partial; missing ${missing}`)
     }
+    if (Boolean(env.SPOTIFY_CLIENT_ID) !== Boolean(env.SPOTIFY_CLIENT_SECRET))
+      issue('SPOTIFY_CLIENT_ID', 'Set both SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET, or neither')
     if (env.DO_SPACES_ENDPOINT) {
       try {
         spacesEndpoint(env.DO_SPACES_ENDPOINT)

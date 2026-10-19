@@ -118,8 +118,8 @@ export function VideoLightbox({
               </span>
               <p className="max-w-md text-base font-semibold leading-relaxed sm:text-lg">
                 {status === 'external'
-                  ? 'ഈ വീഡിയോ YouTube-ൽ മാത്രമേ കാണാനാകൂ'
-                  : 'ഈ വീഡിയോ ഇപ്പോൾ YouTube-ൽ ലഭ്യമല്ല'}
+                  ? 'This video can only be watched on YouTube'
+                  : 'This video is no longer available on YouTube'}
               </p>
               {status === 'external' ? (
                 <a
@@ -128,7 +128,7 @@ export function VideoLightbox({
                   rel="noopener noreferrer"
                   className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#0b0f17] transition-colors hover:bg-brand-soft"
                 >
-                  YouTube-ൽ കാണുക
+                  Watch on YouTube
                   <ExternalLink className="size-4" aria-hidden="true" />
                 </a>
               ) : null}

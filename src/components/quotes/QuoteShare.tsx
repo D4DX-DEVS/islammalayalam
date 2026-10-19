@@ -1,19 +1,36 @@
 'use client'
 
-import { useState, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore, type MouseEvent } from 'react'
 import { Check, Copy, Download, Mail, Share2 } from 'lucide-react'
 import { SocialIcon, type Network } from '@/components/layout/SocialLinks'
+import {
+  canShareImages,
+  pasteKeys,
+  posterPicture,
+  save,
+  sendPoster,
+  siteAddress,
+  type PosterNetwork,
+} from '@/lib/poster-share'
+import { shareLinks } from '@/lib/share-links'
 
 /**
  * Share a quote in ONE row of labelled round buttons, each in its network's colour (plain links, no
  * third-party scripts): WhatsApp, Facebook, X, Telegram, Email and copy-link. Beside them, where it
  * helps: the device's own share sheet on phones and tablets (it also reaches Instagram, LinkedIn,
  * Snapchat… and can attach the poster), and — on the quote's own page — a poster download.
+ *
+ * A poster is shared as an image file: the poster with "islammalayalam.net" on a strip under it
+ * (lib/poster-share.ts). Wherever the browser can share files (phones, and Chrome / Edge / Safari
+ * on a computer) the buttons open the device's share sheet and the app chosen receives the image,
+ * with the website address as its caption; otherwise the picture is copied (or saved) and the
+ * network's share page opens with the address already in the message, because no network takes an
+ * image through a link. An insight with no poster shares its words and address as links.
  */
 interface QuoteShareProps {
   /** Absolute address of what is shared (link previews are built from it). */
   url: string
-  /** The quote and its source, or a short line about the site; may be empty. */
+  /** The quote and its source, or a short line about the site: shared only when there is no poster. */
   text: string
   /** Poster image address, when there is one to attach or download. */
   posterSrc?: string | null
@@ -43,6 +60,7 @@ const DISC =
 const subscribe = () => () => {}
 const supportsNativeShare = () =>
   typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+const supportsImageShare = () => canShareImages()
 
 export function QuoteShare({
   url,
@@ -53,17 +71,59 @@ export function QuoteShare({
   className = '',
 }: QuoteShareProps) {
   const [copied, setCopied] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
   // Server and first client render say "no", so hydration always matches; phones then switch on.
   const native = useSyncExternalStore(subscribe, supportsNativeShare, () => false)
+  const imageShare = useSyncExternalStore(subscribe, supportsImageShare, () => false)
   const enc = encodeURIComponent
-  const lead = text || 'Insights — Islam Malayalam'
+  // With a poster the picture is the message; without one the words are.
+  const words = posterSrc ? '' : text
+  const body = [words, url].filter(Boolean).join('\n')
+  const subject = 'Insights — Islam Malayalam'
 
-  const hrefs: Record<(typeof NETWORKS)[number]['key'], string> = {
-    whatsapp: `https://wa.me/?text=${enc(`${lead}\n${url}`)}`,
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}&quote=${enc(lead)}`,
-    x: `https://twitter.com/intent/tweet?url=${enc(url)}&text=${enc(lead)}`,
-    telegram: `https://t.me/share/url?url=${enc(url)}&text=${enc(lead)}`,
-  }
+  const hrefs = shareLinks(url, words)
+  // A poster travels as a picture; the only text with it is the website address ("islammalayalam.net").
+  const address = siteAddress(url)
+  const site = `https://${address}`
+  const pasteHrefs = shareLinks(site)
+
+  // Make the picture while the visitor is still looking, so pressing a button hands it over at once.
+  useEffect(() => {
+    if (posterSrc) posterPicture(posterSrc, address).catch(() => {})
+  }, [posterSrc, address])
+  useEffect(() => {
+    if (!note) return
+    const timer = window.setTimeout(() => setNote(null), 9000)
+    return () => window.clearTimeout(timer)
+  }, [note])
+
+  /** A network button with a poster: send the picture. Without one (or on a modified click) it is the link. */
+  const sharePicture =
+    (to: PosterNetwork, label: string) => async (event: MouseEvent<HTMLAnchorElement>) => {
+      if (!posterSrc || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey)
+        return
+      event.preventDefault()
+      if (busy) return
+      setBusy(true)
+      try {
+        const outcome = await sendPoster(await posterPicture(posterSrc, address), to, {
+          caption: site,
+          href: pasteHrefs[to],
+        })
+        if (outcome === 'copied')
+          setNote(
+            `Poster copied. Paste it into ${label} (${pasteKeys(navigator.userAgent)}): the address is already in the message.`,
+          )
+        if (outcome === 'saved')
+          setNote(`Poster saved to your downloads. Attach it to your ${label} message.`)
+      } catch {
+        // No picture could be made (the poster is unreachable): share the link instead.
+        window.open(hrefs[to], '_blank', 'noopener,noreferrer')
+      } finally {
+        setBusy(false)
+      }
+    }
 
   const copy = async () => {
     try {
@@ -75,23 +135,27 @@ export function QuoteShare({
     }
   }
 
+  /** The poster page's download: the picture that is shared (poster + address), not the bare poster. */
+  const download = async () => {
+    if (!posterSrc) return
+    try {
+      save((await posterPicture(posterSrc, address)).jpeg)
+    } catch {
+      window.open(posterSrc, '_blank', 'noopener,noreferrer')
+    }
+  }
+
   const shareNative = async () => {
     try {
-      let data: ShareData = { title: 'Insights', text: lead, url }
       if (posterSrc) {
         try {
-          const blob = await (await fetch(posterSrc)).blob()
-          const file = new File([blob], `daily-quote.${blob.type.split('/')[1] || 'jpg'}`, {
-            type: blob.type,
-          })
-          // Apps that take a picture often drop the link, so it travels in the text instead.
-          if (navigator.canShare?.({ files: [file] }))
-            data = { files: [file], text: `${lead}\n${url}` }
+          await sendPoster(await posterPicture(posterSrc, address), 'device', { caption: site })
+          return
         } catch {
-          // The image could not be fetched (another origin): share the link alone.
+          // No picture could be made: share the link alone.
         }
       }
-      await navigator.share(data)
+      await navigator.share({ title: 'Insights', url, ...(words ? { text: words } : {}) })
     } catch {
       // Closed without sharing, or not allowed: nothing to report.
     }
@@ -112,6 +176,7 @@ export function QuoteShare({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Share on ${label}`}
+            onClick={sharePicture(key, label)}
             className={TILE}
           >
             <span className={DISC} style={{ backgroundColor: color }}>
@@ -123,7 +188,7 @@ export function QuoteShare({
           </a>
         ))}
         <a
-          href={`mailto:?subject=${enc('Insights — Islam Malayalam')}&body=${enc(`${lead}\n\n${url}`)}`}
+          href={`mailto:?subject=${enc(subject)}&body=${enc(body)}`}
           aria-label="Share by email"
           className={TILE}
         >
@@ -146,12 +211,12 @@ export function QuoteShare({
             {copied ? 'Copied!' : 'Copy Link'}
           </span>
         </button>
-        {native ? (
+        {native && !(posterSrc && imageShare) ? (
           <button
             type="button"
             onClick={shareNative}
             aria-label="More ways to share"
-            className={`${TILE} ${compact ? 'hidden [@media(pointer:coarse)]:flex' : ''}`}
+            className={TILE}
           >
             <span className={`${DISC} bg-brand`}>
               <Share2 className="size-[1.15rem]" aria-hidden="true" />
@@ -162,25 +227,23 @@ export function QuoteShare({
           </button>
         ) : null}
         {posterSrc && !compact ? (
-          <a
-            href={posterSrc}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Download poster"
-            className={TILE}
-          >
+          <button type="button" onClick={download} aria-label="Download poster" className={TILE}>
             <span className={`${DISC} bg-brand-strong`}>
               <Download className="size-[1.15rem]" aria-hidden="true" />
             </span>
             <span data-share-label className="max-w-full">
               Poster
             </span>
-          </a>
+          </button>
         ) : null}
       </div>
+      {note ? (
+        <p className="mt-2.5 rounded-lg bg-brand/10 px-3 py-2 text-center text-xs font-medium leading-snug text-brand-strong">
+          {note}
+        </p>
+      ) : null}
       <span role="status" className="sr-only">
-        {copied ? 'Link copied' : ''}
+        {note ?? (copied ? 'Link copied' : '')}
       </span>
     </div>
   )

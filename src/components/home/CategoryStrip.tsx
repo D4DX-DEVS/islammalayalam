@@ -12,7 +12,7 @@ export async function CategoryStrip() {
   if (!categories.length) return null
   return (
     <nav
-      aria-label="വിഷയങ്ങൾ"
+      aria-label="Topics"
       className="rounded-2xl bg-card p-2 shadow-card ring-1 ring-line/60 sm:p-3"
     >
       <ul className="no-scrollbar flex snap-x gap-1 overflow-x-auto">

@@ -54,7 +54,7 @@ function Branch({ item, depth, pathname }: { item: NavItem; depth: number; pathn
             type="button"
             className="inline-flex min-h-12 w-12 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-brand"
             aria-expanded={open}
-            aria-label={`${item.label} — ഉപമെനു`}
+            aria-label={`${item.label} — submenu`}
             onClick={() => setOpen((v) => !v)}
           >
             <ChevronDown
@@ -126,7 +126,7 @@ export function MobileNav({
         className="inline-flex size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-surface hover:text-brand"
       >
         <Menu className="size-6" aria-hidden="true" />
-        <span className="sr-only">മെനു</span>
+        <span className="sr-only">Menu</span>
       </button>
       {open
         ? createPortal(
@@ -140,15 +140,15 @@ export function MobileNav({
                 ref={panelRef}
                 role="dialog"
                 aria-modal="true"
-                aria-label="മെനു"
+                aria-label="Menu"
                 className="absolute inset-y-0 start-0 flex w-[88%] max-w-sm flex-col rounded-e-[2rem] bg-card shadow-lift"
               >
                 <div className="flex min-h-16 items-center justify-between px-5">
-                  <span className="font-display text-lg font-bold text-ink">മെനു</span>
+                  <span className="font-display text-lg font-bold text-ink">Menu</span>
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
-                    aria-label="മെനു അടയ്ക്കുക"
+                    aria-label="Close menu"
                     className="-me-2 inline-flex size-11 items-center justify-center rounded-full text-ink hover:bg-surface"
                   >
                     <X className="size-6" aria-hidden="true" />
@@ -156,7 +156,7 @@ export function MobileNav({
                 </div>
                 <SearchForm ai={aiSearch} className="px-4 pb-3" />
                 <nav
-                  aria-label="മൊബൈൽ മെനു"
+                  aria-label="Mobile menu"
                   className="flex-1 overflow-y-auto overscroll-contain px-2 pb-4"
                 >
                   <ul className="space-y-0.5">

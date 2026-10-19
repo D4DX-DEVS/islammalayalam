@@ -45,6 +45,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       ...cdnPattern(),
       { protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' },
+      // Cover art of Spotify episodes (the Audios section).
+      { protocol: 'https', hostname: 'i.scdn.co', pathname: '/image/**' },
+      { protocol: 'https', hostname: '**.spotifycdn.com', pathname: '/image/**' },
     ],
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: false,

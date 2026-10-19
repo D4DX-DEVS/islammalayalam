@@ -646,7 +646,7 @@ export interface Audio {
   _order?: string | null;
   label?: string | null;
   /**
-   * Optional. A Spotify link (episode, show or playlist — it plays inside the player) or a direct https link to an audio file.
+   * Optional. A Spotify link (episode, show or playlist — it plays inside the player) or a direct https link to an audio file. A Spotify episode link is listed with its picture, date and length, and its title when you leave the title empty.
    */
   link?: string | null;
   /**
@@ -1434,6 +1434,10 @@ export interface SiteSetting {
   };
   contact?: {
     email?: string | null;
+    /**
+     * Optional. Listed under the first email wherever the contact details appear (footer, Quick Contact, the About page).
+     */
+    secondEmail?: string | null;
     phone?: string | null;
     /**
      * Shows a green “chat on WhatsApp” button at the bottom right of every page. Leave empty to hide it.
@@ -1745,7 +1749,7 @@ export interface MediaShelfBlock {
   title?: string | null;
   limit: number;
   /**
-   * Your Spotify show or playlist (Share → Copy link in Spotify). It adds the Spotify button to the player. Each audio post can also have its own Spotify link.
+   * Your Spotify show (Share → Copy link in Spotify). Every episode (up to 50) is listed in the card by themselves, first, in a list that scrolls, and a new episode appears within about 15 minutes of publishing it on Spotify, with nothing to upload here. It also adds the Spotify button. A playlist link only adds the button. Each audio post can also have its own Spotify link.
    */
   spotifyUrl?: string | null;
   id?: string | null;
@@ -2268,6 +2272,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | T
     | {
         email?: T;
+        secondEmail?: T;
         phone?: T;
         whatsappNumber?: T;
         whatsappMessage?: T;

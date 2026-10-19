@@ -1,7 +1,7 @@
 import { SocialIcon } from '@/components/layout/SocialLinks'
 
 /**
- * Floating WhatsApp chat button, bottom right on every page. At rest it is only the round WhatsApp
+ * Floating WhatsApp chat button, on the right edge of every page, 200px above the bottom of the screen. At rest it is only the round WhatsApp
  * icon (white on a deeper green than WhatsApp's own, for contrast) with a soft pulse around it; on
  * hover, and for keyboard users on focus, it widens to show "Ask a Question". On a touch screen
  * it stays the icon (a tap goes straight to the chat), and its name is always in the aria-label.
@@ -14,7 +14,7 @@ export function WhatsAppButton({ href }: { href: string }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Ask a Question on WhatsApp"
-      className="group fixed bottom-4 end-4 z-40 inline-flex h-14 rounded-full transition duration-300 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0a8443] motion-reduce:transform-none sm:bottom-5 sm:end-5"
+      className="group fixed bottom-[200px] end-4 z-40 inline-flex h-14 rounded-full transition duration-300 hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0a8443] motion-reduce:transform-none sm:end-5"
     >
       <span
         className="pointer-events-none absolute inset-0 rounded-full bg-[#0a8443] group-hover:hidden group-focus-visible:hidden motion-safe:animate-ping-soft"

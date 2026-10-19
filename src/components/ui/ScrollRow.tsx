@@ -66,7 +66,7 @@ export function ScrollRow({
       type="button"
       onClick={() => scroll(-1)}
       disabled={edge.atStart}
-      aria-label={`${label}: മുമ്പത്തേത്`}
+      aria-label={`${label}: previous`}
       className={button}
     >
       <ChevronLeft className="size-5 rtl:rotate-180" aria-hidden="true" />
@@ -77,7 +77,7 @@ export function ScrollRow({
       type="button"
       onClick={() => scroll(1)}
       disabled={edge.atEnd}
-      aria-label={`${label}: അടുത്തത്`}
+      aria-label={`${label}: next`}
       className={button}
     >
       <ChevronRight className="size-5 rtl:rotate-180" aria-hidden="true" />

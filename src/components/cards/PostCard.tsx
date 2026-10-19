@@ -251,7 +251,7 @@ export function PostCard({
             <p className="line-clamp-3 text-[0.95rem] leading-relaxed text-body">{post.excerpt}</p>
           ) : null}
           <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-all group-hover:gap-3 group-hover:bg-brand-strong">
-            കൂടുതൽ വായിക്കുക
+            Read more
             <ArrowRight className="size-4 rtl:rotate-180" aria-hidden="true" />
           </span>
         </div>

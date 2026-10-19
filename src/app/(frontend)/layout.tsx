@@ -72,7 +72,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           href="#main"
           className="sr-only z-50 rounded-full bg-brand px-4 py-2 font-semibold text-white focus:not-sr-only focus:fixed focus:start-3 focus:top-3"
         >
-          ഉള്ളടക്കത്തിലേക്ക് പോകുക
+          Skip to content
         </a>
         {previewer ? <PreviewBar pathname={pathname} /> : null}
         <SiteHeader
@@ -88,7 +88,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           {children}
         </main>
         <Footer footer={footer} settings={settings} />
-        <BackToTop raised={Boolean(whatsapp)} />
+        <BackToTop />
         {whatsapp ? <WhatsAppButton href={whatsapp} /> : null}
         <ScrollReveal />
       </body>

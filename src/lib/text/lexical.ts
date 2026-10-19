@@ -46,3 +46,21 @@ export function hasBlocks(data: unknown): boolean {
   const children = (data as LexicalDoc | null | undefined)?.root?.children
   return Array.isArray(children) && children.length > 0
 }
+
+/**
+ * True when the document's text already opens with `snippet` (an excerpt made from the start of the
+ * body): showing both would read the same sentences twice. Compared the way a reader would (case,
+ * spacing and Malayalam joiners ignored) on the first `length` characters of the snippet; a
+ * snippet shorter than `min` is never treated as a repeat.
+ */
+export function bodyStartsWith(
+  data: unknown,
+  snippet: string | null | undefined,
+  length = 40,
+  min = 20,
+): boolean {
+  const head = normalizeTitle(snippet ?? '').slice(0, length)
+  const children = (data as LexicalDoc | null | undefined)?.root?.children
+  if (head.length < min || !Array.isArray(children)) return false
+  return normalizeTitle(children.map(plainText).join(' ')).startsWith(head)
+}

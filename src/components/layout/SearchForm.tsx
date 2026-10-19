@@ -33,7 +33,7 @@ export function SearchForm({
         <button type="submit" tabIndex={-1} aria-hidden="true" className="sr-only" />
       ) : null}
       <label className="relative flex min-w-0 flex-1 items-center">
-        <span className="sr-only">തിരയുക</span>
+        <span className="sr-only">Search</span>
         <Search
           className={`pointer-events-none absolute start-4 text-muted ${page ? 'size-5' : 'size-4'}`}
           aria-hidden="true"
@@ -43,7 +43,7 @@ export function SearchForm({
           name="q"
           defaultValue={defaultValue}
           maxLength={ai ? AI_QUESTION_MAX_LENGTH : SEARCH_MAX_LENGTH}
-          placeholder="ലേഖനങ്ങൾ തിരയുക…"
+          placeholder="Search articles…"
           enterKeyHint="search"
           className={`w-full bg-surface text-ink ring-1 ring-line placeholder:text-muted transition focus:bg-card focus:outline-none focus:ring-2 focus:ring-brand ${page ? 'h-14 rounded-full ps-12 pe-5 text-base shadow-card sm:text-lg' : `h-11 rounded-xl ps-10 text-sm ${ai ? 'pe-12' : 'pe-4'}`}`}
         />
@@ -53,7 +53,7 @@ export function SearchForm({
           type="submit"
           className="bg-brand-gradient inline-flex h-14 shrink-0 items-center rounded-full px-7 font-semibold text-white shadow-card transition hover:-translate-y-px hover:shadow-lift"
         >
-          തിരയുക
+          Search
         </button>
       ) : null}
       {ai ? (
@@ -61,8 +61,8 @@ export function SearchForm({
           type="submit"
           name="ai"
           value="1"
-          title="AI ഉത്തരം"
-          aria-label="AI ഉത്തരം: ചോദ്യത്തിന് ഉത്തരം തയ്യാറാക്കുക"
+          title="AI answer"
+          aria-label="AI answer: get an answer to your question"
           className={
             page
               ? 'inline-flex h-14 shrink-0 items-center gap-2 rounded-full bg-card px-6 font-semibold text-brand shadow-card ring-1 ring-brand/40 transition hover:-translate-y-px hover:bg-brand-soft hover:shadow-lift'
@@ -70,7 +70,7 @@ export function SearchForm({
           }
         >
           <Sparkles className={page ? 'size-5' : 'size-4'} aria-hidden="true" />
-          {page ? 'AI ഉത്തരം' : null}
+          {page ? 'AI answer' : null}
         </button>
       ) : null}
     </form>

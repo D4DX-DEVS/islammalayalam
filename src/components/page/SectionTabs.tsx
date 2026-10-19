@@ -43,7 +43,7 @@ export function SectionTabs({ titles, panels }: SectionTabsProps) {
     <div className="mt-8">
       <div
         role="tablist"
-        aria-label="വിഭാഗങ്ങൾ"
+        aria-label="Sections"
         className="no-scrollbar inline-flex max-w-full gap-1 overflow-x-auto rounded-full bg-surface p-1.5"
       >
         {titles.map((title, i) => (

@@ -29,7 +29,7 @@ export function MainNav({ items, pathname }: MainNavProps) {
   return (
     <div className="sticky top-0 z-30 hidden border-b border-line/60 bg-card/80 backdrop-blur-xl xl:block">
       <Container>
-        <nav aria-label="പ്രധാന മെനു">
+        <nav aria-label="Main menu">
           <ul className="-mx-2 flex">
             {items.map((item, index) => {
               const alignRight = index >= items.length - RIGHT_ALIGNED
