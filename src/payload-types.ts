@@ -1589,6 +1589,7 @@ export interface Homepage {
         | QuoteOfDayBlock
         | ReelsBlock
         | ShortsBlock
+        | TopAdsBlock
       )[]
     | null;
   /**
@@ -2019,6 +2020,19 @@ export interface ShortsBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TopAdsBlock".
+ */
+export interface TopAdsBlock {
+  /**
+   * Keeps the settings but stops showing the section on the site.
+   */
+  hidden?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'topAds';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "QuickLinksBlock".
  */
 export interface QuickLinksBlock {
@@ -2370,6 +2384,7 @@ export interface HomepageSelect<T extends boolean = true> {
         quoteOfDay?: T | QuoteOfDayBlockSelect<T>;
         reels?: T | ReelsBlockSelect<T>;
         shorts?: T | ShortsBlockSelect<T>;
+        topAds?: T | TopAdsBlockSelect<T>;
       };
   sidebar?:
     | T
@@ -2631,6 +2646,15 @@ export interface ShortsBlockSelect<T extends boolean = true> {
   title?: T;
   channel?: T;
   limit?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TopAdsBlock_select".
+ */
+export interface TopAdsBlockSelect<T extends boolean = true> {
+  hidden?: T;
   id?: T;
   blockName?: T;
 }

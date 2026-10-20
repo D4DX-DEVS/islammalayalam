@@ -36,7 +36,7 @@ export const getFooter = cached(
 
 // The key carries a version: bump it when the homepage's defaults or shape change (see features/shared).
 export const getHomepage = cached(
-  'homepage:v6',
+  'homepage:v8',
   [globalTag('homepage'), ...LINK_TAGS, collectionTag('media')],
   async (): Promise<Homepage> => {
     const payload = await getPayloadClient()

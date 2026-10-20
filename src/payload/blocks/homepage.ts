@@ -229,6 +229,22 @@ export const BannerBlock: Block = {
   ],
 }
 
+/**
+ * The top ads banner as a section of its own: it is drawn where it sits in the layout, so it can be
+ * moved (above Shorts, under the hero…) like any other section. The pictures themselves are set
+ * under Ads banners → Top ads banner. With no such section in the layout the banner stays at the
+ * very top of the page, as before.
+ */
+export const TopAdsBlock: Block = {
+  slug: 'topAds',
+  interfaceName: 'TopAdsBlock',
+  labels: {
+    singular: 'Top ads banner (pictures are set in Ads banners)',
+    plural: 'Top ads banner',
+  },
+  fields: [],
+}
+
 export const FollowUsBlock: Block = {
   slug: 'followUs',
   interfaceName: 'FollowUsBlock',
@@ -282,6 +298,7 @@ export const mainColumnBlocks: Block[] = withHide([
   QuoteOfDayBlock,
   ReelsBlock,
   ShortsBlock,
+  TopAdsBlock,
 ])
 export const sidebarBlocks: Block[] = withHide([
   CategoryListBlock,
