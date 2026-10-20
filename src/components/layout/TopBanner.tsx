@@ -66,24 +66,29 @@ function TopAd({ ad, priority }: { ad: Ad; priority: boolean }) {
 }
 
 /**
- * The top ad banners, right below the menu bar of the homepage (Admin → Ads banners → Top ads
- * banner): one below the other, each as wide as the page content with its own link. A phone
- * version replaces the main image under 640px. The box keeps each image's own proportions, so
- * nothing is cropped and the page does not jump while it loads.
+ * The top ad banners (Admin → Ads banners → Top ads banner): one below the other, each as wide as
+ * the page content with its own link. A phone version replaces the main image under 640px. The box
+ * keeps each image's own proportions, so nothing is cropped and the page does not jump while it
+ * loads. By default they sit right below the menu bar of the homepage; with `inline` they are a
+ * section of the homepage layout (the page's container and spacing come from the layout), so they
+ * can be moved anywhere in it.
  */
-export function TopBanner({ ads }: { ads: Ad[] }) {
+export function TopBanner({ ads, inline = false }: { ads: Ad[]; inline?: boolean }) {
   if (!ads.length) return null
-  return (
+  const list = (
+    <ul className="space-y-3 sm:space-y-4">
+      {ads.map((ad, i) => (
+        <li key={ad.key}>
+          <TopAd ad={ad} priority={i === 0 && !inline} />
+        </li>
+      ))}
+    </ul>
+  )
+  return inline ? (
+    <section aria-label="Banner">{list}</section>
+  ) : (
     <section aria-label="Banner" className="pt-4 sm:pt-5">
-      <Container>
-        <ul className="space-y-3 sm:space-y-4">
-          {ads.map((ad, i) => (
-            <li key={ad.key}>
-              <TopAd ad={ad} priority={i === 0} />
-            </li>
-          ))}
-        </ul>
-      </Container>
+      <Container>{list}</Container>
     </section>
   )
 }

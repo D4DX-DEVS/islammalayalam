@@ -261,7 +261,7 @@ export const AdsBanners: GlobalConfig = {
         {
           label: 'Top ads banner',
           description:
-            'Wide banners right under the menu bar of the homepage, one below the other.',
+            'Wide banners on the homepage, one below the other. They sit where the “Top ads banner” section is in the Homepage layout (above Shorts); move it with the arrows in Website manager → Homepage. With no such section they stay right under the menu bar.',
           fields: [
             adRows({
               name: 'top',

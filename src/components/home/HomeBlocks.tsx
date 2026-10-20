@@ -10,6 +10,7 @@ import {
 import { LeadWithAside } from '@/components/home/LeadWithAside'
 import { MediaShelf } from '@/components/home/MediaShelf'
 import { ShortsSection } from '@/components/home/ShortsSection'
+import { TopAdsSection } from '@/components/home/TopAdsSection'
 import { TopicGrid } from '@/components/home/TopicGrid'
 import {
   CallToActionSection,
@@ -39,6 +40,7 @@ const SKELETON: Record<string, SectionSkeletonVariant> = {
   mediaShelf: 'band',
   categoryList: 'list',
   shorts: 'shorts',
+  topAds: 'banner',
 }
 
 const isHalf = (block: AnyBlock) => 'width' in block && block.width === 'half'
@@ -92,6 +94,8 @@ function renderBlock(
       return <ReelsSection block={block} compact={opts.sidebar || opts.half} />
     case 'shorts':
       return <ShortsSection block={block} />
+    case 'topAds':
+      return <TopAdsSection />
     case 'faq':
       return <FaqSection block={block} />
     case 'callToAction':
@@ -168,7 +172,7 @@ export function HomeBlocks({
           <div>{cells}</div>
         )
         // Rows after the first two are rendered lazily (see .lazy-section in globals.css).
-        const lazy = page && r >= 2 ? 'lazy-section' : ''
+        const lazy = page && r >= 2 && row[0]!.blockType !== 'topAds' ? 'lazy-section' : ''
         const out: ReactNode[] = [
           page && !bleed ? (
             <Container key={`row-${r}`} className={lazy}>

@@ -140,6 +140,43 @@
     }
   }
 
+  // Up / down arrows that move a section in the Homepage layout.
+  &__move {
+    display: inline-flex;
+    gap: 0.25rem;
+
+    button {
+      display: grid;
+      place-items: center;
+      width: 2.1rem;
+      height: 2.1rem;
+      padding: 0;
+      border: 1px solid var(--im-border);
+      border-radius: 999px;
+      background: var(--theme-bg);
+      color: var(--im-brand);
+      cursor: pointer;
+      transition:
+        background 0.15s,
+        border-color 0.15s;
+
+      svg {
+        width: 1.1rem;
+        height: 1.1rem;
+      }
+
+      &:hover:not(:disabled) {
+        border-color: var(--im-brand);
+        background: var(--im-brand-soft);
+      }
+
+      &:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+    }
+  }
+
   &__btn {
     min-height: 2.4rem;
     padding: 0 0.9rem;
