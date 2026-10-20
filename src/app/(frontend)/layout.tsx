@@ -14,6 +14,7 @@ import { getFooter, getHeader, getSiteSettings } from '@/features/site/queries'
 import { fontVariables } from '@/lib/fonts'
 import { toNavTree } from '@/lib/nav'
 import { whatsappLink } from '@/lib/whatsapp'
+import { SITE_URL } from '@/lib/site-url'
 import { parseTheme, THEME_COOKIE } from '@/lib/theme'
 import './globals.css'
 
@@ -23,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ? `${settings.siteName} | ${settings.siteNameMl}`
     : settings.siteName
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3444'),
+    metadataBase: new URL(SITE_URL),
     title: { default: name, template: `%s | ${settings.siteName}` },
     description: settings.tagline ?? undefined,
     openGraph: { siteName: settings.siteName, locale: 'ml_IN', type: 'website' },

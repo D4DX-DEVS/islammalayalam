@@ -35,6 +35,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { ContentCard, SectionIcon, SectionRow, WebsiteData } from '../websiteModel'
+import { MoveSection } from './MoveSection'
 
 /** The "Website manager" screen: presentation only (data: websiteData.ts, styles: admin-website.scss). */
 
@@ -114,6 +115,7 @@ function Row({ row, number }: { row: SectionRow; number?: number }) {
         {row.note ? <p className="im-site__note">{row.note}</p> : null}
       </div>
       <div className="im-site__actions">
+        {row.move ? <MoveSection {...row.move} label={row.label} /> : null}
         {row.editHref ? (
           <Link href={row.editHref} className="im-dash__btn im-dash__btn--primary im-site__btn">
             <Pencil aria-hidden="true" />
@@ -122,6 +124,12 @@ function Row({ row, number }: { row: SectionRow; number?: number }) {
         ) : (
           <span className="im-site__locked">{row.readOnly ?? 'View only'}</span>
         )}
+        {row.moreHref ? (
+          <Link href={row.moreHref} className="im-dash__btn im-site__btn">
+            <ImageIcon aria-hidden="true" />
+            {row.moreLabel ?? 'Edit'}
+          </Link>
+        ) : null}
         <a
           href={row.viewHref}
           target="_blank"
@@ -218,7 +226,7 @@ export function WebsiteManager({
       <Group
         icon={LayoutTemplate}
         title="Homepage"
-        hint="Sections from top to bottom. Add, reorder, retitle or hide them in the Homepage editor; “Hide this section” keeps the settings but stops showing it."
+        hint="Sections from top to bottom. Use the arrows to move a section up or down (the top ads banner too); add, retitle or hide sections in the Homepage editor — “Hide this section” keeps the settings but stops showing it."
       >
         {data.homepageEmpty ? (
           <p className="im-dash__empty">

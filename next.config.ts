@@ -3,14 +3,15 @@ import type { NextConfig } from 'next'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { PREVIEW_COOKIE } from './src/lib/preview'
-import { cdnUrl } from './src/lib/spaces'
+import { cdnUrlFrom } from './src/lib/spaces'
 
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 const isProd = process.env.NODE_ENV === 'production'
 
+/** The media CDN for next/image. Baked in at build time; a production build always allows the real CDN. */
 function cdnPattern(): { protocol: 'https'; hostname: string; pathname: string }[] {
-  const cdn = cdnUrl(process.env.DO_SPACES_CDN_ENDPOINT)
+  const cdn = cdnUrlFrom(process.env.DO_SPACES_CDN_ENDPOINT, process.env.NODE_ENV)
   return cdn ? [{ protocol: 'https', hostname: new URL(cdn).hostname, pathname: '/**' }] : []
 }
 

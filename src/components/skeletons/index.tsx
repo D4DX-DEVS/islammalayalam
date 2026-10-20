@@ -9,6 +9,7 @@ export type SectionSkeletonVariant =
   | 'list'
   | 'band'
   | 'shorts'
+  | 'banner'
 
 /** Skeletons mirror the real layouts (same grids, radii and aspect ratios) so nothing jumps on load. */
 const CARD_FRAME = 'rounded-card bg-card shadow-card ring-1 ring-line/70'
@@ -81,6 +82,11 @@ export function SectionSkeleton({ variant = 'split' }: { variant?: SectionSkelet
           </div>
         </Container>
       </div>
+    )
+  }
+  if (variant === 'banner') {
+    return (
+      <div className="aspect-[1200/200] animate-pulse rounded-card bg-line sm:aspect-[1200/160]" />
     )
   }
   if (variant === 'shorts') {

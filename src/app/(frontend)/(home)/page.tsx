@@ -5,11 +5,16 @@ import { HomeBlocks } from '@/components/home/HomeBlocks'
 import { TopBanner } from '@/components/layout/TopBanner'
 import { CategoryStrip } from '@/components/home/CategoryStrip'
 import { getAds, getHomepage, getSiteSettings } from '@/features/site/queries'
+import { placeTopAds } from '@/lib/top-ads'
 
 export default async function HomePage() {
   const [home, settings, ads] = await Promise.all([getHomepage(), getSiteSettings(), getAds()])
-  const layout = home.layout ?? []
-  const sidebar = home.sidebar ?? []
+  // The top banner is drawn where the Homepage layout has its section; with none, at the very top.
+  const { layout, sidebar, atTop } = placeTopAds(
+    home.layout ?? [],
+    home.sidebar ?? [],
+    ads.top.length > 0,
+  )
   // Category shortcuts sit right under the hero.
   const strip = (
     <Suspense fallback={<div className="h-28" />}>
@@ -20,7 +25,7 @@ export default async function HomePage() {
   return (
     <>
       {/* The top banner is for the homepage only: inner pages start straight under the menu. */}
-      <TopBanner ads={ads.top} />
+      {atTop ? <TopBanner ads={ads.top} /> : null}
       <div className="py-5 lg:py-7">
         <h1 className="sr-only">
           {settings.siteNameMl

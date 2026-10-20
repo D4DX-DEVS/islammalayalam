@@ -48,6 +48,12 @@ const KNOWN = {
   ANTHROPIC_API_KEY: () => isSet('ANTHROPIC_API_KEY'),
   AI_SEARCH_MODEL: () => (process.env.AI_SEARCH_MODEL ? 'set' : 'default'),
   AI_SEARCH_DAILY_LIMIT: () => (process.env.AI_SEARCH_DAILY_LIMIT ? 'set' : 'default (300)'),
+  SPOTIFY_CLIENT_ID: () => isSet('SPOTIFY_CLIENT_ID'),
+  SPOTIFY_CLIENT_SECRET: () =>
+    Boolean(process.env.SPOTIFY_CLIENT_ID) === Boolean(process.env.SPOTIFY_CLIENT_SECRET)
+      ? isSet('SPOTIFY_CLIENT_SECRET')
+      : 'INCOMPLETE — set both SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET, or neither',
+  PORT: () => (process.env.PORT ? 'set (by the host)' : 'default (3444, scripts/start.mjs)'),
   DO_SPACES_KEY: () => isSet('DO_SPACES_KEY'),
   DO_SPACES_SECRET: () => isSet('DO_SPACES_SECRET'),
 }
