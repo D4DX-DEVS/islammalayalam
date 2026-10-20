@@ -7,12 +7,14 @@ import { PostCard } from '@/components/cards/PostCard'
 import { ContentCard } from '@/components/ui/ContentCard'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { PdfLink, RichText } from '@/components/richtext/RichText'
+import { EbookPanel } from '@/components/ebook/EbookPanel'
 import { YouTubeVideo } from '@/components/richtext/YouTubeVideo'
 import { listPosts } from '@/features/posts/queries'
 import { bodyStartsWith } from '@/lib/text/lexical'
 import { formatDate } from '@/lib/format'
 import { categoryHref, postHref } from '@/lib/links'
 import { trackAudio } from '@/lib/audio'
+import { ebookPdf } from '@/lib/ebook'
 import { SITE_URL } from '@/lib/site-url'
 import type { Author, Category, Media, Post } from '@/payload-types'
 
@@ -85,15 +87,17 @@ async function MoreStories({ post, category }: { post: Post; category: Category 
   )
 }
 
-/** Single article: breadcrumbs, category, title, byline + share, media (image / YouTube / audio), body, PDFs, and a column of related stories beside it. */
+/** Single article: breadcrumbs, category, title, byline + share, media (image / YouTube / audio / e-book reader), body, PDFs, and a column of related stories beside it. */
 export function PostArticle({ post, siteName }: { post: Post; siteName: string }) {
   const category = asObj<Category>(post.primaryCategory) ?? asObj<Category>(post.categories?.[0])
   const author = asObj<Author>(post.author)
   const byline = author?.name ?? siteName
   const videoUrl = post.format === 'video' ? post.video?.url : null
+  // An e-book opens in the page-turning reader; its PDF is not listed again under the downloads.
+  const book = post.format === 'ebook' && post.postNumber ? ebookPdf<Media>(post) : null
   const attachments = (post.attachments ?? [])
     .map((a) => ({ media: asObj<Media>(a.file), label: a.label }))
-    .filter((a) => a.media)
+    .filter((a) => a.media && a.media.id !== book?.id)
   const url = new URL(postHref(post.postNumber) ?? '/', SITE_URL).toString()
   const date = formatDate(post.publishedAt)
 
@@ -157,7 +161,9 @@ export function PostArticle({ post, siteName }: { post: Post; siteName: string }
               </div>
             </header>
 
-            {videoUrl ? (
+            {book ? (
+              <EbookPanel post={{ ...post, categoryName: category?.name }} pdf={book} url={url} />
+            ) : videoUrl ? (
               <div className="mt-4">
                 <YouTubeVideo
                   url={videoUrl}

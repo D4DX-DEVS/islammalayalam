@@ -39,6 +39,7 @@ export default defineConfig([
     '.test-media/**',
     'test-results/**',
     'playwright-report/**',
+    'public/pdfjs/**',
     'src/payload-types.ts',
     'src/payload-generated-schema.ts',
     'src/app/(payload)/admin/importMap.js',

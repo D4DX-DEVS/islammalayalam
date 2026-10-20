@@ -10,6 +10,7 @@
   },
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev -p 3444",
+    "prebuild": "node scripts/copy-pdfjs.mjs",
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
     "start": "node scripts/start.mjs",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
@@ -26,7 +27,8 @@
     "test:int": "vitest run --config ./vitest.config.mts --project int",
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test": "npm run test:unit && npm run test:int",
-    "env:check": "node scripts/env-check.mjs"
+    "env:check": "node scripts/env-check.mjs",
+    "postinstall": "node scripts/copy-pdfjs.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.134.0",
@@ -42,8 +44,10 @@
     "htmlparser2": "12.0.0",
     "lucide-react": "1.48.0",
     "next": "16.4.2",
+    "page-flip": "2.0.7",
     "payload": "3.90.2",
     "payload-totp": "3.0.4",
+    "pdfjs-dist": "6.3.289",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "sanitize-html": "2.17.7",

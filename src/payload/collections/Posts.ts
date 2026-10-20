@@ -28,6 +28,7 @@ import {
   derivePostFields,
   setCreatedBy,
 } from '@/payload/hooks/editorial'
+import { addEbookCategory } from '@/payload/hooks/ebook'
 import { articleEditor } from '@/payload/editor'
 import { isSafeHref, youtubeId } from '@/lib/security/url'
 
@@ -91,6 +92,7 @@ export const Posts: CollectionConfig = {
       authorCannotPublish,
       assignPostNumber,
       setPublishedAt,
+      addEbookCategory,
       derivePostFields,
     ],
   }),
@@ -113,6 +115,10 @@ export const Posts: CollectionConfig = {
               type: 'upload',
               relationTo: 'media',
               filterOptions: { mimeType: { contains: 'image' } },
+              admin: {
+                description:
+                  'For an e-book this is the book cover (a portrait image looks best on the shelf).',
+              },
             },
             { name: 'content', type: 'richText', editor: articleEditor },
           ],
@@ -175,6 +181,29 @@ export const Posts: CollectionConfig = {
                   admin: { description: 'Optional: a direct https link to an audio file.' },
                 },
                 durationField,
+              ],
+            },
+            {
+              name: 'ebook',
+              label: 'E-book',
+              type: 'group',
+              admin: {
+                condition: (data) => data?.format === 'ebook',
+                description:
+                  'Readers open the PDF as a page-turning book on the site and can download it. The cover is the Featured image (Content tab). E-books are listed under the E-Books category automatically.',
+              },
+              fields: [
+                {
+                  name: 'pdf',
+                  label: 'Book PDF',
+                  type: 'upload',
+                  relationTo: 'media',
+                  filterOptions: { mimeType: { equals: 'application/pdf' } },
+                  admin: {
+                    description:
+                      'Upload or choose the book PDF (max 40 MB). Without one, the first PDF under "PDFs" below is used.',
+                  },
+                },
               ],
             },
             {

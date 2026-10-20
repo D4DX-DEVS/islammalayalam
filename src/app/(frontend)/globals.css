@@ -402,6 +402,41 @@
 }
 
 /*
+ * E-book reader (components/ebook): page-flip lays the book out inside .ebook-flip (it must fill the
+ * stage: the book is sized from it). Each page is white paper with its PDF page drawn on a canvas,
+ * and a soft pulse until that page is drawn.
+ */
+.ebook-flip {
+  width: 100%;
+  height: 100%;
+}
+.ebook-page {
+  background: #fff;
+  overflow: hidden;
+}
+.ebook-page canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ebook-page:not([data-ready])::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, #f1f3f6 30%, #fafbfc 50%, #f1f3f6 70%) 0 0 / 200% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ebook-page:not([data-ready])::after {
+    animation: ebook-shimmer 1.4s linear infinite;
+  }
+}
+@keyframes ebook-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/*
  * Lazy-load entrance animations.
  *
  * - `data-reveal` (below the fold): <ScrollReveal> arms the hidden state only after hydration, so

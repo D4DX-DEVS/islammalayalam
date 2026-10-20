@@ -168,6 +168,9 @@ export interface Post {
    * Short summary for cards and search results
    */
   excerpt?: string | null;
+  /**
+   * For an e-book this is the book cover (a portrait image looks best on the shelf).
+   */
   featuredImage?: (string | null) | Media;
   content?: {
     root: {
@@ -209,6 +212,15 @@ export interface Post {
      * Optional length, e.g. 18:24 — shown on the video tile and next to audio tracks.
      */
     duration?: string | null;
+  };
+  /**
+   * Readers open the PDF as a page-turning book on the site and can download it. The cover is the Featured image (Content tab). E-books are listed under the E-Books category automatically.
+   */
+  ebook?: {
+    /**
+     * Upload or choose the book PDF (max 40 MB). Without one, the first PDF under "PDFs" below is used.
+     */
+    pdf?: (string | null) | Media;
   };
   attachments?:
     | {
@@ -961,6 +973,11 @@ export interface PostsSelect<T extends boolean = true> {
         spotifyUrl?: T;
         url?: T;
         duration?: T;
+      };
+  ebook?:
+    | T
+    | {
+        pdf?: T;
       };
   attachments?:
     | T

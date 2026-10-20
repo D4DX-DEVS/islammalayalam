@@ -33,7 +33,7 @@ function internalHref(doc: LinkFields['doc']): string | null {
   return null
 }
 
-function formatBytes(bytes: number | null | undefined): string {
+export function formatBytes(bytes: number | null | undefined): string {
   if (!bytes) return ''
   return bytes > 1_048_576
     ? `${(bytes / 1_048_576).toFixed(1)} MB`
