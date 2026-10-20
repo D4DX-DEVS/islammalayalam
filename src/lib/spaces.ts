@@ -35,6 +35,20 @@ export function cdnUrl(raw: string | undefined): string | undefined {
   }
 }
 
+/** The production media CDN (the bucket's CDN endpoint). Public knowledge: it is in every page's CSP. */
+export const PRODUCTION_CDN_URL = 'https://d4dx-storage.blr1.cdn.digitaloceanspaces.com'
+
+/**
+ * The CDN origin a build bakes into the image allowlist (next.config.ts). Next reads it at build
+ * time, so on the host DO_SPACES_CDN_ENDPOINT must be set for the *build* too; if a production
+ * build lacks it anyway, the real CDN is used so media cannot break over a variable-scope mistake.
+ */
+export const cdnUrlFrom = (
+  configured: string | undefined,
+  nodeEnv: string | undefined,
+): string | undefined =>
+  cdnUrl(configured) ?? (nodeEnv === 'production' ? PRODUCTION_CDN_URL : undefined)
+
 /** Folder inside the bucket without surrounding slashes: `/ISLAMMALAYALAM/` → `ISLAMMALAYALAM`. */
 export const spacesFolder = (raw: string | undefined): string =>
   (raw ?? '').replace(/^\/+|\/+$/g, '')
