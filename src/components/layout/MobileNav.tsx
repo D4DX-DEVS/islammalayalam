@@ -8,6 +8,7 @@ import { SmartLink } from '@/components/ui/SmartLink'
 import { SearchForm } from '@/components/layout/SearchForm'
 import { SocialLinks } from '@/components/layout/SocialLinks'
 import { isActive, isCurrent, type NavItem } from '@/lib/nav'
+import { OPEN_MOBILE_NAV } from '@/lib/pwa'
 import type { SiteSetting } from '@/payload-types'
 
 interface MobileNavProps {
@@ -97,6 +98,13 @@ export function MobileNav({
     setLastPath(pathname)
     setOpen(false)
   }
+
+  // The bottom dock's Menu button opens the same drawer.
+  useEffect(() => {
+    const onOpen = () => setOpen(true)
+    window.addEventListener(OPEN_MOBILE_NAV, onOpen)
+    return () => window.removeEventListener(OPEN_MOBILE_NAV, onOpen)
+  }, [])
 
   useEffect(() => {
     if (!open) return

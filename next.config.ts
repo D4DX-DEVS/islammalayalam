@@ -1,5 +1,6 @@
 import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
+import { execSync } from 'child_process'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { PREVIEW_COOKIE } from './src/lib/preview'
@@ -13,6 +14,22 @@ const isProd = process.env.NODE_ENV === 'production'
 function cdnPattern(): { protocol: 'https'; hostname: string; pathname: string }[] {
   const cdn = cdnUrlFrom(process.env.DO_SPACES_CDN_ENDPOINT, process.env.NODE_ENV)
   return cdn ? [{ protocol: 'https', hostname: new URL(cdn).hostname, pathname: '/**' }] : []
+}
+
+/**
+ * Deploy version for the PWA: /sw.js embeds it, so each deploy is a new worker and installed apps
+ * get the "Update" toast. App Platform's commit SHA, else local git, else the build time.
+ */
+function appVersion(): string {
+  const sha = process.env.COMMIT_SHA || process.env.SOURCE_COMMIT
+  if (sha) return sha.slice(0, 12)
+  try {
+    return execSync('git rev-parse --short=12 HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim()
+  } catch {
+    return String(Date.now())
+  }
 }
 
 /** Static security headers for every response (the per-request CSP is set in src/proxy.ts). */
@@ -33,6 +50,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  env: { NEXT_PUBLIC_APP_VERSION: `${appVersion()}-${Date.now().toString(36)}` },
   // Keep the dev-only Next badge clear of the admin sidebar's account card (bottom-left).
   devIndicators: { position: 'bottom-right' },
   // WordPress URLs end in "/" (/1234/, /category/news/). Next would 308 them to no-slash; instead
@@ -74,6 +92,10 @@ const nextConfig: NextConfig = {
         has: [{ type: 'cookie', key: PREVIEW_COOKIE }],
         headers: [{ key: 'X-Frame-Options', value: 'SAMEORIGIN' }],
       },
+      // The preview entry itself (redirect or a plain-text "sign in first" message) is framed by our
+      // own admin before the draft cookie exists; without this the pane only says "content is blocked".
+      { source: '/next/preview', headers: [{ key: 'X-Frame-Options', value: 'SAMEORIGIN' }] },
+      { source: '/next/preview/', headers: [{ key: 'X-Frame-Options', value: 'SAMEORIGIN' }] },
       // Later rules win for the same header: the admin is never frameable, cookie or not.
       { source: '/admin/:path*', headers: [{ key: 'X-Frame-Options', value: 'DENY' }] },
       // JSON API and uploaded files: nothing in these responses may ever execute as a document.

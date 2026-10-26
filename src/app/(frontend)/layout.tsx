@@ -6,6 +6,10 @@ import { MainNav } from '@/components/layout/MainNav'
 import { Footer } from '@/components/layout/Footer'
 import { BackToTop } from '@/components/layout/BackToTop'
 import { WhatsAppButton } from '@/components/layout/WhatsAppButton'
+import { MobileDock } from '@/components/layout/MobileDock'
+import { ScrollDirection } from '@/components/layout/ScrollDirection'
+import { InstallBanner } from '@/components/pwa/InstallBanner'
+import { PwaUpdater } from '@/components/pwa/PwaUpdater'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { PreviewBar } from '@/components/preview/PreviewBar'
 import { getPreviewUser } from '@/features/preview/session'
@@ -54,6 +58,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: '#ffffff',
+  // Lets the dock pad itself for the iPhone home indicator (env(safe-area-inset-bottom)).
+  viewportFit: 'cover',
 }
 
 export default async function FrontendLayout({ children }: { children: ReactNode }) {
@@ -108,6 +114,10 @@ export default async function FrontendLayout({ children }: { children: ReactNode
         <Footer footer={footer} settings={settings} />
         <BackToTop />
         {whatsapp ? <WhatsAppButton href={whatsapp} /> : null}
+        <MobileDock whatsapp={whatsapp} />
+        <InstallBanner />
+        <PwaUpdater />
+        <ScrollDirection />
         <ScrollReveal />
       </body>
     </html>

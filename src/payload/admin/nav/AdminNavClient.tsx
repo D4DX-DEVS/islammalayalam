@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useConfig } from '@payloadcms/ui'
@@ -66,6 +66,25 @@ const ICONS: Record<string, LucideIcon> = {
 
 const ROLE_LABEL: Record<string, string> = { admin: 'Admin', editor: 'Editor', author: 'Author' }
 const STORAGE_KEY = 'im-nav-tucked-open'
+const SCROLL_KEY = 'im-nav-scroll'
+// useLayoutEffect warns during SSR; the scroll restore only matters in the browser.
+const useBrowserLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
+
+function readScroll(): number {
+  try {
+    return Number(window.sessionStorage.getItem(SCROLL_KEY)) || 0
+  } catch {
+    return 0
+  }
+}
+
+function writeScroll(top: number): void {
+  try {
+    window.sessionStorage.setItem(SCROLL_KEY, String(Math.round(top)))
+  } catch {
+    // Blocked storage: the sidebar simply starts at the top.
+  }
+}
 
 function readOpen(): string[] {
   try {
@@ -101,6 +120,24 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
   const admin = config.routes.admin
   const logout = `${admin}${config.admin.routes.logout ?? '/logout'}`
   const [open, setOpen] = useState<string[]>([])
+  const navRef = useRef<HTMLElement>(null)
+
+  // Payload re-renders the sidebar on every page, which would jump it back to the top. Keep its
+  // scroll position for the tab, and make sure the page you are on is always visible in it.
+  useBrowserLayoutEffect(() => {
+    const scroller = navRef.current?.closest<HTMLElement>('.nav__scroll')
+    if (!scroller) return
+    scroller.scrollTop = readScroll()
+    const current = navRef.current?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (current) {
+      const box = scroller.getBoundingClientRect()
+      const item = current.getBoundingClientRect()
+      if (item.top < box.top || item.bottom > box.bottom) current.scrollIntoView({ block: 'center' })
+    }
+    const save = () => writeScroll(scroller.scrollTop)
+    scroller.addEventListener('scroll', save, { passive: true })
+    return () => scroller.removeEventListener('scroll', save)
+  }, [pathname])
 
   useEffect(() => {
     // Restored after mount so server and client render the same markup.
@@ -142,7 +179,7 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
   }
 
   return (
-    <nav className="nav__wrap im-nav" aria-label="Admin">
+    <nav ref={navRef} className="nav__wrap im-nav" aria-label="Admin">
       <Link href={admin} className="im-nav__brand">
         {/* eslint-disable-next-line @next/next/no-img-element -- static brand asset */}
         <img src="/brand/icon-192.png" alt="" width={36} height={36} />
@@ -180,7 +217,7 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
               >
                 <ChevronRight aria-hidden="true" data-open={expanded} />
                 <span className="im-nav__text">{group.label}</span>
-                <span className="im-nav__tag">Admins</span>
+                <span className="im-nav__tag">Rarely used</span>
               </button>
               {expanded ? (
                 <ul id={id} className="im-nav__list">

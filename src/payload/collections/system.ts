@@ -26,7 +26,7 @@ export const Redirects: CollectionConfig = {
   slug: 'redirects',
   admin: {
     useAsTitle: 'from',
-    group: 'Team',
+    group: 'Advanced',
     defaultColumns: ['from', 'to', 'code', 'source', 'hits'],
   },
   access: { read: isEditor, create: isEditor, update: isEditor, delete: isEditor },
@@ -116,7 +116,7 @@ export const AuditLogs: CollectionConfig = {
   labels: { singular: 'Activity entry', plural: 'Activity log' },
   admin: {
     useAsTitle: 'target',
-    group: 'Team',
+    group: 'Advanced',
     defaultColumns: ['createdAt', 'action', 'target', 'docId', 'user'],
   },
   defaultSort: '-createdAt',
@@ -141,7 +141,9 @@ export const MigrationRuns: CollectionConfig = {
   labels: { singular: 'Migration run', plural: 'Migration runs' },
   admin: {
     useAsTitle: 'runId',
-    group: 'Migration',
+    group: 'Advanced',
+    // The WordPress import finished (2026-09-30): kept for the record, out of the sidebar.
+    hidden: true,
     defaultColumns: ['runId', 'status', 'startedAt', 'finishedAt'],
   },
   access: { read: isAdmin, create: nobody, update: nobody, delete: isAdmin },
@@ -174,7 +176,9 @@ export const MigrationIssues: CollectionConfig = {
   labels: { singular: 'Migration issue', plural: 'Migration issues' },
   admin: {
     useAsTitle: 'summary',
-    group: 'Migration',
+    group: 'Advanced',
+    // The WordPress import finished (2026-09-30): kept for the record, out of the sidebar.
+    hidden: true,
     defaultColumns: ['severity', 'entity', 'wpId', 'gate', 'resolved'],
   },
   access: { read: isAdmin, create: nobody, update: isAdmin, delete: isAdmin },

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { buildCsp, createNonce, originOf } from '@/lib/security/csp'
-import { PREVIEW_COOKIE } from '@/lib/preview'
+import { PREVIEW_COOKIE, PREVIEW_ROUTE } from '@/lib/preview'
 import { isAdminPath, needsTrailingSlash } from '@/lib/routing'
 import { cdnUrl } from '@/lib/spaces'
 
@@ -44,8 +44,10 @@ export function proxy(request: NextRequest): NextResponse {
   // Draft-mode cookie present → a staff live preview: allow our own admin to frame the page and keep
   // it out of search engines. The cookie grants nothing by itself (pages re-check the admin session).
   const preview = request.cookies.has(PREVIEW_COOKIE)
+  // The preview entry route is framed by the admin before that cookie exists (see next.config.ts).
+  const previewEntry = pathname === PREVIEW_ROUTE || pathname === PREVIEW_ROUTE.slice(0, -1)
   const csp = buildCsp(n, isAdminPath(pathname) ? 'admin' : 'site', MODE, {
-    previewFrame: preview,
+    previewFrame: preview || previewEntry,
   })
 
   const requestHeaders = new Headers(request.headers)

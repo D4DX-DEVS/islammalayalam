@@ -55,7 +55,8 @@ function PartnerLogo({ settings }: { settings: SiteSetting }) {
 
 /**
  * Masthead. Below `xl` it is the sticky app bar (menu · logo · search · theme); from `xl` it scrolls
- * away and the MainNav bar underneath becomes the sticky element.
+ * away and the MainNav bar underneath becomes the sticky element. Below `xl` it slides away while
+ * scrolling down and back on scroll up (`.mobile-header`, globals.css).
  */
 export function SiteHeader({
   settings,
@@ -66,7 +67,7 @@ export function SiteHeader({
   aiSearch = false,
 }: SiteHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-line/60 bg-card/80 backdrop-blur-xl xl:static xl:bg-card">
+    <header className="mobile-header sticky top-0 z-40 border-b border-line/60 bg-card/80 backdrop-blur-xl xl:static xl:bg-card">
       <Container className="flex h-16 items-center gap-1.5 sm:h-[4.5rem] xl:h-20 xl:gap-4">
         <MobileNav
           items={navItems}
