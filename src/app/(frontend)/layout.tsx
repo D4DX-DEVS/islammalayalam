@@ -16,7 +16,7 @@ import { getPreviewUser } from '@/features/preview/session'
 import { aiSearchUiEnabled } from '@/features/ai-search/service'
 import { getFooter, getHeader, getSiteSettings } from '@/features/site/queries'
 import { fontVariables } from '@/lib/fonts'
-import { toNavTree } from '@/lib/nav'
+import { toNavGroups, toNavTree } from '@/lib/nav'
 import { whatsappLink } from '@/lib/whatsapp'
 import { SITE_URL } from '@/lib/site-url'
 import { absolute, siteJsonLd } from '@/lib/seo'
@@ -103,6 +103,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           settings={settings}
           topLinks={toNavTree(header.topBarLinks, 'top')}
           navItems={navItems}
+          quickLinks={toNavGroups(footer.columns)}
           showSocial={header.showSocialInTopBar !== false}
           pathname={pathname}
           aiSearch={aiSearchUiEnabled()}

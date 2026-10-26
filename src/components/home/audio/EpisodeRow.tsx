@@ -50,11 +50,11 @@ export function EpisodeRow({
   const unavailable = t.kind === 'none'
   const length = t.length ?? (active && loadedSeconds ? clock(loadedSeconds) : t.duration)
   const meta = [t.subtitle, length].filter(Boolean).join(' • ')
-  const item = 'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-start hover:bg-white/10'
+  const item = 'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-start hover:bg-brand-soft'
   return (
     <li
       data-track={t.id}
-      className="border-b border-white/10 last:border-b-0"
+      className="border-b border-line last:border-b-0"
       aria-current={active ? 'true' : undefined}
     >
       <div className={`flex gap-3.5 py-3 sm:gap-4 ${unavailable ? 'opacity-60' : ''}`}>
@@ -64,7 +64,7 @@ export function EpisodeRow({
           disabled={unavailable}
           tabIndex={-1}
           aria-hidden="true"
-          className="relative size-[4.5rem] shrink-0 self-start overflow-hidden rounded-md bg-[#1b3a86] sm:size-20"
+          className="relative size-[4.5rem] shrink-0 self-start overflow-hidden rounded-md bg-brand-soft sm:size-20"
         >
           {t.cover}
         </button>
@@ -73,21 +73,21 @@ export function EpisodeRow({
             type="button"
             onClick={onChoose}
             disabled={unavailable}
-            className="block w-full text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            className="block w-full text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <span
-              className="line-clamp-2 text-base font-bold leading-snug text-white sm:text-[1.05rem]"
+              className="line-clamp-2 text-base font-bold leading-snug text-ink sm:text-[1.05rem]"
               style={active ? { color: SPOTIFY_GREEN } : undefined}
             >
               {t.title}
             </span>
           </button>
           {t.description ? (
-            <p className="mt-0.5 line-clamp-1 text-sm leading-snug text-white/60">
+            <p className="mt-0.5 line-clamp-1 text-sm leading-snug text-muted">
               {t.description}
             </p>
           ) : null}
-          <p className="mt-1 flex items-center gap-2 text-sm text-white/70">
+          <p className="mt-1 flex items-center gap-2 text-sm text-muted">
             {playing ? <Equalizer /> : null}
             <span>
               {meta}
@@ -112,7 +112,7 @@ export function EpisodeRow({
                   <div
                     role="menu"
                     style={{ top: menuPos.top, left: menuPos.left }}
-                    className="fixed z-50 w-52 rounded-lg bg-[#282828] p-1 text-sm shadow-[0_16px_40px_-8px_rgb(0_0_0/0.8)] ring-1 ring-white/10"
+                    className="fixed z-50 w-52 rounded-lg bg-card p-1 text-sm shadow-card ring-1 ring-line"
                   >
                     {url ? (
                       <button type="button" role="menuitem" onClick={onCopy} className={item}>
@@ -182,7 +182,7 @@ export function EpisodeRow({
               onClick={onChoose}
               disabled={unavailable}
               aria-label={`${playing ? 'Pause' : t.kind === 'link' ? 'Open' : 'Play'} ${t.title}`}
-              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-[#0b0b0b] shadow-lg transition hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:pointer-events-none disabled:opacity-40"
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-card shadow-lg transition hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:pointer-events-none disabled:opacity-40"
             >
               {playing ? (
                 <Pause className="size-5 fill-current" aria-hidden="true" />

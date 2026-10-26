@@ -267,7 +267,7 @@ export function AudioPlayer({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col text-white">
+    <div className="flex h-full min-h-0 flex-col text-ink">
       <audio
         ref={audio}
         src={track.kind === 'file' ? (track.src ?? undefined) : undefined}
@@ -287,7 +287,7 @@ export function AudioPlayer({
       {/* The heading, and under it the player once an episode is played. */}
       <div
         ref={top}
-        className="shrink-0 bg-gradient-to-b from-[#1d4fb0] via-[#142f6b] to-[#121212] px-4 pb-4 pt-5 sm:px-6 sm:pt-6"
+        className="shrink-0 border-b border-line bg-gradient-to-b from-brand-soft to-card px-4 pb-4 pt-5 sm:px-6 sm:pt-6"
       >
         {heading}
         <PlayBar
@@ -321,7 +321,7 @@ export function AudioPlayer({
           type="button"
           onClick={() => setNewestFirst((v) => !v)}
           aria-label={`Sort episodes: ${newestFirst ? 'newest' : 'oldest'} first. Change`}
-          className="inline-flex min-h-10 items-center gap-2.5 rounded-md text-start text-[0.95rem] font-bold text-white transition hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          className="inline-flex min-h-10 items-center gap-2.5 rounded-md text-start text-[0.95rem] font-bold text-ink transition hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           <SlidersHorizontal className="size-5" aria-hidden="true" />
           <span>
@@ -332,7 +332,7 @@ export function AudioPlayer({
           <label className="relative block min-w-[9rem] flex-1">
             <span className="sr-only">Search episodes</span>
             <Search
-              className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-white/45"
+              className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-muted"
               aria-hidden="true"
             />
             <input
@@ -340,7 +340,7 @@ export function AudioPlayer({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search episodes"
-              className="h-10 w-full rounded-full border border-white/15 bg-[#1c1c1c] ps-9 pe-4 text-sm text-white placeholder:text-white/45 focus:border-white/45 focus:outline-none"
+              className="h-10 w-full rounded-full border border-line bg-canvas ps-9 pe-4 text-sm text-ink placeholder:text-muted focus:border-brand focus:outline-none"
             />
           </label>
         ) : null}
@@ -377,7 +377,7 @@ export function AudioPlayer({
           )
         })}
         {!results.length ? (
-          <li className="py-8 text-center text-sm text-white/55">No episodes found.</li>
+          <li className="py-8 text-center text-sm text-muted">No episodes found.</li>
         ) : null}
       </ul>
 
@@ -387,14 +387,14 @@ export function AudioPlayer({
           href={show.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex shrink-0 items-center gap-3 border-t border-white/10 bg-[#181818] px-4 py-3 transition-colors hover:bg-[#202020] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/60 sm:px-6"
+          className="flex shrink-0 items-center gap-3 border-t border-line bg-surface px-4 py-3 transition-colors hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand sm:px-6"
         >
-          <SpotifyMark className="size-7 shrink-0 text-[#1ed760]" />
+          <SpotifyMark className="size-7 shrink-0 text-[#1db954]" />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-bold">{show.name}</span>
-            <span className="block truncate text-xs text-white/60">All episodes on Spotify</span>
+            <span className="block truncate text-xs text-muted">All episodes on Spotify</span>
           </span>
-          <span className="inline-flex h-8 shrink-0 items-center rounded-full border border-white/50 px-4 text-xs font-bold">
+          <span className="inline-flex h-8 shrink-0 items-center rounded-full border border-brand/40 text-brand px-4 text-xs font-bold">
             Follow
           </span>
         </a>
@@ -404,7 +404,7 @@ export function AudioPlayer({
         {notice ?? ''}
       </span>
       {notice ? (
-        <p className="pointer-events-none absolute inset-x-0 bottom-20 mx-auto w-fit rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[#0b0b0b] shadow-lg">
+        <p className="pointer-events-none absolute inset-x-0 bottom-20 mx-auto w-fit rounded-full bg-ink px-4 py-1.5 text-sm font-semibold text-canvas shadow-lg">
           {notice}
         </p>
       ) : null}

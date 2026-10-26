@@ -81,11 +81,11 @@ export function PlayBar({
   return (
     <div
       hidden={!open}
-      className="mt-3 rounded-2xl bg-black/35 p-3 ring-1 ring-white/10 backdrop-blur-sm sm:p-3.5"
+      className="mt-3 rounded-2xl bg-card p-3 shadow-card ring-1 ring-line sm:p-3.5"
     >
       {spotify ? (
         <div className="mb-2 flex items-center gap-1">
-          <span className="min-w-0 flex-1 truncate ps-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-white/60">
+          <span className="min-w-0 flex-1 truncate ps-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">
             Now playing
           </span>
           {prevNext(-1)}
@@ -94,12 +94,12 @@ export function PlayBar({
         </div>
       ) : (
         <div className="mb-2 flex items-center gap-3">
-          <div className="relative size-10 shrink-0 overflow-hidden rounded bg-[#1b3a86]">
+          <div className="relative size-10 shrink-0 overflow-hidden rounded bg-brand-soft">
             {track.cover}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{track.title}</p>
-            <p className="truncate text-xs text-white/60">{byline.join(' · ')}</p>
+            <p className="truncate text-xs text-muted">{byline.join(' · ')}</p>
           </div>
           {close}
         </div>
@@ -120,11 +120,11 @@ export function PlayBar({
             sandbox="allow-scripts allow-same-origin allow-popups"
             className={`w-full rounded-xl border-0 ${track.tallEmbed ? 'h-[352px]' : 'h-[152px]'}`}
           />
-          <p className="mt-2 text-center text-xs text-white/55">Press play in the player above</p>
+          <p className="mt-2 text-center text-xs text-muted">Press play in the player above</p>
         </>
       ) : null}
       {spotify && !embedFallback && embedBlocked ? (
-        <p role="status" className="mt-2 text-center text-xs text-white/65">
+        <p role="status" className="mt-2 text-center text-xs text-muted">
           It has not started yet: press play in the player above.
         </p>
       ) : null}
@@ -132,7 +132,7 @@ export function PlayBar({
       {!spotify ? (
         <>
           <div className="flex items-center gap-3">
-            <span className="w-11 shrink-0 text-xs tabular-nums text-white/75">{clock(time)}</span>
+            <span className="w-11 shrink-0 text-xs tabular-nums text-muted">{clock(time)}</span>
             <input
               type="range"
               className="range-player min-w-0 flex-1"
@@ -145,7 +145,7 @@ export function PlayBar({
               style={{ '--fill': fill } as CSSProperties}
               onChange={(e) => onSeek(Number(e.target.value))}
             />
-            <span className="w-11 shrink-0 text-end text-xs tabular-nums text-white/75">
+            <span className="w-11 shrink-0 text-end text-xs tabular-nums text-muted">
               {duration ? clock(duration) : (track.duration ?? '--:--')}
             </span>
           </div>
@@ -155,7 +155,7 @@ export function PlayBar({
                 type="button"
                 onClick={onRate}
                 aria-label={`Playback speed ${rate}×. Change speed`}
-                className={`${CONTROL} h-8 min-w-11 border border-white/30 px-3 text-xs font-bold`}
+                className={`${CONTROL} h-8 min-w-11 border border-brand/40 text-brand px-3 text-xs font-bold`}
               >
                 {rate}×
               </button>
@@ -174,7 +174,7 @@ export function PlayBar({
                 type="button"
                 onClick={onToggle}
                 aria-label={playing ? 'Pause' : 'Play'}
-                className="inline-flex size-12 items-center justify-center rounded-full text-[#0b0b0b] shadow-lg transition hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="inline-flex size-12 items-center justify-center rounded-full text-card shadow-lg transition hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 style={{ backgroundColor: SPOTIFY_GREEN }}
               >
                 {playing ? (

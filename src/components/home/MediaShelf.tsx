@@ -87,9 +87,7 @@ export async function MediaShelf({
       : { show: null, episodes: [] }
   const { episodes } = feed
   const showMore = spotifyShowId(block.spotifyUrl)
-    ? episodes.length > 1
-      ? { href: '/audios/', external: false }
-      : { href: feed.show?.url ?? block.spotifyUrl ?? null, external: true }
+    ? { href: '/audios/', external: false }
     : { href: null, external: false }
   if (!docs.length && !entries.length && !episodes.length) return null
   const title = block.title || category?.name || FORMAT_TITLE[block.format]
@@ -193,7 +191,7 @@ export async function MediaShelf({
       limit={block.limit}
       title={title}
       // With a Spotify show behind the section, "View More" opens every episode: on this site's
-      // /audios/ page when there are several to list, else on the show's own page on Spotify.
+      // /audios/ page, which links on to the show on Spotify.
       more={showMore.href ?? more}
       moreExternal={showMore.external}
       half={half}
