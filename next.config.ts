@@ -50,7 +50,13 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'i.scdn.co', pathname: '/image/**' },
       { protocol: 'https', hostname: '**.spotifycdn.com', pathname: '/image/**' },
     ],
-    formats: ['image/avif', 'image/webp'],
+    // WebP only: AVIF encoding took 1–3.5 s per image on the App Platform instance (and timed out
+    // under load). Uploads are already WebP, so WebP resizes are fast and nearly as small.
+    formats: ['image/webp'],
+    // Optimized copies are keyed by URL and uploads never change in place: cache them for 31 days.
+    minimumCacheTTL: 2678400,
+    // Drop the 2048/3840 widths: no layout is wider than 1920 px, and each width is another encode.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     dangerouslyAllowSVG: false,
   },
   async headers() {

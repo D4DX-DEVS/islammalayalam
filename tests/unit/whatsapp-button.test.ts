@@ -37,8 +37,8 @@ describe('WhatsAppButton', () => {
     expect(html).toContain('group-focus-visible:hidden')
   })
 
-  it('sits on the right edge, 200px above the bottom, leaving the bottom corner to the back-to-top button', () => {
-    expect(html).toContain('fixed bottom-[200px] end-4')
+  it('sits in the bottom-right corner, stacked just above the back-to-top button', () => {
+    expect(html).toContain('fixed bottom-20 end-4')
     expect(html).not.toMatch(/\btop-/)
     expect(html).toContain('h-14')
   })
