@@ -78,7 +78,7 @@ export function PwaUpdater() {
     <div
       role="status"
       aria-live="polite"
-      className="dock-float fixed inset-x-3 z-50 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-line/70 bg-card p-3 shadow-lift sm:inset-x-auto sm:start-5"
+      className="dock-float fixed inset-x-0 z-50 mx-auto flex w-[calc(100%-1.5rem)] max-w-md items-center gap-3 rounded-2xl border border-line/70 bg-card p-3 shadow-lift"
     >
       <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
         <RefreshCw className={`size-5 ${updating ? 'animate-spin' : ''}`} aria-hidden="true" />

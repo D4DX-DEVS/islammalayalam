@@ -569,3 +569,56 @@
     transition: none;
   }
 }
+
+/* MobileNav drawer: slides in from the start edge over a fading backdrop. */
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes drawer-fade {
+  from {
+    opacity: 0;
+  }
+}
+.drawer-in {
+  animation: drawer-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.drawer-fade {
+  animation: drawer-fade 0.25s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawer-in,
+  .drawer-fade {
+    animation: none;
+  }
+}
+
+/* MobileNav drill-down: a section page slides in from the end edge; Back slides the parent in from the start. */
+@keyframes drill-in {
+  from {
+    opacity: 0;
+    transform: translateX(2.5rem);
+  }
+}
+@keyframes drill-back {
+  from {
+    opacity: 0;
+    transform: translateX(-2.5rem);
+  }
+}
+.drill-in {
+  animation: drill-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.drill-back {
+  animation: drill-back 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .drill-in,
+  .drill-back {
+    animation: none;
+  }
+}

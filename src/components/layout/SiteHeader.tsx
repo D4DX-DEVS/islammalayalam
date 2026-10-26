@@ -74,6 +74,8 @@ export function SiteHeader({
           pathname={pathname}
           topLinks={topLinks}
           social={settings.social}
+          siteName={settings.siteName}
+          tagline={settings.tagline}
           aiSearch={aiSearch}
         />
         <Brand settings={settings} priority />

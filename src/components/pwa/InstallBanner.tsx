@@ -80,7 +80,7 @@ export function InstallBanner() {
     <div
       role="dialog"
       aria-label="Install the app"
-      className="dock-float fixed inset-x-3 z-50 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-line/70 bg-card p-3 shadow-lift enter sm:inset-x-auto sm:start-5"
+      className="dock-float fixed inset-x-0 z-50 mx-auto flex w-[calc(100%-1.5rem)] max-w-md items-center gap-3 rounded-2xl border border-line/70 bg-card p-3 shadow-lift enter"
     >
       <Image
         src="/brand/icon-192.png"
