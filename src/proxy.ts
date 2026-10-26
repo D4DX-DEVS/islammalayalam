@@ -60,10 +60,12 @@ export function proxy(request: NextRequest): NextResponse {
   return response
 }
 
+// pdfjs/: the e-book reader's worker and data files (static, ours). A CSP on the worker's own
+// response would govern the worker itself, and the nonce policy cannot cover a worker's wasm decoders.
 export const config = {
   matcher: [
     {
-      source: '/((?!api/|_next/static|_next/image|favicon.ico|robots.txt|sitemap).*)',
+      source: '/((?!api/|_next/static|_next/image|pdfjs/|favicon.ico|robots.txt|sitemap).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

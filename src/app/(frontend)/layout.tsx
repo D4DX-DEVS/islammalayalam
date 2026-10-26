@@ -43,10 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#070e1c' },
-  ],
+  themeColor: '#ffffff',
 }
 
 export default async function FrontendLayout({ children }: { children: ReactNode }) {
@@ -66,8 +63,8 @@ export default async function FrontendLayout({ children }: { children: ReactNode
   })
 
   return (
-    // No data-theme → the OS preference applies (CSS); a saved choice comes from the theme cookie.
-    <html lang="ml" data-theme={theme} className={fontVariables}>
+    // Light by default, whatever the OS prefers; dark only when the visitor picked it (theme cookie).
+    <html lang="ml" data-theme={theme ?? 'light'} className={fontVariables}>
       <body id="top" className="flex min-h-dvh flex-col">
         <a
           href="#main"

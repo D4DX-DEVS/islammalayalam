@@ -55,3 +55,6 @@ npm-debug.log*
 # Plain-language daily change summary (personal notes, not part of the repo)
 /TODAYS-CHANGES.md
 /TASKS-*.md
+
+# pdf.js worker + data, copied from node_modules by scripts/copy-pdfjs.mjs
+/public/pdfjs/
