@@ -5,9 +5,11 @@ import { ArchiveHeader } from '@/components/listing/ArchiveHeader'
 import { PostListing } from '@/components/listing/PostListing'
 import { getCategoryBySlug } from '@/features/categories/queries'
 import { listPosts } from '@/features/posts/queries'
+import { getSiteSettings } from '@/features/site/queries'
 import { encodePath } from '@/features/routing/resolve'
 import { parsePage } from '@/lib/format'
 import { categoryHref } from '@/lib/links'
+import { describe } from '@/lib/seo'
 import { decodeSegment, normalizeSlug } from '@/lib/text/slug'
 
 const PAGE_SIZE = 12
@@ -29,11 +31,15 @@ async function load(props: Props) {
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { category, page } = await load(props)
+  const [{ category, page }, settings] = await Promise.all([load(props), getSiteSettings()])
   const canonical = categoryHref(category.slug)!
   return {
     title: page > 1 ? `${category.name} — പേജ് ${page}` : category.name,
-    description: category.description ?? undefined,
+    // Most categories have no description of their own: name the section and the site instead.
+    description:
+      describe(category.meta?.description) ??
+      describe(category.description) ??
+      describe(`${category.name} — ${settings.siteName}. ${settings.tagline ?? ''}`),
     alternates: { canonical: page > 1 ? `${canonical}?page=${page}` : canonical },
   }
 }

@@ -13,6 +13,16 @@ describe('siteUrlFrom', () => {
     expect(siteUrlFrom(undefined, 'production')).toBe(PRODUCTION_URL)
     expect(siteUrlFrom('', 'production')).toBe(PRODUCTION_URL)
     expect(siteUrlFrom('   ', 'production')).toBe(PRODUCTION_URL)
+  })
+  it('is the real domain when a production build was given a local address', () => {
+    expect(siteUrlFrom('http://localhost:3444', 'production')).toBe(PRODUCTION_URL)
+    expect(siteUrlFrom('http://127.0.0.1:3000', 'production')).toBe(PRODUCTION_URL)
+    expect(siteUrlFrom('http://0.0.0.0:8080', 'production')).toBe(PRODUCTION_URL)
+    expect(siteUrlFrom('http://[::1]:3444', 'production')).toBe(PRODUCTION_URL)
+    expect(siteUrlFrom('not a url', 'production')).toBe(PRODUCTION_URL)
+  })
+  it('drops a trailing slash so paths join cleanly', () => {
+    expect(siteUrlFrom('https://islammalayalam.net/', 'production')).toBe(PRODUCTION_URL)
     expect(PRODUCTION_URL).toBe('https://islammalayalam.net')
   })
   it('is the local address in development and tests', () => {

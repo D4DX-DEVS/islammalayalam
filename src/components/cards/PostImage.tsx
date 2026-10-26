@@ -92,7 +92,7 @@ export function PostImage({
       <div className={frame}>
         <LazyImage
           src={src.url}
-          alt={media.alt ?? ''}
+          alt={media.alt || post.title || ''}
           fill
           sizes={sizes}
           // Not `preload`: several cards above the fold differ by screen size, so a preload tag would
@@ -113,7 +113,7 @@ export function PostImage({
       <div className={frame}>
         <LazyImage
           src={`https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`}
-          alt=""
+          alt={post.title ?? ''}
           fill
           sizes={sizes}
           unoptimized

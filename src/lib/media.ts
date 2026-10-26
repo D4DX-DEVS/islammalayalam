@@ -17,3 +17,14 @@ export function mediaSrc(url: string | null | undefined): string | null {
     return null
   }
 }
+
+/** Shown in link previews when a page has no picture of its own (1200×800, the site's placeholder art). */
+export const DEFAULT_SHARE_IMAGE = '/brand/post-placeholder.jpg'
+
+type ShareMedia = { url?: string | null; sizes?: { large?: { url?: string | null } | null } | null }
+
+/** The picture for link previews: the image's large size, else its original, else the site's default. */
+export function shareImage(media: unknown): string {
+  const m = media && typeof media === 'object' ? (media as ShareMedia) : null
+  return mediaSrc(m?.sizes?.large?.url) ?? mediaSrc(m?.url) ?? DEFAULT_SHARE_IMAGE
+}

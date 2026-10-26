@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { Container } from '@/components/ui/Container'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -6,6 +7,8 @@ import { TopBanner } from '@/components/layout/TopBanner'
 import { CategoryStrip } from '@/components/home/CategoryStrip'
 import { getAds, getHomepage, getSiteSettings } from '@/features/site/queries'
 import { placeTopAds } from '@/lib/top-ads'
+
+export const metadata: Metadata = { alternates: { canonical: '/' } }
 
 export default async function HomePage() {
   const [home, settings, ads] = await Promise.all([getHomepage(), getSiteSettings(), getAds()])

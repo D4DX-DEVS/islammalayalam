@@ -16,6 +16,9 @@ import { categoryHref, postHref } from '@/lib/links'
 import { trackAudio } from '@/lib/audio'
 import { ebookPdf } from '@/lib/ebook'
 import { SITE_URL } from '@/lib/site-url'
+import { shareImage } from '@/lib/media'
+import { absolute, articleJsonLd, breadcrumbJsonLd, postDescription } from '@/lib/seo'
+import { JsonLd } from '@/components/seo/JsonLd'
 import type { Author, Category, Media, Post } from '@/payload-types'
 
 const asObj = <T,>(v: unknown): T | null => (v && typeof v === 'object' ? (v as T) : null)
@@ -104,8 +107,27 @@ export function PostArticle({ post, siteName }: { post: Post; siteName: string }
   // The excerpt of most imported posts is just the start of the body: show it only when it adds something.
   const excerpt = post.excerpt && !bodyStartsWith(post.content, post.excerpt) ? post.excerpt : null
 
+  const hasImage = Boolean(asObj<Media>(post.featuredImage))
+  const structured = [
+    articleJsonLd({
+      path: postHref(post.postNumber) ?? '/',
+      title: post.title,
+      description: postDescription(post),
+      images: hasImage ? [absolute(shareImage(post.featuredImage))] : undefined,
+      publishedAt: post.publishedAt,
+      updatedAt: post.updatedAt,
+      author: author ? { name: author.name, path: `/author/${author.slug}/` } : null,
+      section: category?.name,
+    }),
+    breadcrumbJsonLd([
+      ...(category ? [{ name: category.name, path: categoryHref(category.slug) }] : []),
+      { name: post.title },
+    ]),
+  ]
+
   return (
     <>
+      <JsonLd data={structured} />
       <Breadcrumbs
         items={[
           ...(category ? [{ label: category.name, href: categoryHref(category.slug) }] : []),

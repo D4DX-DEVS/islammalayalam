@@ -6,9 +6,9 @@ import { KbPage } from '@/components/page/KbPage'
 import { PostalLibraryPage } from '@/components/postal/PostalLibraryPage'
 import { resolvePath } from '@/features/routing/resolve'
 import { getSiteSettings } from '@/features/site/queries'
-import { mediaSrc } from '@/lib/media'
+import { shareImage } from '@/lib/media'
+import { postDescription } from '@/lib/seo'
 import { pageHref, postHref } from '@/lib/links'
-import type { Media } from '@/payload-types'
 
 type Props = { params: Promise<{ path: string[] }> }
 
@@ -16,29 +16,49 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const res = await resolvePath((await params).path)
   if (res.kind === 'post') {
     const { post } = res
+    const settings = await getSiteSettings()
+    const href = postHref(post.postNumber)
+    const description = postDescription(post)
     const image =
       (post.meta?.image && typeof post.meta.image === 'object' ? post.meta.image : null) ??
-      (typeof post.featuredImage === 'object' ? post.featuredImage : null)
-    const ogImage = mediaSrc(
-      (image as Media | null)?.sizes?.large?.url ?? (image as Media | null)?.url,
-    )
+      (typeof post.featuredImage === 'object' ? post.featuredImage : null) ??
+      settings.defaultOgImage
     return {
       title: post.meta?.title || post.title,
-      description: post.meta?.description || post.excerpt || undefined,
-      alternates: { canonical: postHref(post.postNumber) },
+      description,
+      alternates: { canonical: href },
       openGraph: {
         type: 'article',
+        siteName: settings.siteName,
+        locale: 'ml_IN',
+        url: href ?? undefined,
         title: post.title,
+        description,
         publishedTime: post.publishedAt ?? undefined,
-        images: ogImage ? [ogImage] : undefined,
+        modifiedTime: post.updatedAt,
+        images: [shareImage(image)],
       },
     }
   }
   if (res.kind === 'page') {
+    const settings = await getSiteSettings()
+    const href = pageHref(res.page.path)
+    const description = postDescription(res.page)
     return {
       title: res.page.meta?.title || res.page.title,
-      description: res.page.meta?.description || undefined,
-      alternates: { canonical: pageHref(res.page.path) },
+      description,
+      alternates: { canonical: href },
+      openGraph: {
+        type: 'website',
+        siteName: settings.siteName,
+        locale: 'ml_IN',
+        url: href ?? undefined,
+        title: res.page.title,
+        description,
+        images: [
+          shareImage(res.page.meta?.image || res.page.featuredImage || settings.defaultOgImage),
+        ],
+      },
     }
   }
   return {}
