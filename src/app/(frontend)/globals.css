@@ -519,3 +519,106 @@
     animation-delay: var(--enter-delay, 0ms);
   }
 }
+
+/*
+ * Mobile app chrome (below xl): the bottom dock (MobileDock) and things that float above it
+ * (.dock-float: back to top, install banner, update toast). <html data-scroll="down"> (ScrollDirection)
+ * slides the header up and the dock down, Facebook-style; scrolling up brings both back.
+ */
+:root {
+  --dock-h: 0px;
+  --dock-space: 0px;
+}
+@media (width < 80rem) {
+  :root {
+    --dock-space: calc(3.75rem + env(safe-area-inset-bottom));
+    --dock-h: var(--dock-space);
+  }
+  :root[data-scroll='down'] {
+    --dock-h: 0px;
+  }
+  body {
+    padding-bottom: var(--dock-space);
+  }
+  .mobile-header,
+  .mobile-dock {
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
+  }
+  :root[data-scroll='down'] .mobile-header {
+    transform: translateY(-100%);
+  }
+  :root[data-scroll='down'] .mobile-dock {
+    transform: translateY(100%);
+  }
+}
+.dock-float {
+  bottom: calc(var(--dock-h) + 1rem);
+  transition-property: bottom, transform, opacity;
+  transition-duration: 0.3s;
+}
+@media (width >= 40rem) {
+  .dock-float {
+    bottom: calc(var(--dock-h) + 1.25rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-header,
+  .mobile-dock,
+  .dock-float {
+    transition: none;
+  }
+}
+
+/* MobileNav drawer: slides in from the start edge over a fading backdrop. */
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes drawer-fade {
+  from {
+    opacity: 0;
+  }
+}
+.drawer-in {
+  animation: drawer-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.drawer-fade {
+  animation: drawer-fade 0.25s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawer-in,
+  .drawer-fade {
+    animation: none;
+  }
+}
+
+/* MobileNav drill-down: a section page slides in from the end edge; Back slides the parent in from the start. */
+@keyframes drill-in {
+  from {
+    opacity: 0;
+    transform: translateX(2.5rem);
+  }
+}
+@keyframes drill-back {
+  from {
+    opacity: 0;
+    transform: translateX(-2.5rem);
+  }
+}
+.drill-in {
+  animation: drill-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.drill-back {
+  animation: drill-back 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .drill-in,
+  .drill-back {
+    animation: none;
+  }
+}

@@ -5,9 +5,12 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Islam Malayalam — ഇസ്‌ലാം മലയാളം',
     short_name: 'Islam Malayalam',
+    id: '/',
+    scope: '/',
     description: 'Official Website of Dialogue Centre Kerala',
     start_url: '/',
     display: 'standalone',
+    categories: ['education', 'books', 'lifestyle'],
     background_color: '#ffffff',
     theme_color: '#1a6bc4',
     lang: 'ml',

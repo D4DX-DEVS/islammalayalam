@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowUp } from 'lucide-react'
 
-/** Round "back to top" button, shown after scrolling one screen. */
+/** Round "back to top" button, shown after scrolling one screen; rides above the mobile dock. */
 export function BackToTop() {
   const [visible, setVisible] = useState(false)
 
@@ -18,7 +18,7 @@ export function BackToTop() {
     <a
       href="#top"
       aria-label="Back to top"
-      className={`fixed bottom-4 end-4 z-40 sm:bottom-5 sm:end-5 bg-brand-gradient inline-flex size-12 items-center justify-center rounded-full text-white shadow-lift ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 ${visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'}`}
+      className={`dock-float fixed end-4 z-40 sm:end-5 bg-brand-gradient inline-flex size-12 items-center justify-center rounded-full text-white shadow-lift ring-1 ring-white/20 transition duration-300 hover:-translate-y-0.5 ${visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'}`}
       tabIndex={visible ? 0 : -1}
     >
       <ArrowUp className="size-5" aria-hidden="true" />

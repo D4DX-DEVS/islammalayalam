@@ -50,7 +50,7 @@ const labelsOf = (groups: ReturnType<typeof buildNavGroups>, key: string) =>
   groups.find((g) => g.key === key)?.items.map((i) => i.label)
 
 describe('buildNavGroups', () => {
-  it('groups by job, in a fixed order, with Migration tools last', () => {
+  it('groups by job, in a fixed order, with Advanced tools last', () => {
     const groups = buildNavGroups({ entities: everything })
     expect(groups.map((g) => g.label)).toEqual([
       'Write',
@@ -58,7 +58,7 @@ describe('buildNavGroups', () => {
       'Inbox',
       'Site',
       'Team',
-      'Migration tools',
+      'Advanced tools',
     ])
     expect(labelsOf(groups, 'write')).toEqual(['Posts', 'Pages', 'Categories', 'Authors'])
     expect(labelsOf(groups, 'library')).toEqual(['Audio', 'Videos', 'Insights', 'Files and images'])
@@ -71,14 +71,14 @@ describe('buildNavGroups', () => {
       'Site settings',
       'Ads banners',
     ])
-    expect(labelsOf(groups, 'team')).toEqual([
-      'Users',
+    expect(labelsOf(groups, 'team')).toEqual(['Users', 'Two-step login'])
+    expect(groups.at(-1)?.tucked).toBe(true)
+    expect(labelsOf(groups, 'advanced')).toEqual([
       'Redirects',
       'Activity log',
-      'Two-step login',
+      'Migration runs',
+      'Migration issues',
     ])
-    expect(groups.at(-1)?.tucked).toBe(true)
-    expect(labelsOf(groups, 'migration')).toEqual(['Migration runs', 'Migration issues'])
   })
 
   it('points each item at its admin path', () => {
@@ -115,7 +115,7 @@ describe('buildNavGroups', () => {
     expect(groups.find((g) => g.key === 'write')!.items[0]?.badge).toBe(9)
   })
 
-  it('keeps an entity the layout does not know about, under More, before Migration tools', () => {
+  it('keeps an entity the layout does not know about, under More, before Advanced tools', () => {
     const groups = buildNavGroups({ entities: [...everything, col('newsletters', 'Newsletters')] })
     expect(groups.at(-2)?.label).toBe('More')
     expect(labelsOf(groups, 'more')).toEqual(['Newsletters'])

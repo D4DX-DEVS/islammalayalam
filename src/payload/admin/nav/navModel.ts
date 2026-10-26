@@ -1,7 +1,7 @@
 /**
  * The admin sidebar's structure as plain data (no Payload, no React), so the grouping, the order and
  * the permission rules are unit-tested. Jobs, not data types: Write, Library, Inbox, Site, Team, with
- * the rarely used Migration tools tucked away at the bottom.
+ * the rarely used Advanced tools (redirects, activity log, migration) tucked away at the bottom.
  *
  * Item names come from each collection's / global's own label (set next to its config), so the
  * sidebar, the list headings and the breadcrumbs always use the same word. Only entries that are not
@@ -41,7 +41,7 @@ export const NAV_GROUP_LABELS = {
   inbox: 'Inbox',
   site: 'Site',
   team: 'Team',
-  migration: 'Migration',
+  advanced: 'Advanced',
 } as const
 
 const LAYOUT: LayoutGroup[] = [
@@ -90,16 +90,17 @@ const LAYOUT: LayoutGroup[] = [
     label: NAV_GROUP_LABELS.team,
     items: [
       { kind: 'collection', slug: 'users' },
-      { kind: 'collection', slug: 'redirects' },
-      { kind: 'collection', slug: 'audit-logs' },
       { kind: 'global', slug: 'security-settings' },
     ],
   },
   {
-    key: 'migration',
-    label: 'Migration tools',
+    // Technical lists an everyday editor never needs: folded behind one row.
+    key: 'advanced',
+    label: 'Advanced tools',
     tucked: true,
     items: [
+      { kind: 'collection', slug: 'redirects' },
+      { kind: 'collection', slug: 'audit-logs' },
       { kind: 'collection', slug: 'migration-runs' },
       { kind: 'collection', slug: 'migration-issues' },
     ],
