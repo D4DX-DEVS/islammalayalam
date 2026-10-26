@@ -15,6 +15,9 @@ import { fontVariables } from '@/lib/fonts'
 import { toNavTree } from '@/lib/nav'
 import { whatsappLink } from '@/lib/whatsapp'
 import { SITE_URL } from '@/lib/site-url'
+import { absolute, siteJsonLd } from '@/lib/seo'
+import { shareImage } from '@/lib/media'
+import { JsonLd } from '@/components/seo/JsonLd'
 import { parseTheme, THEME_COOKIE } from '@/lib/theme'
 import './globals.css'
 
@@ -27,7 +30,14 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(SITE_URL),
     title: { default: name, template: `%s | ${settings.siteName}` },
     description: settings.tagline ?? undefined,
-    openGraph: { siteName: settings.siteName, locale: 'ml_IN', type: 'website' },
+    // Pages that set their own openGraph replace this whole object, so they repeat siteName/locale.
+    openGraph: {
+      siteName: settings.siteName,
+      locale: 'ml_IN',
+      type: 'website',
+      images: [shareImage(settings.defaultOgImage)],
+    },
+    twitter: { card: 'summary_large_image' },
     formatDetection: { telephone: false },
     // The site's own emblem (public/brand). app/favicon.ico and app/manifest.ts add their own tags.
     icons: {
@@ -66,6 +76,16 @@ export default async function FrontendLayout({ children }: { children: ReactNode
     // Light by default, whatever the OS prefers; dark only when the visitor picked it (theme cookie).
     <html lang="ml" data-theme={theme ?? 'light'} className={fontVariables}>
       <body id="top" className="flex min-h-dvh flex-col">
+        <JsonLd
+          data={siteJsonLd({
+            name: settings.siteName,
+            alternateName: settings.siteNameMl,
+            description: settings.tagline,
+            logo: absolute('/brand/icon-512.png'),
+            profiles: Object.values(settings.social ?? {}),
+            email: settings.contact?.email,
+          })}
+        />
         <a
           href="#main"
           className="sr-only z-50 rounded-full bg-brand px-4 py-2 font-semibold text-white focus:not-sr-only focus:fixed focus:start-3 focus:top-3"
