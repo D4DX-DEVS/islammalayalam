@@ -9,13 +9,15 @@ import { SearchForm, SEARCH_PATH } from '@/components/layout/SearchForm'
 import { SocialLinks } from '@/components/layout/SocialLinks'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { mediaSrc } from '@/lib/media'
-import type { NavItem } from '@/lib/nav'
+import type { NavGroup, NavItem } from '@/lib/nav'
 import type { Media, SiteSetting } from '@/payload-types'
 
 interface SiteHeaderProps {
   settings: SiteSetting
   topLinks: NavItem[]
   navItems: NavItem[]
+  /** The footer's link columns: on phones they live in the menu drawer instead of the footer. */
+  quickLinks?: NavGroup[]
   showSocial: boolean
   pathname: string
   /** Show the AI button in the search boxes. */
@@ -62,6 +64,7 @@ export function SiteHeader({
   settings,
   topLinks,
   navItems,
+  quickLinks = [],
   showSocial,
   pathname,
   aiSearch = false,
@@ -71,6 +74,7 @@ export function SiteHeader({
       <Container className="flex h-16 items-center gap-1.5 sm:h-[4.5rem] xl:h-20 xl:gap-4">
         <MobileNav
           items={navItems}
+          quickLinks={quickLinks}
           pathname={pathname}
           topLinks={topLinks}
           social={settings.social}

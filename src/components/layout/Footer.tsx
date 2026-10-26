@@ -52,7 +52,8 @@ function ColumnBody({ column, settings }: { column: Column; settings: SiteSettin
  * Royal-blue footer: brand, tagline and social buttons on the left, the editor-defined columns
  * (Quick Links · Quick Contact …) beside them and a bottom bar: copyright (without the site name the
  * logo already shows), bottom links and "Powered by". Back to top is the floating BackToTop button.
- * Phones get a compact version: centred brand row, link chips, tighter spacing.
+ * Phones get a compact version: centred brand row, tighter spacing, and the link columns moved
+ * into the menu drawer.
  */
 export function Footer({ footer, settings }: { footer: FooterData; settings: SiteSetting }) {
   const bottom = (footer.bottomLinks ?? [])
@@ -64,11 +65,11 @@ export function Footer({ footer, settings }: { footer: FooterData; settings: Sit
   const rest = columns.filter((c) => c.kind !== 'social')
   return (
     <footer className="bg-night relative isolate mt-8 overflow-hidden text-white lg:mt-10">
-      <Container className="grid gap-8 py-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,2fr)] lg:gap-16 lg:py-16">
+      <Container className="grid gap-6 py-6 sm:gap-8 sm:py-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,2fr)] lg:gap-16 lg:py-16">
         <div
           data-reveal="fade"
           suppressHydrationWarning
-          className="flex flex-col items-center space-y-4 text-center lg:items-start lg:space-y-5 lg:text-start"
+          className="flex flex-col items-center space-y-3 text-center sm:space-y-4 lg:items-start lg:space-y-5 lg:text-start"
         >
           <Brand settings={settings} tone="light" />
           {settings.tagline ? (
@@ -89,6 +90,8 @@ export function Footer({ footer, settings }: { footer: FooterData; settings: Sit
               aria-labelledby={`footer-col-${i}`}
               data-reveal="up"
               suppressHydrationWarning
+              // Below `xl` the link columns are in the menu drawer (MobileNav), keeping the footer short.
+              className={column.kind === 'links' ? 'hidden xl:block' : undefined}
             >
               <h2 id={`footer-col-${i}`} className="mb-3 text-base font-bold text-white lg:mb-5">
                 {column.title}

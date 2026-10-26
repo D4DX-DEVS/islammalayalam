@@ -12,6 +12,9 @@ export type NavItem = {
   highlight: boolean
   children: NavItem[]
 }
+/** A titled list of links (a footer "Quick Links" column), shown as its own group in the mobile menu. */
+export type NavGroup = { id: string; title: string; links: NavItem[] }
+
 type MenuNode = {
   id?: string | null
   link: CmsLink
@@ -27,6 +30,18 @@ export function toNavTree(nodes: MenuNode[] | null | undefined, prefix = 'n'): N
     return [
       { id, ...link, highlight: Boolean(node.highlight), children: toNavTree(node.children, id) },
     ]
+  })
+}
+
+/** The footer's link columns as menu groups; columns with no usable link are left out. */
+export function toNavGroups(
+  columns: { id?: string | null; kind: string; title: string; links?: MenuNode[] | null }[] | null | undefined,
+): NavGroup[] {
+  return (columns ?? []).flatMap((column, i) => {
+    if (column.kind !== 'links') return []
+    const id = `group-${column.id ?? i}`
+    const links = toNavTree(column.links, id)
+    return links.length ? [{ id, title: column.title, links }] : []
   })
 }
 

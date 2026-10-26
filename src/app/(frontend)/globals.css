@@ -317,7 +317,7 @@
       linear-gradient(135deg, var(--royal-1) 0%, var(--royal-2) 52%, var(--royal-3) 100%);
   }
 
-  /* Slim white-on-glass range slider (audio progress and volume); --fill is set from the value. */
+  /* Slim brand-coloured range slider (audio progress and volume); --fill is set from the value. */
   .range-player {
     -webkit-appearance: none;
     appearance: none;
@@ -330,17 +330,17 @@
   .range-player::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 9999px;
-    background: linear-gradient(to right, #fff var(--fill), rgb(255 255 255 / 0.25) var(--fill));
+    background: linear-gradient(to right, var(--color-brand) var(--fill), var(--color-line) var(--fill));
   }
   .range-player::-moz-range-track {
     height: 4px;
     border-radius: 9999px;
-    background: rgb(255 255 255 / 0.25);
+    background: var(--color-line);
   }
   .range-player::-moz-range-progress {
     height: 4px;
     border-radius: 9999px;
-    background: #fff;
+    background: var(--color-brand);
   }
   .range-player::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -348,7 +348,7 @@
     height: 12px;
     margin-top: -4px;
     border-radius: 9999px;
-    background: #fff;
+    background: var(--color-brand);
     box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
     opacity: 0;
     transition: opacity 0.15s;
@@ -358,7 +358,7 @@
     height: 12px;
     border: 0;
     border-radius: 9999px;
-    background: #fff;
+    background: var(--color-brand);
     box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
     opacity: 0;
     transition: opacity 0.15s;

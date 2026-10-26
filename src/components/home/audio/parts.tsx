@@ -36,7 +36,7 @@ export type PlayerShow = {
   url: string
 }
 
-export const SPOTIFY_GREEN = '#1ed760'
+export const SPOTIFY_GREEN = 'var(--color-brand)'
 
 export const isPlayable = (t: PlayerTrack | undefined): boolean =>
   t?.kind === 'file' || t?.kind === 'spotify'
@@ -47,7 +47,7 @@ export function SpotifyMark({ className }: { className: string }) {
 }
 
 export const CONTROL =
-  'inline-flex items-center justify-center rounded-full text-white/75 transition hover:text-white active:scale-95 disabled:pointer-events-none disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70'
+  'inline-flex items-center justify-center rounded-full text-muted transition hover:text-ink active:scale-95 disabled:pointer-events-none disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
 export const ICON_BTN = `${CONTROL} size-9`
 
 export function Equalizer() {

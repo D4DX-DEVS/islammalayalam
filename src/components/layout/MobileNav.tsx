@@ -8,12 +8,14 @@ import { ArrowLeft, ChevronRight, House, Menu, X } from 'lucide-react'
 import { SmartLink } from '@/components/ui/SmartLink'
 import { SearchForm } from '@/components/layout/SearchForm'
 import { SocialLinks } from '@/components/layout/SocialLinks'
-import { isActive, isCurrent, type NavItem } from '@/lib/nav'
+import { isActive, isCurrent, type NavGroup, type NavItem } from '@/lib/nav'
 import { OPEN_MOBILE_NAV } from '@/lib/pwa'
 import type { SiteSetting } from '@/payload-types'
 
 interface MobileNavProps {
   items: NavItem[]
+  /** The footer's link columns (Quick Links …), listed under the menu; the footer hides them on phones. */
+  quickLinks?: NavGroup[]
   pathname: string
   topLinks: NavItem[]
   social: SiteSetting['social']
@@ -72,6 +74,7 @@ function Row({
  */
 export function MobileNav({
   items,
+  quickLinks = [],
   pathname: initialPath,
   topLinks,
   social,
@@ -237,6 +240,29 @@ export function MobileNav({
                         </li>
                       ))}
                     </ul>
+                    {section
+                      ? null
+                      : quickLinks.map((group) => (
+                          <section
+                            key={group.id}
+                            aria-labelledby={`menu-${group.id}`}
+                            className="mt-2 border-t border-line/60 pt-2"
+                          >
+                            <h2
+                              id={`menu-${group.id}`}
+                              className="px-3 pb-1 pt-1.5 text-xs font-semibold uppercase tracking-wider text-muted"
+                            >
+                              {group.title}
+                            </h2>
+                            <ul className="space-y-0.5">
+                              {group.links.map((item) => (
+                                <li key={item.id}>
+                                  <Row item={item} pathname={pathname} onOpen={push} />
+                                </li>
+                              ))}
+                            </ul>
+                          </section>
+                        ))}
                   </div>
                 </nav>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line/60 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">

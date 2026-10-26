@@ -164,14 +164,16 @@ export async function AudioShelf({
   // The card is the same size however many episodes there are and whatever is playing: the list
   // scrolls inside it. Beside another section (half) it is as tall as that section's column, never
   // shorter than CARD_MIN, and its content is taken out of the flow, so it cannot stretch the row.
+  // On its own page, below `lg`, the card grows with its list and the page itself scrolls: a list
+  // scrolling inside a screen-high card fights the page's scroll on a phone.
   const size = fullList
-    ? 'mx-auto h-[min(52rem,calc(100dvh-9rem))] min-h-[30rem] max-w-4xl'
+    ? 'mx-auto max-w-4xl lg:h-[min(52rem,calc(100dvh-9rem))] lg:min-h-[30rem]'
     : half
       ? 'h-[40rem] lg:h-auto lg:min-h-[36rem]'
       : 'mx-auto h-[40rem] max-w-4xl sm:h-[36rem]'
   return (
     <section
-      className={`relative isolate overflow-hidden rounded-card bg-[#121212] shadow-card ring-1 ring-white/10 ${size}`}
+      className={`relative isolate overflow-hidden rounded-card bg-card shadow-card ring-1 ring-line/60 ${size}`}
     >
       <div className={half && !fullList ? 'h-full lg:absolute lg:inset-0' : 'h-full'}>
         <AudioPlayer
@@ -184,7 +186,7 @@ export async function AudioShelf({
               href={more}
               external={moreExternal}
               moreLabel={moreLabel}
-              tone="dark"
+              tone="default"
               icon={Headphones}
               className="!mb-0"
             />
