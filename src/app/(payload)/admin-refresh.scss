@@ -144,6 +144,52 @@
   }
 }
 
+// Phones: the whole screen, not a card floating on paper. Navy fills it from the top (logo, welcome
+// text) and the form sits on a white sheet with rounded top corners that runs to the bottom edge.
+@media (max-width: 560px) {
+  .template-minimal.login {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .login .template-minimal__wrap {
+    max-width: none;
+    min-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    grid-template-rows: auto auto 1fr;
+
+    &::before,
+    &::after {
+      grid-row: 1 / -1;
+    }
+
+    .login__brand {
+      padding-top: calc(3rem + env(safe-area-inset-top));
+    }
+
+    // The skyline back at the foot of the navy, standing on the sheet's edge, under the text: room
+    // for its full height (600 × 220, drawn at the screen's width).
+    .im-login-intro {
+      padding-block: 1.75rem calc(100vw * 220 / 600);
+      background: url('/brand/login-skyline.svg') bottom center / 100% auto no-repeat;
+    }
+
+    form {
+      align-self: stretch;
+      padding: 2rem 1.5rem calc(2rem + env(safe-area-inset-bottom));
+      border-radius: 1.75rem 1.75rem 0 0;
+      background: var(--im-surface);
+      box-shadow: 0 -16px 40px -20px rgb(0 0 0 / 0.5);
+    }
+  }
+
+  .im-login-intro__title {
+    font-size: 1.75rem;
+  }
+}
+
 // On the navy panel the logo is the white-lettered one, in both themes.
 .login .login__brand {
   .im-logo {

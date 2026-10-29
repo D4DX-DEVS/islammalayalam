@@ -8,6 +8,7 @@ import { LayoutDashboard, LayoutGrid, Newspaper, Plus } from 'lucide-react'
 import { activeTab, type DockTarget } from '@/lib/dock'
 import { nextScrollDir, type ScrollDir } from '@/lib/pwa'
 import { InboxBell } from '../header/InboxBell'
+import { useMenuSheet } from './useMenuSheet'
 
 type Tab = DockTarget & { key: 'home' | 'posts' | 'new' | 'inbox' | 'menu' }
 
@@ -16,7 +17,8 @@ type Tab = DockTarget & { key: 'home' | 'posts' | 'new' | 'inbox' | 'menu' }
  * side menu becomes a drawer): Home · Posts · New post · Inbox · Menu, the last opening that drawer.
  * The same floating glass bar as the site's MobileDock, with a highlight that slides to the current
  * section. Only offers what this role may open, and steps aside while scrolling down, while typing
- * and while the menu is open (admin-dock.scss).
+ * and while the menu is open (admin-dock.scss). On phones that menu is a bottom sheet over a scrim
+ * (admin-menu-sheet.scss): a tap outside it, Escape or a pull down closes it (useMenuSheet).
  */
 export function AdminDock() {
   const { config } = useConfig()
@@ -45,6 +47,8 @@ export function AdminDock() {
       if (frame) window.cancelAnimationFrame(frame)
     }
   }, [])
+
+  useMenuSheet(navOpen, setNavOpen)
 
   const hidden = scroll === 'down' || navOpen
   // Bottom-pinned Payload bars (bulk actions, toasts) follow it: admin-dock.scss, --im-dock-h.

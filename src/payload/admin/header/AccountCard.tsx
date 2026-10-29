@@ -238,7 +238,8 @@ export function AccountCard({
       ) : null}
 
       <footer className="im-account__foot">
-        <a className="im-account__signout" href={logoutHref}>
+        {/* data-im-sign-out: AdminEnhancements asks for confirmation first. */}
+        <a className="im-account__signout" href={logoutHref} data-im-sign-out="">
           <LogOut aria-hidden="true" />
           Sign out
         </a>

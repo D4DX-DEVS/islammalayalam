@@ -2,14 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { useModal } from '@payloadcms/ui'
-import { Globe, LockOpen, UserRound } from 'lucide-react'
+import { Globe, LockOpen, LogOut, UserRound } from 'lucide-react'
 import { ConfirmDialog } from './ConfirmDialog'
 import { confirmRuleFor, GUARDED_BUTTONS } from './confirmRules'
 import type { ConfirmRule } from './confirmRules'
 import { PasswordToggles } from './PasswordToggles'
 
 const MODAL_SLUG = 'im-confirm-action'
+const SIGN_OUT_SLUG = 'im-confirm-sign-out'
+/** Sign-out links (the menu's and the account card's) carry this; the guard asks first. */
+const SIGN_OUT_LINK = 'a[data-im-sign-out]'
 
 const ICONS: Record<ConfirmRule['kind'], ReactNode> = {
   publish: <Globe />,
@@ -19,7 +23,8 @@ const ICONS: Record<ConfirmRule['kind'], ReactNode> = {
 
 /**
  * Admin-wide provider (admin.components.providers). Asks for confirmation before Publish / Save /
- * Force Unlock on the screens listed in confirmRules, and adds eye toggles to password fields.
+ * Force Unlock on the screens listed in confirmRules and before signing out, and adds eye toggles
+ * to password fields.
  *
  * The guard listens in the capture phase on window, i.e. before React's own handler, so it also
  * catches Ctrl/Cmd+S (Payload's hotkey just clicks the same button). After "Confirm" the original
@@ -27,13 +32,23 @@ const ICONS: Record<ConfirmRule['kind'], ReactNode> = {
  */
 export function AdminEnhancements({ children }: { children?: ReactNode }) {
   const { openModal, closeModal } = useModal()
+  const router = useRouter()
   const [rule, setRule] = useState<ConfirmRule | null>(null)
+  const [signOutHref, setSignOutHref] = useState<string | null>(null)
   const pending = useRef<HTMLButtonElement | null>(null)
   const bypass = useRef(false)
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
       if (bypass.current || !(event.target instanceof Element)) return
+      const signOut = event.target.closest<HTMLAnchorElement>(SIGN_OUT_LINK)
+      if (signOut) {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+        setSignOutHref(signOut.getAttribute('href'))
+        openModal(SIGN_OUT_SLUG)
+        return
+      }
       const button = event.target.closest<HTMLButtonElement>(GUARDED_BUTTONS)
       if (!button || button.disabled) return
       const next = confirmRuleFor(button.id, window.location.pathname, button.textContent ?? '')
@@ -77,6 +92,17 @@ export function AdminEnhancements({ children }: { children?: ReactNode }) {
           onCancel={() => {
             pending.current = null
           }}
+        />
+      )}
+      {signOutHref && (
+        <ConfirmDialog
+          modalSlug={SIGN_OUT_SLUG}
+          icon={<LogOut />}
+          heading="Sign out?"
+          body="You will need your password to sign back in. Anything you have not saved on this screen will be lost."
+          confirmLabel="Sign out"
+          confirmingLabel="Signing out…"
+          onConfirm={() => router.push(signOutHref)}
         />
       )}
     </>

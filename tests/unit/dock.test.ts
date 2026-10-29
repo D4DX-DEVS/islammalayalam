@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { activeTab, type DockTarget } from '@/lib/dock'
+import { activeTab, sheetDismissed, type DockTarget } from '@/lib/dock'
 
 const SITE: DockTarget[] = [
   { href: '/', exact: true },
@@ -46,5 +46,22 @@ describe('activeTab', () => {
 
   it('never lights tabs without a destination', () => {
     expect(activeTab('/anything', [{}, {}])).toBe(-1)
+  })
+})
+
+describe('sheetDismissed', () => {
+  it('closes after a long enough pull down', () => {
+    expect(sheetDismissed(120, 600)).toBe(true)
+    expect(sheetDismissed(60, 600)).toBe(false)
+  })
+
+  it('closes on a quick flick even when short', () => {
+    expect(sheetDismissed(40, 60)).toBe(true)
+    expect(sheetDismissed(10, 10)).toBe(false)
+  })
+
+  it('never closes on an upward or zero-time pull', () => {
+    expect(sheetDismissed(-200, 100)).toBe(false)
+    expect(sheetDismissed(50, 0)).toBe(false)
   })
 })
