@@ -4,6 +4,8 @@ import { mediaSrc } from '@/lib/media'
 import { collectionTag } from '@/payload/hooks/revalidate'
 import { cached, POPULATE, PUBLIC } from '@/features/shared'
 import { istDayKey } from '@/lib/quote'
+import type { InstagramPost } from '@/lib/instagram'
+import { getInstagramPosts } from '@/features/instagram/queries'
 import { showableQuotes } from './pick'
 import type { Media, Quote } from '@/payload-types'
 
@@ -78,7 +80,29 @@ const loadShowable = cached(
   },
 )
 
-const showable = () => loadShowable(istDayKey(new Date()) ?? '')
+/**
+ * An Instagram picture post as an insight: the picture is the poster and the caption its text.
+ * It opens (and is shared as) the post on Instagram; posts are mostly 4:5 portraits.
+ */
+const fromInstagram = (post: InstagramPost): QuoteView => ({
+  id: `ig-${post.id}`,
+  text: post.caption,
+  source: '',
+  showOn: null,
+  date: post.timestamp,
+  poster: { src: post.image, width: 1080, height: 1350, alt: post.caption },
+  href: post.permalink,
+})
+
+/**
+ * What Insights show: the newest picture posts of the site's Instagram account when it is connected
+ * (INSTAGRAM_ACCESS_TOKEN), else the insights added in the admin, in the admin's order.
+ */
+async function showable(): Promise<QuoteView[]> {
+  const posts = await getInstagramPosts()
+  if (posts.length) return posts.map(fromInstagram)
+  return loadShowable(istDayKey(new Date()) ?? '')
+}
 
 /** The first `count` quotes in the admin's order: the homepage Insights slider. */
 export async function getLatestQuotes(count: number): Promise<QuoteView[]> {

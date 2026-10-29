@@ -10,7 +10,7 @@ import { simpleEditor } from '@/payload/editor'
  */
 export const Authors: CollectionConfig = {
   slug: 'authors',
-  admin: { useAsTitle: 'name', group: 'Write' },
+  admin: { useAsTitle: 'name', group: 'Content' },
   custom: totpPublicRead,
   access: { read: publicOrStaff, create: isEditor, update: isEditor, delete: isAdmin },
   hooks: contentHooks(),

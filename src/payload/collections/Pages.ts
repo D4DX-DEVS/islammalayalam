@@ -23,7 +23,7 @@ export const Pages: CollectionConfig = {
   slug: 'pages',
   admin: {
     useAsTitle: 'title',
-    group: 'Write',
+    group: 'Content',
     defaultColumns: ['title', 'path', 'kind', 'updatedAt'],
     listSearchableFields: ['title', 'path'],
   },

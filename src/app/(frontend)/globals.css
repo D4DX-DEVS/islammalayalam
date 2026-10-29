@@ -330,7 +330,11 @@
   .range-player::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 9999px;
-    background: linear-gradient(to right, var(--color-brand) var(--fill), var(--color-line) var(--fill));
+    background: linear-gradient(
+      to right,
+      var(--color-brand) var(--fill),
+      var(--color-line) var(--fill)
+    );
   }
   .range-player::-moz-range-track {
     height: 4px;
@@ -447,6 +451,12 @@
  *   `--enter-delay`; it always ends visible, so it needs no script.
  * Both are off for visitors who prefer reduced motion.
  */
+/* 'right' starts 1.5rem past its place: without this the waiting cards widen the page, and phones
+   zoom the whole site out to fit them (the bottom dock then sits below the screen edge). `clip`,
+   unlike `hidden`, makes no scroll container, so sticky elements inside keep working. */
+main {
+  overflow-x: clip;
+}
 @media (prefers-reduced-motion: no-preference) {
   .reveal-ready [data-reveal]:not([data-revealed], [data-reveal-done]) {
     opacity: 0;
@@ -524,6 +534,7 @@
  * Mobile app chrome (below xl): the bottom dock (MobileDock) and things that float above it
  * (.dock-float: back to top, install banner, update toast). <html data-scroll="down"> (ScrollDirection)
  * slides the header up and the dock down, Facebook-style; scrolling up brings both back.
+ * The dock is a 4rem bar floating 0.625rem above the bottom edge (and the iPhone home indicator).
  */
 :root {
   --dock-h: 0px;
@@ -531,7 +542,7 @@
 }
 @media (width < 80rem) {
   :root {
-    --dock-space: calc(3.75rem + env(safe-area-inset-bottom));
+    --dock-space: calc(4.625rem + env(safe-area-inset-bottom));
     --dock-h: var(--dock-space);
   }
   :root[data-scroll='down'] {
@@ -562,11 +573,48 @@
     bottom: calc(var(--dock-h) + 1.25rem);
   }
 }
+
+/* MobileDock: glass bar and WhatsApp button; .dock-pill slides under tab --i of --count. */
+.dock-bar {
+  box-shadow:
+    0 1px 2px rgb(13 52 120 / 0.08),
+    0 14px 32px -14px rgb(13 52 120 / 0.45);
+}
+:root[data-theme='dark'] .dock-bar {
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.4),
+    0 16px 36px -14px rgb(0 0 0 / 0.9);
+}
+.dock-pill {
+  position: absolute;
+  inset-block: 0.375rem;
+  inset-inline-start: 0.375rem;
+  width: calc((100% - 0.75rem) / var(--count));
+  border-radius: 9999px;
+  transform: translateX(calc(var(--i) * 100%));
+  transition: transform 0.45s cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+.dock-item[aria-current='page'] svg {
+  animation: dock-pop 0.4s cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+@keyframes dock-pop {
+  from {
+    transform: scale(0.8);
+  }
+  to {
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mobile-header,
   .mobile-dock,
-  .dock-float {
+  .dock-float,
+  .dock-pill {
     transition: none;
+  }
+  .dock-item[aria-current='page'] svg {
+    animation: none;
   }
 }
 

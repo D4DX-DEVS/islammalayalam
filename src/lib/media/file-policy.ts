@@ -97,3 +97,18 @@ export function safeFilename(name: string, kind: AllowedKind): string {
       .slice(0, 80) || 'file'
   return `${slug}.${KIND_INFO[kind].ext}`
 }
+
+/**
+ * Stand-in description for an image uploaded without one: the file name in words
+ * ("top-banner_quran.png" → "Top banner quran"). Better than refusing the upload (which left editors
+ * unable to add a banner); the Files list shows it, so it can be replaced with a real description.
+ */
+export function altFromFilename(filename: string | null | undefined): string {
+  const words = (filename ?? '')
+    .replace(/\.[a-z0-9]{2,5}$/i, '')
+    .replace(/[-_.+]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 300)
+  return words ? words[0]!.toUpperCase() + words.slice(1) : 'Image'
+}

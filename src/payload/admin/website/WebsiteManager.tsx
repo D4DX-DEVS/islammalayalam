@@ -3,14 +3,15 @@ import type { ReactNode } from 'react'
 import {
   BookOpen,
   Bot,
-  Calendar,
   CircleHelp,
   CirclePlay,
   Clapperboard,
   Smartphone,
   ExternalLink,
+  Eye,
   GalleryHorizontal,
   Globe,
+  HelpCircle,
   Grid2x2,
   Headphones,
   Image as ImageIcon,
@@ -34,10 +35,11 @@ import {
   Upload,
   type LucideIcon,
 } from 'lucide-react'
-import type { ContentCard, SectionIcon, SectionRow, WebsiteData } from '../websiteModel'
+import type { SectionIcon, SectionRow, WebsiteData } from '../websiteModel'
 import { MoveSection } from './MoveSection'
+import { SiteTabs } from '../site/SiteTabs'
 
-/** The "Website manager" screen: presentation only (data: websiteData.ts, styles: admin-website.scss). */
+/** The Site area's Overview tab (the "Website manager"): presentation only (data: websiteData.ts, styles: admin-website.scss). */
 
 const ICONS: Record<SectionIcon, LucideIcon> = {
   header: PanelTop,
@@ -70,11 +72,14 @@ function Group({
   title,
   hint,
   icon: Icon,
+  actions,
   children,
 }: {
   title: string
   hint: string
   icon: LucideIcon
+  /** Buttons for the whole group (e.g. one "Edit homepage" instead of one per row). */
+  actions?: ReactNode
   children: ReactNode
 }) {
   return (
@@ -86,6 +91,7 @@ function Group({
           </span>
           {title}
         </h2>
+        {actions ? <div className="im-site__group-actions">{actions}</div> : null}
       </header>
       <p className="im-site__hint">{hint}</p>
       {children}
@@ -93,8 +99,23 @@ function Group({
   )
 }
 
-function Row({ row, number }: { row: SectionRow; number?: number }) {
+/**
+ * One section. `shared` is what the group header already links to (the Homepage editor, the
+ * homepage itself): rows pointing there leave out their own Edit / View, so twenty rows do not
+ * repeat the same two buttons.
+ */
+function Row({
+  row,
+  number,
+  shared,
+}: {
+  row: SectionRow
+  number?: number
+  shared?: { editHref: string | null; viewHref: string }
+}) {
   const Icon = ICONS[row.icon]
+  const ownEdit = !shared || row.editHref !== shared.editHref
+  const ownView = !shared || row.viewHref !== shared.viewHref
   return (
     <li className={`im-site__row${row.hidden ? ' is-hidden' : ''}`}>
       {number ? (
@@ -116,7 +137,7 @@ function Row({ row, number }: { row: SectionRow; number?: number }) {
       </div>
       <div className="im-site__actions">
         {row.move ? <MoveSection {...row.move} label={row.label} /> : null}
-        {row.editHref ? (
+        {!ownEdit ? null : row.editHref ? (
           <Link href={row.editHref} className="im-dash__btn im-dash__btn--primary im-site__btn">
             <Pencil aria-hidden="true" />
             {row.editLabel}
@@ -130,34 +151,17 @@ function Row({ row, number }: { row: SectionRow; number?: number }) {
             {row.moreLabel ?? 'Edit'}
           </Link>
         ) : null}
-        <a
-          href={row.viewHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="im-site__view"
-          aria-label={`${row.label} — open on the live site`}
-        >
-          View
-          <ExternalLink aria-hidden="true" />
-        </a>
-      </div>
-    </li>
-  )
-}
-
-function ContentTile({ card }: { card: ContentCard }) {
-  return (
-    <li className="im-site__tile">
-      <p className="im-site__tile-count">{card.count ?? '—'}</p>
-      <p className="im-site__tile-label">{card.label}</p>
-      <p className="im-site__tile-hint">{card.hint}</p>
-      <div className="im-site__tile-actions">
-        <Link href={card.listHref}>Open</Link>
-        {card.createHref ? (
-          <Link href={card.createHref} className="im-site__tile-new">
-            <Plus aria-hidden="true" />
-            New
-          </Link>
+        {ownView ? (
+          <a
+            href={row.viewHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="im-site__view"
+            aria-label={`${row.label} — open on the live site`}
+          >
+            View
+            <ExternalLink aria-hidden="true" />
+          </a>
         ) : null}
       </div>
     </li>
@@ -192,15 +196,17 @@ export function WebsiteManager({
   mediaCreateHref: string | null
   postCreateHref: string | null
 }) {
+  const homeLinks = { editHref: data.homepageEditHref, viewHref: '/' }
   return (
     <div className="im-dash im-dash--view im-site">
+      <SiteTabs description="" />
       <header className="im-dash__hero">
         <div>
-          <p className="im-dash__eyebrow">Website manager</p>
-          <h1 className="im-dash__title">Every page and section of the site</h1>
+          <p className="im-dash__eyebrow">Site</p>
+          <h1 className="im-dash__title">Your website at a glance</h1>
           <p className="im-dash__lead">
-            Listed in the order visitors see them. <strong>Edit</strong> opens the screen that
-            changes it; <strong>View</strong> shows it live. Every change is saved to the audit log.
+            Every section in the order visitors see it. Use the tabs above to change the homepage,
+            menu, footer, banners or contact details.
           </p>
         </div>
         <div className="im-dash__hero-actions">
@@ -226,7 +232,31 @@ export function WebsiteManager({
       <Group
         icon={LayoutTemplate}
         title="Homepage"
-        hint="Sections from top to bottom. Use the arrows to move a section up or down (the top ads banner too); add, retitle or hide sections in the Homepage editor — “Hide this section” keeps the settings but stops showing it."
+        hint="Top to bottom. The arrows move a section up or down; add, rename or hide sections in the editor."
+        actions={
+          <>
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="im-dash__btn im-site__btn"
+            >
+              <Eye aria-hidden="true" />
+              View
+            </a>
+            {data.homepageEditHref ? (
+              <Link
+                href={data.homepageEditHref}
+                className="im-dash__btn im-dash__btn--primary im-site__btn"
+              >
+                <Pencil aria-hidden="true" />
+                Edit homepage
+              </Link>
+            ) : (
+              <span className="im-site__locked">View only</span>
+            )}
+          </>
+        }
       >
         {data.homepageEmpty ? (
           <p className="im-dash__empty">
@@ -235,7 +265,7 @@ export function WebsiteManager({
         ) : null}
         <ol className="im-site__flow">
           {data.homepage.map((row, i) => (
-            <Row key={row.key} row={row} number={i + 1} />
+            <Row key={row.key} row={row} number={i + 1} shared={homeLinks} />
           ))}
         </ol>
         {data.sidebar.length ? (
@@ -243,7 +273,7 @@ export function WebsiteManager({
             <h3 className="im-site__subhead">Sidebar</h3>
             <ul className="im-site__flow">
               {data.sidebar.map((row) => (
-                <Row key={row.key} row={row} />
+                <Row key={row.key} row={row} shared={homeLinks} />
               ))}
             </ul>
           </>
@@ -262,19 +292,11 @@ export function WebsiteManager({
         </ul>
       </Group>
 
-      <Group
-        icon={Newspaper}
-        title="Content"
-        hint="Everything the sections above are filled from. Open a list to edit, or create something new."
-      >
-        <ul className="im-site__tiles">
-          {data.content.map((card) => (
-            <ContentTile key={card.key} card={card} />
-          ))}
-        </ul>
-      </Group>
-
-      <Group icon={Calendar} title="Uploading" hint="What can be added, and where.">
+      <details className="im-dash__panel im-site__help">
+        <summary>
+          <HelpCircle aria-hidden="true" />
+          How to add pictures, PDFs, videos and audio
+        </summary>
         <dl className="im-site__guide">
           {UPLOAD_GUIDE.map((g) => (
             <div key={g.kind}>
@@ -283,7 +305,7 @@ export function WebsiteManager({
             </div>
           ))}
         </dl>
-      </Group>
+      </details>
     </div>
   )
 }

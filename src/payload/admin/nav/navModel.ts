@@ -1,11 +1,11 @@
 /**
  * The admin sidebar's structure as plain data (no Payload, no React), so the grouping, the order and
- * the permission rules are unit-tested. Jobs, not data types: Write, Library, Inbox, Site, Team, with
- * the rarely used Advanced tools (redirects, activity log, migration) tucked away at the bottom.
+ * the permission rules are unit-tested. Jobs, not data types: Content, Media, Communication, Site, Team, with
+ * the rarely used Advanced tools (redirects, activity log) tucked away at the bottom.
  *
  * Item names come from each collection's / global's own label (set next to its config), so the
  * sidebar, the list headings and the breadcrumbs always use the same word. Only entries that are not
- * a collection or global (Website manager) are named here.
+ * a collection or global (Site) are named here.
  */
 export type NavKind = 'collection' | 'global' | 'view'
 
@@ -21,6 +21,8 @@ export type NavItemData = {
   badge?: number
   slug: string
   kind: NavKind
+  /** Other paths that light this row up (the Site row covers every Site tab). */
+  also?: string[]
 }
 
 export type NavGroupData = {
@@ -31,18 +33,47 @@ export type NavGroupData = {
   tucked?: boolean
 }
 
-type LayoutEntry = { kind: NavKind; slug: string; label?: string }
+type LayoutEntry = {
+  kind: NavKind
+  slug: string
+  label?: string
+  /** Entities reached through this row's own page (as tabs) instead of their own sidebar rows. */
+  covers?: ReadonlyArray<Pick<NavEntity, 'kind' | 'slug'>>
+}
 type LayoutGroup = { key: string; label: string; tucked?: boolean; items: LayoutEntry[] }
 
 /** Group names also live on each config's `admin.group`; tests keep the two in step. */
 export const NAV_GROUP_LABELS = {
-  write: 'Write',
-  library: 'Library',
-  inbox: 'Inbox',
+  write: 'Content',
+  library: 'Media',
+  inbox: 'Communication',
   site: 'Site',
   team: 'Team',
   advanced: 'Advanced',
 } as const
+
+/**
+ * The Site area: an overview page plus one tab per site-wide setting, in this order. The sidebar
+ * shows a single "Site" row for all of them (SiteTabs renders the tabs on each page).
+ */
+export const SITE_GLOBALS = [
+  'homepage',
+  'header',
+  'footer',
+  'ads-banners',
+  'site-settings',
+] as const
+
+/**
+ * Kept out of the sidebar on purpose (their pages still open by link): quick audio / video entries
+ * (added as Video or Audio posts now) and the one-off WordPress migration records.
+ */
+export const NAV_OMITTED: ReadonlyArray<Pick<NavEntity, 'kind' | 'slug'>> = [
+  { kind: 'collection', slug: 'audios' },
+  { kind: 'collection', slug: 'videos' },
+  { kind: 'collection', slug: 'migration-runs' },
+  { kind: 'collection', slug: 'migration-issues' },
+]
 
 const LAYOUT: LayoutGroup[] = [
   {
@@ -59,8 +90,6 @@ const LAYOUT: LayoutGroup[] = [
     key: 'library',
     label: NAV_GROUP_LABELS.library,
     items: [
-      { kind: 'collection', slug: 'audios' },
-      { kind: 'collection', slug: 'videos' },
       { kind: 'collection', slug: 'quotes' },
       { kind: 'collection', slug: 'media' },
     ],
@@ -77,17 +106,18 @@ const LAYOUT: LayoutGroup[] = [
     key: 'site',
     label: NAV_GROUP_LABELS.site,
     items: [
-      { kind: 'view', slug: 'website', label: 'Website manager' },
-      { kind: 'global', slug: 'homepage' },
-      { kind: 'global', slug: 'header' },
-      { kind: 'global', slug: 'footer' },
-      { kind: 'global', slug: 'site-settings' },
-      { kind: 'global', slug: 'ads-banners' },
+      {
+        kind: 'view',
+        slug: 'website',
+        label: 'Site',
+        covers: SITE_GLOBALS.map((slug) => ({ kind: 'global' as const, slug })),
+      },
     ],
   },
   {
     key: 'team',
     label: NAV_GROUP_LABELS.team,
+    // Who may sign in, and how: the two-step login switch is a sign-in rule, not part of the site.
     items: [
       { kind: 'collection', slug: 'users' },
       { kind: 'global', slug: 'security-settings' },
@@ -101,8 +131,6 @@ const LAYOUT: LayoutGroup[] = [
     items: [
       { kind: 'collection', slug: 'redirects' },
       { kind: 'collection', slug: 'audit-logs' },
-      { kind: 'collection', slug: 'migration-runs' },
-      { kind: 'collection', slug: 'migration-issues' },
     ],
   },
 ]
@@ -126,7 +154,7 @@ export type NavBadges = Partial<Record<string, number>>
  * Groups the entities the signed-in user may open, in the sidebar's fixed order. `entities` must
  * already be filtered by visibility and read permission (AdminNav does that). Anything not listed
  * in the layout (a collection added later) still shows, under "More", so nothing silently vanishes.
- * `view` entries (Website manager) show when `websiteManager` is true.
+ * `view` entries (Site) show when `websiteManager` is true.
  */
 export function buildNavGroups({
   entities,
@@ -138,19 +166,29 @@ export function buildNavGroups({
   websiteManager?: boolean
 }): NavGroupData[] {
   const bySlug = new Map(entities.map((e) => [keyOf(e.kind, e.slug), e]))
-  const used = new Set<string>()
+  // Covered (Site tabs) and omitted entities never fall through to "More".
+  const used = new Set<string>([
+    ...NAV_OMITTED.map((e) => keyOf(e.kind, e.slug)),
+    ...LAYOUT.flatMap((g) => g.items.flatMap((i) => i.covers ?? [])).map((e) =>
+      keyOf(e.kind, e.slug),
+    ),
+  ])
 
   const toItem = (entry: LayoutEntry): NavItemData | null => {
     const key = keyOf(entry.kind, entry.slug)
     if (entry.kind === 'view') {
       if (!websiteManager) return null
       used.add(key)
+      const also = (entry.covers ?? [])
+        .filter((c) => bySlug.has(keyOf(c.kind, c.slug)))
+        .map((c) => navHref(c.kind, c.slug))
       return {
         key,
         slug: entry.slug,
         kind: entry.kind,
         href: navHref(entry.kind, entry.slug),
         label: entry.label ?? entry.slug,
+        ...(also.length ? { also } : {}),
       }
     }
     const entity = bySlug.get(key)

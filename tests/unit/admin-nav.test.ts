@@ -53,32 +53,44 @@ describe('buildNavGroups', () => {
   it('groups by job, in a fixed order, with Advanced tools last', () => {
     const groups = buildNavGroups({ entities: everything })
     expect(groups.map((g) => g.label)).toEqual([
-      'Write',
-      'Library',
-      'Inbox',
+      'Content',
+      'Media',
+      'Communication',
       'Site',
       'Team',
       'Advanced tools',
     ])
     expect(labelsOf(groups, 'write')).toEqual(['Posts', 'Pages', 'Categories', 'Authors'])
-    expect(labelsOf(groups, 'library')).toEqual(['Audio', 'Videos', 'Insights', 'Files and images'])
+    expect(labelsOf(groups, 'library')).toEqual(['Insights', 'Files and images'])
     expect(labelsOf(groups, 'inbox')).toEqual(['Messages', 'Postal library'])
-    expect(labelsOf(groups, 'site')).toEqual([
-      'Website manager',
-      'Homepage',
-      'Header and menu',
-      'Footer',
-      'Site settings',
-      'Ads banners',
-    ])
+    // One row for the whole Site area; its tabs (the site globals) never get rows of their own.
+    expect(labelsOf(groups, 'site')).toEqual(['Site'])
+    // Two-step login is a sign-in rule: it sits with the users, not among the Site tabs.
     expect(labelsOf(groups, 'team')).toEqual(['Users', 'Two-step login'])
     expect(groups.at(-1)?.tucked).toBe(true)
-    expect(labelsOf(groups, 'advanced')).toEqual([
-      'Redirects',
-      'Activity log',
-      'Migration runs',
-      'Migration issues',
+    expect(labelsOf(groups, 'advanced')).toEqual(['Redirects', 'Activity log'])
+  })
+
+  it('lights the Site row on every Site tab the user can open', () => {
+    const site = buildNavGroups({ entities: everything }).find((g) => g.key === 'site')!.items[0]
+    expect(site?.href).toBe('/website')
+    expect(site?.also).toEqual([
+      '/globals/homepage',
+      '/globals/header',
+      '/globals/footer',
+      '/globals/ads-banners',
+      '/globals/site-settings',
     ])
+    const limited = buildNavGroups({ entities: [glob('homepage', 'Homepage')] })
+    expect(limited.find((g) => g.key === 'site')!.items[0]?.also).toEqual(['/globals/homepage'])
+  })
+
+  it('leaves quick audio/video and the migration records out, without a More group', () => {
+    const groups = buildNavGroups({ entities: everything })
+    const slugs = groups.flatMap((g) => g.items.map((i) => i.slug))
+    for (const slug of ['audios', 'videos', 'migration-runs', 'migration-issues'])
+      expect(slugs).not.toContain(slug)
+    expect(groups.some((g) => g.key === 'more')).toBe(false)
   })
 
   it('points each item at its admin path', () => {
@@ -86,7 +98,7 @@ describe('buildNavGroups', () => {
     const href = (key: string) => items.find((i) => i.key === key)?.href
     expect(href('collection:posts')).toBe('/collections/posts')
     expect(href('collection:quotes')).toBe('/collections/quotes')
-    expect(href('global:header')).toBe('/globals/header')
+    expect(href('collection:media')).toBe('/collections/media')
     expect(href('view:website')).toBe('/website')
   })
 
@@ -94,7 +106,7 @@ describe('buildNavGroups', () => {
     const author: NavEntity[] = [col('posts', 'Posts'), col('media', 'Files and images')]
     const groups = buildNavGroups({ entities: author })
     expect(groups.map((g) => g.key)).toEqual(['write', 'library', 'site'])
-    expect(labelsOf(groups, 'site')).toEqual(['Website manager'])
+    expect(labelsOf(groups, 'site')).toEqual(['Site'])
     expect(groups.some((g) => g.tucked)).toBe(false)
   })
 

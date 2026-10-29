@@ -12,13 +12,13 @@ import {
   File,
   FileText,
   FolderTree,
+  Globe,
   Headphones,
   History,
   Images,
   Inbox,
   Megaphone,
   LayoutDashboard,
-  LayoutPanelTop,
   LayoutTemplate,
   LogOut,
   Newspaper,
@@ -61,7 +61,7 @@ const ICONS: Record<string, LucideIcon> = {
   homepage: LayoutTemplate,
   footer: PanelBottom,
   'ads-banners': Megaphone,
-  website: LayoutPanelTop,
+  website: Globe,
 }
 
 const ROLE_LABEL: Record<string, string> = { admin: 'Admin', editor: 'Editor', author: 'Author' }
@@ -132,7 +132,8 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
     if (current) {
       const box = scroller.getBoundingClientRect()
       const item = current.getBoundingClientRect()
-      if (item.top < box.top || item.bottom > box.bottom) current.scrollIntoView({ block: 'center' })
+      if (item.top < box.top || item.bottom > box.bottom)
+        current.scrollIntoView({ block: 'center' })
     }
     const save = () => writeScroll(scroller.scrollTop)
     scroller.addEventListener('scroll', save, { passive: true })
@@ -153,6 +154,8 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
 
   const hrefFor = (item: NavItemData) => `${admin}${item.href}`
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+  const itemActive = (item: NavItemData) =>
+    [item.href, ...(item.also ?? [])].some((path) => isActive(`${admin}${path}`))
 
   const renderItem = (item: NavItemData) => {
     const href = hrefFor(item)
@@ -163,7 +166,7 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
           href={href}
           prefetch={false}
           className="im-nav__link"
-          aria-current={isActive(href) ? 'page' : undefined}
+          aria-current={itemActive(item) ? 'page' : undefined}
         >
           <Icon aria-hidden="true" />
           <span className="im-nav__text">{item.label}</span>
@@ -197,7 +200,7 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
             aria-current={pathname === admin ? 'page' : undefined}
           >
             <LayoutDashboard aria-hidden="true" />
-            <span className="im-nav__text">Today</span>
+            <span className="im-nav__text">Dashboard</span>
           </Link>
         </li>
       </ul>

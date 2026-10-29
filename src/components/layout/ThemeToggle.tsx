@@ -1,7 +1,7 @@
 'use client'
 
 import { Moon, Sun } from 'lucide-react'
-import { THEME_COOKIE, type Theme } from '@/lib/theme'
+import { THEME_COLOR, THEME_COOKIE, type Theme } from '@/lib/theme'
 
 /** Light/dark switch. Icons swap via CSS (`dark:`), so server and client markup always match. */
 export function ThemeToggle({ className = '' }: { className?: string }) {
@@ -14,6 +14,8 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
         : 'light'
     const next: Theme = current === 'dark' ? 'light' : 'dark'
     root.dataset.theme = next
+    // The status bar follows (the server sets it from the cookie on the next page load).
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[next])
     const secure = location.protocol === 'https:' ? '; secure' : ''
     document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax${secure}`
   }

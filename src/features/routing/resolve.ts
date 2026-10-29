@@ -7,7 +7,7 @@ import {
 } from '@/features/posts/queries'
 import { getPageByPath } from '@/features/pages/queries'
 import { getPreviewUser } from '@/features/preview/session'
-import { findRedirect } from '@/features/redirects/queries'
+import { countRedirectHit, findRedirect } from '@/features/redirects/queries'
 import { encodePath, normalizePath, toPath } from '@/lib/text/slug'
 import type { Page, Post } from '@/payload-types'
 
@@ -36,12 +36,17 @@ function redirectTarget(to: string): string | null {
   return /^https:\/\/[^\s]+$/.test(to) ? to : null
 }
 
-/** Where a canonical path (/a/b/) permanently moved to, per the redirects table (null: no move). */
+/**
+ * Where a canonical path (/a/b/) permanently moved to, per the redirects table (null: no move).
+ * Call only when the redirect is served: it counts a hit on the row.
+ */
 export async function movedTo(canonical: string): Promise<string | null> {
   const hit = await findRedirect(canonical)
   if (!hit || hit.code === '410' || !hit.to) return null
   const to = redirectTarget(hit.to)
-  return to && to !== encodePath(canonical) ? to : null
+  if (!to || to === encodePath(canonical)) return null
+  countRedirectHit(hit.id)
+  return to
 }
 
 /**
@@ -72,7 +77,10 @@ async function resolveCanonicalPath(segments: string[], canonical: string): Prom
   if (direct) return direct
 
   const hit = await findRedirect(canonical)
-  if (hit?.code === '410') return { kind: 'gone' }
+  if (hit?.code === '410') {
+    countRedirectHit(hit.id)
+    return { kind: 'gone' }
+  }
   const to = hit ? await movedTo(canonical) : null
   if (to) return { kind: 'redirect', to }
 

@@ -10,7 +10,7 @@ export const Categories: CollectionConfig = {
   slug: 'categories',
   admin: {
     useAsTitle: 'name',
-    group: 'Write',
+    group: 'Content',
     defaultColumns: ['name', 'slug', 'order', 'updatedAt'],
   },
   custom: totpPublicRead,

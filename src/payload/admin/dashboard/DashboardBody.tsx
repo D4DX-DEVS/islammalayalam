@@ -7,32 +7,24 @@ import {
   ChevronRight,
   ExternalLink,
   FilePen,
-  FileText,
   Flag,
-  ImagePlus,
-  ImageUp,
+  FolderTree,
+  Globe,
   Inbox,
-  LayoutPanelTop,
-  LayoutTemplate,
-  Megaphone,
-  Menu,
-  Newspaper,
-  PanelBottom,
   Plus,
-  Settings,
-  TrendingUp,
+  Quote,
   type LucideIcon,
 } from 'lucide-react'
 import type { DashboardData } from '../dashboardData'
-import { QuickAdd } from './QuickAdd'
 import { RecentPosts } from './RecentPosts'
 import { ActivityRows, Panel, StatusStrip, type StatusRow } from './parts'
 import { buildQueue, queueSummary, type QueueIcon } from './queue'
 import { Pulse } from './charts'
+import { ReportCharts, ReportStats } from './stats'
 
 /**
- * The home screen ("Today"): what needs you, a place to start something new, the state of the site,
- * and recent work. Totals and charts live on Reports. Presentational (no data access), so it can
+ * The Dashboard (admin home): site totals, what needs you, the state of the site, recent work and
+ * the charts. Presentational (no data access), so it can
  * render from DashboardView's real data or from mock data. Every link and panel is filtered by the
  * signed-in user's permissions.
  */
@@ -47,15 +39,19 @@ type BodyProps = {
   data: DashboardData
   /** Admin route prefix, e.g. "/admin". */
   admin: string
-  /** Payload's REST route (the quick-add form saves through it), e.g. "/api". */
-  api?: string
   permissions?: SanitizedPermissions
   user: DashboardUser
   now?: Date
 }
 
-type Tile = { label: string; href: string; icon: LucideIcon; allowed: boolean }
-type Chip = { label: string; hint: string; href: string; icon: LucideIcon; allowed: boolean }
+type Chip = {
+  label: string
+  hint: string
+  href: string
+  icon: LucideIcon
+  tone: 'blue' | 'violet' | 'green' | 'rose'
+  allowed: boolean
+}
 
 const TZ = 'Asia/Kolkata'
 
@@ -75,14 +71,7 @@ function greeting(now: Date): string {
   return 'Good evening'
 }
 
-export function DashboardBody({
-  data,
-  admin,
-  api = '/api',
-  permissions,
-  user,
-  now = new Date(),
-}: BodyProps) {
+export function DashboardBody({ data, admin, permissions, user, now = new Date() }: BodyProps) {
   const col = (slug: string) => `${admin}/collections/${slug}`
   const can = permissions ?? {}
   const canRead = (slug: string) => Boolean(can.collections?.[slug]?.read)
@@ -104,76 +93,32 @@ export function DashboardBody({
     now: now.getTime(),
   })
 
-  const tiles: Tile[] = [
-    {
-      label: 'Post',
-      href: `${posts}/create`,
-      icon: Newspaper,
-      allowed: Boolean(can.collections?.posts?.create),
-    },
-    {
-      label: 'Page',
-      href: `${col('pages')}/create`,
-      icon: FileText,
-      allowed: Boolean(can.collections?.pages?.create),
-    },
-    {
-      label: 'Insight',
-      href: `${col('quotes')}/create`,
-      icon: ImagePlus,
-      allowed: Boolean(can.collections?.quotes?.create),
-    },
-    {
-      label: 'Upload files',
-      href: `${col('media')}/create`,
-      icon: ImageUp,
-      allowed: Boolean(can.collections?.media?.create),
-    },
-  ]
-  const allowedTiles = tiles.filter((t) => t.allowed)
-
+  // Quick actions, each in its own colour. New post and the media library are already one click away
+  // (the header button and the "Files and images" total), so they are not repeated here.
   const chips: Chip[] = [
     {
-      label: 'Website manager',
-      hint: 'Every page and section, with where to edit it',
+      label: 'Manage categories',
+      hint: 'Order, icons and visibility of topics',
+      href: col('categories'),
+      icon: FolderTree,
+      tone: 'violet',
+      allowed: Boolean(can.collections?.categories?.update),
+    },
+    {
+      label: 'Insights',
+      hint: 'Posters and thoughts for the homepage slider',
+      href: col('quotes'),
+      icon: Quote,
+      tone: 'green',
+      allowed: Boolean(can.collections?.quotes?.update),
+    },
+    {
+      label: 'Site',
+      hint: 'Homepage, menus, banners and settings',
       href: `${admin}/website`,
-      icon: LayoutPanelTop,
+      icon: Globe,
+      tone: 'rose',
       allowed: Boolean(can.globals?.homepage?.update || can.globals?.header?.update),
-    },
-    {
-      label: 'Homepage',
-      hint: 'Sections and featured posts',
-      href: `${admin}/globals/homepage`,
-      icon: LayoutTemplate,
-      allowed: Boolean(can.globals?.homepage?.update),
-    },
-    {
-      label: 'Header and menu',
-      hint: 'Top navigation',
-      href: `${admin}/globals/header`,
-      icon: Menu,
-      allowed: Boolean(can.globals?.header?.update),
-    },
-    {
-      label: 'Footer',
-      hint: 'Links and contact details',
-      href: `${admin}/globals/footer`,
-      icon: PanelBottom,
-      allowed: Boolean(can.globals?.footer?.update),
-    },
-    {
-      label: 'Site settings',
-      hint: 'Name, social links, search defaults',
-      href: `${admin}/globals/site-settings`,
-      icon: Settings,
-      allowed: Boolean(can.globals?.['site-settings']?.update),
-    },
-    {
-      label: 'Ads banners',
-      hint: 'Top and bottom banners, with their links',
-      href: `${admin}/globals/ads-banners`,
-      icon: Megaphone,
-      allowed: Boolean(can.globals?.['ads-banners']?.update),
     },
   ]
   const allowedChips = chips.filter((c) => c.allowed)
@@ -219,14 +164,11 @@ export function DashboardBody({
   ]
 
   const canSeeActivity = canRead('audit-logs')
-  const canQuickAdd = Boolean(can.collections?.audios?.create || can.collections?.videos?.create)
-  const hasCreate = Boolean(allowedTiles.length || canQuickAdd)
-  // The board has one column per block that this person can use, so no column is ever left empty.
-  const boardColumns = 1 + Number(hasCreate) + Number(allowedChips.length > 0)
 
   return (
     <div className="im-dash im-dash--view">
       <header className="im-dash__hero">
+        <Skyline />
         <div>
           <h1 className="im-dash__title">
             {greeting(now)}, {name}
@@ -238,7 +180,7 @@ export function DashboardBody({
         <div className="im-dash__hero-actions">
           <a href="/" target="_blank" rel="noopener noreferrer" className="im-dash__btn">
             <ExternalLink aria-hidden="true" />
-            View site
+            View website
           </a>
           {can.collections?.posts?.create ? (
             <Link href={`${posts}/create`} className="im-dash__btn im-dash__btn--primary">
@@ -249,121 +191,104 @@ export function DashboardBody({
         </div>
       </header>
 
-      <div className={`im-board im-board--${boardColumns}`}>
-        <div className="im-board__col">
-          <Panel
-            title="Needs you today"
-            className="im-dash__panel--flush im-dash__panel--queue"
-            aside={
-              queue.length ? (
-                <span className="im-dash__count">
-                  {queue.length} {queue.length === 1 ? 'item' : 'items'}
-                </span>
-              ) : null
-            }
-          >
-            {queue.length ? (
-              <ul className="im-queue">
-                {queue.map((row) => {
-                  const Icon = QUEUE_ICON[row.icon]
-                  return (
-                    <li key={row.key}>
-                      <Link href={row.href} className="im-queue__row">
-                        <span className={`im-queue__icon im-queue__icon--${row.tone}`}>
-                          <Icon aria-hidden="true" />
-                        </span>
-                        <span className="im-queue__text">
-                          <span className="im-queue__title">{row.title}</span>
-                          <span className="im-queue__detail">{row.detail}</span>
-                        </span>
-                        <span className="im-queue__count" aria-hidden="true">
-                          {row.count.toLocaleString('en-IN')}
-                        </span>
-                        <span className="im-queue__action">
-                          {row.action}
-                          <ArrowRight aria-hidden="true" />
-                        </span>
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            ) : (
-              <p className="im-dash__clear">
-                <CheckCircle2 aria-hidden="true" />
-                You are all caught up. Nothing is waiting for review, no new messages and no postal
-                library requests.
-              </p>
-            )}
-          </Panel>
-          <Panel title="Site status" className="im-board__grow">
-            <StatusStrip rows={statusRows} />
-          </Panel>
-        </div>
+      <ReportStats data={data} admin={admin} permissions={permissions} />
 
-        {hasCreate ? (
-          <div className="im-board__col">
-            <Panel title="Create" className="im-dash__create im-board__grow">
-              {allowedTiles.length ? (
-                <ul className="im-tiles">
-                  {allowedTiles.map(({ label, href, icon: Icon }) => (
-                    <li key={href}>
-                      <Link href={href} className="im-tiles__tile">
-                        <Icon aria-hidden="true" />
-                        {label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-              {canQuickAdd ? (
-                <QuickAdd
-                  api={api}
-                  adminBase={admin}
-                  audio={Boolean(can.collections?.audios?.create)}
-                  video={Boolean(can.collections?.videos?.create)}
-                />
-              ) : null}
-            </Panel>
-          </div>
-        ) : null}
-
-        {allowedChips.length ? (
-          <div className="im-board__col im-board__col--wide">
-            <Panel title="Edit the site" className="im-board__grow">
-              <ul className="im-links">
-                {allowedChips.map(({ label, hint, href, icon: Icon }) => (
-                  <li key={href}>
-                    <Link href={href} className="im-links__row">
-                      <span className="im-links__icon">
+      <div className="im-board">
+        <Panel
+          title="Needs your attention"
+          className="im-dash__panel--flush im-dash__panel--queue"
+          aside={
+            queue.length ? (
+              <span className="im-dash__count">
+                {queue.length} {queue.length === 1 ? 'item' : 'items'}
+              </span>
+            ) : null
+          }
+        >
+          {queue.length ? (
+            <ul className="im-queue">
+              {queue.map((row) => {
+                const Icon = QUEUE_ICON[row.icon]
+                return (
+                  <li key={row.key}>
+                    <Link href={row.href} className="im-queue__row">
+                      <span className={`im-queue__icon im-queue__icon--${row.tone}`}>
                         <Icon aria-hidden="true" />
                       </span>
-                      <span className="im-links__text">
-                        <span className="im-links__label">{label}</span>
-                        <span className="im-links__hint">{hint}</span>
+                      <span className="im-queue__text">
+                        <span className="im-queue__title">{row.title}</span>
+                        <span className="im-queue__detail">{row.detail}</span>
                       </span>
-                      <ChevronRight className="im-links__go" aria-hidden="true" />
+                      <span className="im-queue__count" aria-hidden="true">
+                        {row.count.toLocaleString('en-IN')}
+                      </span>
+                      <span className="im-queue__action">
+                        {row.action}
+                        <ArrowRight aria-hidden="true" />
+                      </span>
                     </Link>
                   </li>
-                ))}
-              </ul>
-            </Panel>
-          </div>
+                )
+              })}
+            </ul>
+          ) : (
+            <p className="im-dash__clear">
+              <CheckCircle2 aria-hidden="true" />
+              You are all caught up. Nothing is waiting for review, no new messages and no postal
+              library requests.
+            </p>
+          )}
+        </Panel>
+
+        {allowedChips.length ? (
+          <Panel title="Quick actions">
+            <ul className="im-links">
+              {allowedChips.map(({ label, hint, href, icon: Icon, tone }) => (
+                <li key={href}>
+                  <Link href={href} className={`im-links__row im-links__row--${tone}`}>
+                    <span className="im-links__icon">
+                      <Icon aria-hidden="true" />
+                    </span>
+                    <span className="im-links__text">
+                      <span className="im-links__label">{label}</span>
+                      <span className="im-links__hint">{hint}</span>
+                    </span>
+                    <ChevronRight className="im-links__go" aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Panel>
         ) : null}
       </div>
+
+      <Panel title="Site status" className="im-dash__panel--status">
+        <StatusStrip rows={statusRows} />
+      </Panel>
+
+      <ReportCharts data={data} admin={admin} permissions={permissions} />
 
       <div className="im-dash__grid">
         <Panel
           title="Recent posts"
-          className="im-dash__panel--flush"
+          className="im-dash__panel--flush im-dash__panel--posts"
           href={posts}
-          hrefLabel="See all posts"
+          hrefLabel="View all posts"
         >
           <RecentPosts
             admin={admin}
-            recent={data.recent}
-            drafts={data.drafts}
-            published={data.published}
+            lists={{
+              all: data.recent,
+              published: data.published,
+              drafts: data.drafts,
+              review: data.review,
+            }}
+            counts={{
+              all: data.stats.all,
+              published: data.stats.published,
+              drafts: data.stats.drafts,
+              review: data.stats.needsReview,
+            }}
           />
         </Panel>
 
@@ -374,18 +299,16 @@ export function DashboardBody({
           </Panel>
         ) : null}
       </div>
-
-      <Link href={`${admin}/reports`} className="im-dash__reports">
-        <TrendingUp aria-hidden="true" />
-        <span>
-          Totals, posts per year and the content mix now live in <strong>Reports</strong>, one click
-          away.
-        </span>
-        <span className="im-dash__reports-go">
-          Open Reports
-          <ArrowRight aria-hidden="true" />
-        </span>
-      </Link>
     </div>
+  )
+}
+
+/** A faint mosque skyline at the right of the greeting: decoration only. */
+function Skyline() {
+  return (
+    <svg className="im-dash__skyline" viewBox="0 0 320 96" aria-hidden="true" focusable="false">
+      <path d="M232 14a12 12 0 1 0 9 20 14 14 0 1 1-9-20Z" />
+      <path d="M0 96V80h28V58l6-10 6 10v22h14V64c0-14 12-22 22-30 10 8 22 16 22 30v16h18V44l5-12 5 12v36h22V70c0-22 18-34 34-42 16 8 34 20 34 42v10h22V44l5-12 5 12v36h16V62l6-10 6 10v18h28v16Z" />
+    </svg>
   )
 }

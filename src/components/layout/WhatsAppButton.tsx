@@ -6,7 +6,7 @@ import { SocialIcon } from '@/components/layout/SocialLinks'
  * hover, and for keyboard users on focus, it widens to show "Ask a Question". On a touch screen
  * it stays the icon (a tap goes straight to the chat), and its name is always in the aria-label.
  * Opens WhatsApp in a new tab, with the greeting editors set in Site settings pre-filled.
- * Desktop only (`xl`): on smaller screens WhatsApp is the "Ask" tab of the MobileDock.
+ * Desktop only (`xl`): on smaller screens WhatsApp is the round button beside the MobileDock.
  */
 export function WhatsAppButton({ href }: { href: string }) {
   return (

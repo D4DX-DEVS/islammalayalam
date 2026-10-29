@@ -57,7 +57,9 @@ export function InsightsCard({
       />
     ),
     share: {
-      url: absoluteUrl(quote.href),
+      // An Instagram insight opens the post on Instagram, but is shared as the site's own
+      // Insights page, so the shared picture and caption carry this site's address.
+      url: absoluteUrl(/^https?:/i.test(quote.href) ? '/insights/' : quote.href),
       text: shareText(quote),
       posterSrc: quote.poster?.src ?? null,
     },

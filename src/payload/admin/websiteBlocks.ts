@@ -81,7 +81,7 @@ export function describeBlock(
           label: block.title || 'Videos',
           icon: 'video',
           detail: `Full-width blue band with a carousel · ${scope} · ${plural(block.limit, 'video')}`,
-          note: 'Videos open in a popup player. Add one in seconds from the dashboard (Add video: link, title, author — all optional), or as a Video post.',
+          note: 'Videos open in a popup player. Add one as a post: New post → “This post is: A video” → paste the YouTube link under Media & files.',
         }
       if (block.format === 'audio')
         return {
@@ -90,9 +90,9 @@ export function describeBlock(
           icon: 'audio',
           detail: `Podcast-style player with search and a scrolling list · ${scope} · ${spotifyShowId(block.spotifyUrl) ? 'every episode of your Spotify show (up to 50), updated automatically' : `up to ${plural(block.limit, 'episode')} · ${block.spotifyUrl ? 'Spotify button on' : 'no Spotify button'}`} · ${WIDTH(block)}`,
           note: spotifyShowId(block.spotifyUrl)
-            ? 'New episodes of the Spotify show appear here by themselves, within about 15 minutes. Until the site developer adds Spotify app keys on the server, Spotify only hands over the newest episode: add each other episode by pasting its link under Audio (Admin → Library), and it is listed in full.'
+            ? 'New episodes of the Spotify show appear here by themselves, within about 15 minutes. Until the site developer adds Spotify app keys on the server, Spotify only hands over the newest episode: add each other episode as an Audio post (New post → “This post is: An audio” → its Spotify link), and it is listed in full.'
             : extras.audiosWithoutAudio
-              ? `${plural(extras.audiosWithoutAudio, 'Audio post')} ${extras.audiosWithoutAudio === 1 ? 'has' : 'have'} no audio yet. Add real audio in seconds from the dashboard (Add audio: link, title, author — all optional), or open the post → Media & files → Audio and add a Spotify link.`
+              ? `${plural(extras.audiosWithoutAudio, 'Audio post')} ${extras.audiosWithoutAudio === 1 ? 'has' : 'have'} no audio yet. Open the post → Media & files → Audio and add a Spotify link.`
               : block.spotifyUrl
                 ? 'Each Audio post can have its own Spotify link (plays in the player) or a hosted audio link.'
                 : 'Add your Spotify show link to this section and its episodes are listed here by themselves; or add a Spotify link or hosted audio link in each Audio post.',

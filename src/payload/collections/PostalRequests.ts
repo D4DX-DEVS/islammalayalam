@@ -32,7 +32,7 @@ export const PostalRequests: CollectionConfig = {
   labels: { singular: 'Postal library request', plural: 'Postal library' },
   admin: {
     useAsTitle: 'name',
-    group: 'Inbox',
+    group: 'Communication',
     defaultColumns: ['name', 'phone', 'email', 'status', 'createdAt'],
     listSearchableFields: ['name', 'phone', 'email', 'pincode'],
     description: 'Requests to join the postal library. Readers cannot be edited, only triaged.',

@@ -9,6 +9,10 @@
 @use './admin-security';
 @use './admin-dialog';
 @use './admin-modern';
+@use './admin-refresh';
+@use './admin-chrome';
+@use './admin-dock';
+@use './admin-lists';
 
 :root {
   // Warm paper, navy menu, royal blue actions (the redesign canvas, "Tokens" board).

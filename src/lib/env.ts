@@ -52,6 +52,13 @@ const schema = z
      */
     SPOTIFY_CLIENT_ID: optional(z.string().min(16, 'SPOTIFY_CLIENT_ID looks too short')),
     SPOTIFY_CLIENT_SECRET: optional(z.string().min(16, 'SPOTIFY_CLIENT_SECRET looks too short')),
+    /**
+     * Long-lived token of the site's Instagram account (Instagram API with Instagram Login; the
+     * account must be Professional). With it, Insights show the account's newest picture posts; it is
+     * renewed automatically after that. Without it, Insights are the ones added in the admin.
+     */
+    // No length check: a bad token only turns Insights back to the admin ones; it must never stop the app.
+    INSTAGRAM_ACCESS_TOKEN: optional(z.string()),
     /** Claude model that writes AI search answers (default: claude-opus-5-5). */
     AI_SEARCH_MODEL: optional(
       z.string().regex(/^claude-[a-z0-9.-]+$/, 'AI_SEARCH_MODEL must be a Claude model id'),

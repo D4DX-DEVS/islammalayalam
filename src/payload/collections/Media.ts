@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionBeforeValidateHook, CollectionConfig } from 'payload'
 import { isEditor, isStaff, publicOrStaff, totpPublicRead } from '@/payload/access'
 import { legacyFields } from '@/payload/fields'
 import { auditCollectionChange, auditCollectionDelete } from '@/payload/hooks/auditLog'
@@ -9,7 +9,7 @@ import {
   rejectFilelessCreate,
 } from '@/payload/hooks/mediaGuard'
 import { revalidateCollection, revalidateCollectionDelete } from '@/payload/hooks/revalidate'
-import { ALLOWED_MIME_TYPES } from '@/lib/media/file-policy'
+import { ALLOWED_MIME_TYPES, altFromFilename } from '@/lib/media/file-policy'
 
 const MEDIA_DIR = /^[a-z0-9][a-z0-9._-]*$/i
 
@@ -17,6 +17,21 @@ const MEDIA_DIR = /^[a-z0-9][a-z0-9._-]*$/i
 export function mediaDir(env: NodeJS.ProcessEnv = process.env): string {
   if (env.NODE_ENV === 'test') return '.test-media'
   return env.MEDIA_DIR && MEDIA_DIR.test(env.MEDIA_DIR) ? env.MEDIA_DIR : 'media'
+}
+
+/**
+ * An image saved without a description gets its file name as one instead of failing: the upload
+ * form cannot flag the empty field before the file reaches the server, so editors only saw a save
+ * error (e.g. when adding an ad banner with "Create New"). Runs before validation, after Payload has
+ * read the file's type.
+ */
+const defaultImageAlt: CollectionBeforeValidateHook = ({ data, originalDoc, req }) => {
+  if (!data || req.context?.migration) return data
+  const mimeType = data.mimeType ?? originalDoc?.mimeType
+  const alt = data.alt ?? originalDoc?.alt
+  if (typeof mimeType !== 'string' || !mimeType.startsWith('image/')) return data
+  if (typeof alt === 'string' && alt.trim()) return data
+  return { ...data, alt: altFromFilename(data.filename ?? originalDoc?.filename) }
 }
 
 /**
@@ -29,7 +44,7 @@ export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: 'File', plural: 'Files and images' },
   admin: {
-    group: 'Library',
+    group: 'Media',
     defaultColumns: ['filename', 'alt', 'mimeType', 'filesize', 'updatedAt'],
   },
   custom: totpPublicRead,
@@ -82,7 +97,7 @@ export const Media: CollectionConfig = {
   },
   hooks: {
     beforeOperation: [guardMediaUpload],
-    beforeValidate: [guardCollectionContent],
+    beforeValidate: [guardCollectionContent, defaultImageAlt],
     beforeChange: [rejectFilelessCreate, recordMediaFacts],
     afterChange: [revalidateCollection, auditCollectionChange],
     afterDelete: [revalidateCollectionDelete, auditCollectionDelete],
@@ -93,7 +108,8 @@ export const Media: CollectionConfig = {
       type: 'text',
       maxLength: 300,
       admin: {
-        description: 'Describe the image for screen readers. Required for images added by editors.',
+        description:
+          'Describe the image for screen readers. Left empty, the file name is used — replace it with a real description.',
       },
       validate: (
         value: string | null | undefined,
@@ -114,7 +130,7 @@ export const Media: CollectionConfig = {
     {
       name: 'blurDataURL',
       type: 'text',
-      admin: { hidden: true },
+      admin: { hidden: true, disableListColumn: true, disableListFilter: true },
       access: { create: () => false, update: () => false },
     },
     {
@@ -125,6 +141,8 @@ export const Media: CollectionConfig = {
         readOnly: true,
         position: 'sidebar',
         description: 'SHA-256 of the original upload (dedupe)',
+        disableListColumn: true,
+        disableListFilter: true,
       },
       access: { create: () => false, update: () => false },
     },

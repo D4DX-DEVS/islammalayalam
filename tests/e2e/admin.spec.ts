@@ -204,21 +204,129 @@ test('admin: password + TOTP sign-in, locked-down API, admin views load under th
     await page.screenshot({ path: `${SHOTS}/admin-homepage.png`, fullPage: true, ...SHOT })
   })
 
-  await test.step('dashboard: editorial overview with quick actions and no sideways scroll', async () => {
+  await test.step('list toolbar: tabs, filter chips, Columns menu and Advanced replace the pill wall', async () => {
+    await page.goto('/admin/collections/posts')
+    const list = page.locator('.collection-list')
+    const toolbar = list.locator('.im-list-toolbar')
+    await expect(toolbar).toBeVisible()
+    // Payload's own Columns / Filters pills and its wall of column pills are gone.
+    await expect(list.locator('.list-controls__toggle-columns')).toBeHidden()
+    await expect(list.locator('.list-controls__columns')).toBeHidden()
+    const tabs = toolbar.getByRole('group', { name: 'Show' })
+    await expect(tabs.getByRole('button', { name: /^All/ })).toHaveAttribute('aria-pressed', 'true')
+
+    // Columns: shown columns in table order, the rest grouped; no WordPress plumbing on offer.
+    await toolbar.getByRole('button', { name: /^Columns/ }).click()
+    const columns = page.getByRole('dialog', { name: 'Choose columns' })
+    await expect(columns.getByRole('list', { name: 'Shown columns' })).toContainText('Title')
+    await expect(columns).not.toContainText('Source hash')
+    await page.screenshot({ path: `${SHOTS}/admin-posts-columns.png`, ...SHOT })
+    await page.keyboard.press('Escape')
+    await expect(columns).toBeHidden()
+
+    // A chip filters through the URL; its text says what is filtered.
+    await toolbar.getByRole('button', { name: /^This post is/ }).click()
+    const format = page.getByRole('dialog', { name: 'Filter by This post is' })
+    await format.getByRole('checkbox', { name: 'A video' }).check()
+    await expect(page).toHaveURL(/format.*video/)
+    await format.getByRole('button', { name: 'Done' }).click()
+    await expect(toolbar.getByRole('button', { name: 'This post is: A video' })).toBeVisible()
+    await page.screenshot({ path: `${SHOTS}/admin-posts-filtered.png`, ...SHOT })
+    // A filtered link opens with the chip set and Payload's own builder closed.
+    await page.reload()
+    await expect(toolbar.getByRole('button', { name: 'This post is: A video' })).toBeVisible()
+    await expect(toolbar.getByRole('button', { name: 'Advanced', exact: true })).toHaveAttribute('aria-pressed', 'false')
+
+    // Tabs keep the chips, and "Clear filters" keeps the tab.
+    await tabs.getByRole('button', { name: /^Drafts/ }).click()
+    await expect(page).toHaveURL(/_status.*draft/)
+    await expect(page).toHaveURL(/format/)
+    await toolbar.getByRole('button', { name: 'Clear filters' }).click()
+    await expect(page).not.toHaveURL(/format/)
+    await expect(tabs.getByRole('button', { name: /^Drafts/ })).toHaveAttribute('aria-pressed', 'true')
+
+    // Advanced opens Payload's own and/or builder below the toolbar.
+    await toolbar.getByRole('button', { name: 'Advanced', exact: true }).click()
+    await expect(toolbar.getByRole('button', { name: 'Advanced', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await expect(list.locator('.list-controls__where .where-builder')).toBeVisible()
+    await toolbar.getByRole('button', { name: 'Advanced', exact: true }).click()
+
+    // Phones: a chip's panel is a sheet above the bottom bar, the page never scrolls sideways.
+    await page.setViewportSize({ width: 375, height: 812 })
+    await toolbar.getByRole('button', { name: /^Categories/ }).click()
+    const sheet = page.getByRole('dialog', { name: 'Filter by Categories' })
+    await expect(sheet.getByRole('checkbox').first()).toBeVisible()
+    const box = (await sheet.boundingBox())!
+    expect(box.x).toBeGreaterThanOrEqual(0)
+    expect(box.x + box.width).toBeLessThanOrEqual(375)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375)
+    await page.screenshot({ path: `${SHOTS}/admin-posts-filter-mobile.png`, ...SHOT })
+    await page.keyboard.press('Escape')
+    await page.setViewportSize({ width: 1280, height: 900 })
+  })
+
+  await test.step('dashboard: totals, work queue and charts, no Create panel, no sideways scroll', async () => {
     await page.goto('/admin')
     const dash = page.locator('.im-dash')
-    await expect(dash.getByRole('heading', { name: /^Welcome back/ })).toBeVisible()
-    await expect(dash.getByRole('link', { name: 'New post' })).toBeVisible()
-    await expect(dash.getByRole('link', { name: /Needs review/ }).first()).toBeVisible()
-    await page.screenshot({ path: `${SHOTS}/admin-dashboard-overview.png`, ...SHOT })
-    await page.setViewportSize({ width: 375, height: 812 })
-    await expect(dash).toBeVisible()
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-      'no horizontal scroll at 375px',
-    ).toBe(true)
-    await page.screenshot({ path: `${SHOTS}/admin-dashboard-375.png`, fullPage: true, ...SHOT })
+    await expect(page.locator('.im-nav').getByRole('link', { name: 'Dashboard' })).toBeVisible()
+    await expect(dash.getByRole('heading', { name: /^Good (morning|afternoon|evening)/ })).toBeVisible()
+    await expect(dash.getByRole('list', { name: 'Content totals' })).toBeVisible()
+    await expect(dash.getByRole('link', { name: /Published posts/ }).first()).toBeVisible()
+    await expect(dash.getByRole('heading', { name: 'Needs your attention' })).toBeVisible()
+    await expect(dash.getByRole('heading', { name: 'Published posts by year' })).toBeVisible()
+    await expect(dash.getByRole('heading', { name: 'Content mix' })).toBeVisible()
+    await expect(dash.getByRole('heading', { name: 'Create', exact: true })).toHaveCount(0)
+    for (const [width, height] of [
+      [1280, 900],
+      [768, 1024],
+      [375, 812],
+    ] as const) {
+      await page.setViewportSize({ width, height })
+      await expect(dash).toBeVisible()
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+        `no horizontal scroll at ${width}px`,
+      ).toBe(true)
+      await page.screenshot({
+        path: `${SHOTS}/admin-dashboard-${width}.png`,
+        fullPage: true,
+        ...SHOT,
+      })
+    }
     await page.setViewportSize({ width: 1280, height: 900 })
+  })
+
+  await test.step('drafts: the edit screen opens and the list Delete button removes one', async () => {
+    const title = `E2E delete draft ${Date.now()}`
+    const created = await call(page, '/api/posts?draft=true&depth=0', {
+      method: 'POST',
+      body: JSON.stringify({ title, _status: 'draft' }),
+    })
+    expect(created.status).toBe(201)
+    const { doc } = JSON.parse(created.body) as { doc: { id: string } }
+    const edit = await page.goto(`/admin/collections/posts/${doc.id}`)
+    expect(edit?.status()).toBe(200)
+    await expect(page.locator('[data-lexical-editor="true"]').first()).toBeVisible()
+    await page.goto('/admin/collections/posts?where[_status][equals]=draft&sort=-updatedAt')
+    await page.getByRole('button', { name: `Delete ${title}` }).click()
+    await page.locator('.im-confirm--danger').getByRole('button', { name: 'Delete' }).click()
+    await expect(page.getByText(`Deleted “${title}”`)).toBeVisible()
+    expect((await call(page, `/api/posts/${doc.id}?draft=true&depth=0`)).status).toBe(404)
+  })
+
+  await test.step('image upload from the admin page finishes', async () => {
+    const image = readFileSync('public/brand/post-placeholder.jpg').toString('base64')
+    const uploaded = await page.evaluate(async (b64) => {
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+      const form = new FormData()
+      form.append('file', new File([bytes], `e2e-upload-${Date.now()}.jpg`, { type: 'image/jpeg' }))
+      form.append('_payload', JSON.stringify({ alt: 'E2E upload check' }))
+      const res = await fetch('/api/media', { method: 'POST', credentials: 'include', body: form })
+      return { status: res.status, body: await res.text() }
+    }, image)
+    expect(uploaded.status, uploaded.body.slice(0, 300)).toBe(201)
+    const { doc } = JSON.parse(uploaded.body) as { doc: { id: string } }
+    expect((await call(page, `/api/media/${doc.id}`, { method: 'DELETE' })).status).toBe(200)
   })
 
   await test.step('live preview: drafts only for this signed-in session, updated on autosave', async () => {

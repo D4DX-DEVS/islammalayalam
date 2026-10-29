@@ -29,8 +29,13 @@ export function slugField(source = 'title', opts: { unique?: boolean } = {}): Fi
   }
 }
 
-/** Read-only references back to WordPress, written only by the migration (Local API, overrideAccess). */
+/**
+ * Read-only references back to WordPress, written only by the migration (Local API, overrideAccess).
+ * Never offered as list columns; only the WordPress id and old URLs stay filterable (Advanced).
+ */
 export function legacyFields(opts: { withUrls?: boolean } = {}): Field {
+  const ref = { readOnly: true, disableListColumn: true } as const
+  const internal = { ...ref, disableListFilter: true } as const
   return {
     name: 'legacy',
     type: 'group',
@@ -42,28 +47,20 @@ export function legacyFields(opts: { withUrls?: boolean } = {}): Field {
     },
     access: { read: staffFieldOnly, create: () => false, update: () => false },
     fields: [
-      { name: 'wpId', type: 'number', index: true, admin: { readOnly: true } },
-      { name: 'legacySlugs', type: 'text', hasMany: true, admin: { readOnly: true } },
+      { name: 'wpId', type: 'number', index: true, admin: ref },
+      { name: 'legacySlugs', type: 'text', hasMany: true, admin: internal },
       ...(opts.withUrls
-        ? [
-            {
-              name: 'legacyUrls',
-              type: 'text',
-              hasMany: true,
-              index: true,
-              admin: { readOnly: true },
-            } as Field,
-          ]
+        ? [{ name: 'legacyUrls', type: 'text', hasMany: true, index: true, admin: ref } as Field]
         : []),
       {
         name: 'sourceHash',
         type: 'text',
         admin: {
-          readOnly: true,
+          ...internal,
           description: 'Hash of the sanitized source record (idempotent re-runs)',
         },
       },
-      { name: 'migratedAt', type: 'date', admin: { readOnly: true } },
+      { name: 'migratedAt', type: 'date', admin: internal },
     ],
   }
 }
@@ -110,7 +107,7 @@ export const searchTextField: Field = {
   name: 'searchText',
   type: 'textarea',
   maxLength: SEARCH_TEXT_LIMIT,
-  admin: { hidden: true },
+  admin: { hidden: true, disableListColumn: true, disableListFilter: true },
   access: { create: () => false, update: () => false, read: () => false },
 }
 
@@ -118,7 +115,7 @@ export const searchTextField: Field = {
 export const searchKeyField: Field = {
   name: 'searchKey',
   type: 'textarea',
-  admin: { hidden: true },
+  admin: { hidden: true, disableListColumn: true, disableListFilter: true },
   access: { create: () => false, update: () => false, read: () => false },
 }
 

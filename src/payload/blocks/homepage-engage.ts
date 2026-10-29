@@ -2,6 +2,7 @@ import type { Block, Field } from 'payload'
 import { linkGroup } from '@/payload/fields'
 import { youtubeId } from '@/lib/security/url'
 import { shortsPage } from '@/lib/youtube-shorts'
+import { SECTION_GROUPS, SECTION_NAMES } from './sectionNames'
 
 /**
  * Engagement blocks from the client's revamp brief: quote of the day (flyer), reels
@@ -34,7 +35,8 @@ const imageUpload = (name: string, description: string): Field => ({
 export const QuoteOfDayBlock: Block = {
   slug: 'quoteOfDay',
   interfaceName: 'QuoteOfDayBlock',
-  labels: { singular: 'Quote of the day', plural: 'Quote of the day' },
+  labels: { singular: SECTION_NAMES.quoteOfDay!, plural: 'Quote of the day' },
+  admin: { group: SECTION_GROUPS.extras },
   fields: [
     heading('ഇന്നത്തെ ചിന്ത'),
     {
@@ -68,7 +70,8 @@ export const QuoteOfDayBlock: Block = {
 export const ReelsBlock: Block = {
   slug: 'reels',
   interfaceName: 'ReelsBlock',
-  labels: { singular: 'Reels (YouTube Shorts)', plural: 'Reels' },
+  labels: { singular: SECTION_NAMES.reels!, plural: 'Reels' },
+  admin: { group: SECTION_GROUPS.media },
   fields: [
     heading('സംശയനിവാരണം'),
     {
@@ -95,7 +98,8 @@ export const ReelsBlock: Block = {
 export const ShortsBlock: Block = {
   slug: 'shorts',
   interfaceName: 'ShortsBlock',
-  labels: { singular: 'YouTube Shorts (new ones appear by themselves)', plural: 'YouTube Shorts' },
+  labels: { singular: SECTION_NAMES.shorts!, plural: 'YouTube Shorts' },
+  admin: { group: SECTION_GROUPS.media },
   fields: [
     heading('Shorts'),
     {
@@ -128,7 +132,8 @@ export const ShortsBlock: Block = {
 export const FaqBlock: Block = {
   slug: 'faq',
   interfaceName: 'FaqBlock',
-  labels: { singular: 'FAQ (questions & answers)', plural: 'FAQ' },
+  labels: { singular: SECTION_NAMES.faq!, plural: 'FAQ' },
+  admin: { group: SECTION_GROUPS.extras },
   fields: [
     width,
     heading('പൊതുവായ ചോദ്യങ്ങള്‍'),
@@ -149,7 +154,8 @@ export const FaqBlock: Block = {
 export const CallToActionBlock: Block = {
   slug: 'callToAction',
   interfaceName: 'CallToActionBlock',
-  labels: { singular: 'Call to action / promo card', plural: 'Call to action cards' },
+  labels: { singular: SECTION_NAMES.callToAction!, plural: 'Promo cards' },
+  admin: { group: SECTION_GROUPS.promo },
   fields: [
     width,
     {

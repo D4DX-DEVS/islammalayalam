@@ -84,4 +84,7 @@ describe('service worker rules', () => {
     expect(src).toContain('skipWaiting')
     expect(() => new Function(src)).not.toThrow()
   })
+  it('keeps the start page at install, for opening offline', () => {
+    expect(serviceWorkerSource('v')).toContain("caches.open(PAGES).then((c) => c.add('/'))")
+  })
 })

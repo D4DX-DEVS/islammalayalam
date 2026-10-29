@@ -73,7 +73,10 @@ export const Redirects: CollectionConfig = {
       name: 'hits',
       type: 'number',
       defaultValue: 0,
-      admin: { readOnly: true },
+      admin: {
+        readOnly: true,
+        description: 'Visits this redirect has served (counted since Oct 2026)',
+      },
       access: { create: () => false, update: () => false },
     },
   ],
@@ -84,7 +87,7 @@ export const ContactMessages: CollectionConfig = {
   labels: { singular: 'Message', plural: 'Messages' },
   admin: {
     useAsTitle: 'subject',
-    group: 'Inbox',
+    group: 'Communication',
     defaultColumns: ['name', 'subject', 'status', 'createdAt'],
   },
   // Created only by the site's server action (Local API, rate-limited); never via the REST API.

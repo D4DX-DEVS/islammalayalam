@@ -2,7 +2,7 @@ import { deflateSync } from 'node:zlib'
 import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import { MEDIA_FIELDS, POPULATE } from '@/features/shared'
-import { checkFilePolicy, safeFilename, sniffKind } from '@/lib/media/file-policy'
+import { altFromFilename, checkFilePolicy, safeFilename, sniffKind } from '@/lib/media/file-policy'
 import { scanPdf } from '@/lib/media/pdf-scan'
 import { reencodeImage } from '@/lib/media/reencode'
 
@@ -53,6 +53,18 @@ describe('file policy', () => {
   it('produces ASCII-safe filenames with the canonical extension', () => {
     expect(safeFilename('../../ഖുര്‍ആന്‍ Poster (1).JPEG', 'jpeg')).toBe('poster-1.jpg')
     expect(safeFilename('ഖുര്‍ആന്‍.png', 'png')).toBe('file.png')
+  })
+})
+
+describe('altFromFilename', () => {
+  it('turns a file name into words for an image uploaded without a description', () => {
+    expect(altFromFilename('top-banner_understanding-islam.png')).toBe(
+      'Top banner understanding islam',
+    )
+    expect(altFromFilename('ബാനർ-1.JPG')).toBe('ബാനർ 1')
+    expect(altFromFilename('')).toBe('Image')
+    expect(altFromFilename(undefined)).toBe('Image')
+    expect(altFromFilename(`${'a'.repeat(400)}.webp`)).toHaveLength(300)
   })
 })
 

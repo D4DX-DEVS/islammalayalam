@@ -92,16 +92,7 @@ const input = (over: Partial<WebsiteInput> = {}): WebsiteInput => ({
     cat('Hidden', { hidden: true }),
     cat('Off', { showInStrip: false }),
   ],
-  counts: {
-    articles: 10,
-    videos: 4,
-    audios: 4,
-    ebooks: 3,
-    pages: 20,
-    authors: 2,
-    media: 99,
-    redirects: 5,
-  },
+  counts: {},
   ...over,
   aiSearchOn: over.aiSearchOn ?? false,
 })
@@ -169,9 +160,11 @@ describe('website manager model', () => {
     expect(data.homepage.find((r) => r.key === 'categoryGrid-a')).toBeUndefined()
   })
 
-  it('offers Edit links and counts only where the role may', () => {
+  it('offers Edit links only where the role may', () => {
     const open = buildWebsite(input())
     expect(open.homepage[0]!.editHref).toBe('/admin/globals/homepage')
+    // One "Edit homepage" button for the whole list, instead of one per row.
+    expect(open.homepageEditHref).toBe('/admin/globals/homepage')
     expect(open.site.map((r) => r.editHref)).toEqual([
       '/admin/globals/header',
       '/admin/globals/ads-banners', // the top ads banner
@@ -182,16 +175,10 @@ describe('website manager model', () => {
       '/admin/collections/quotes', // the daily quote
       null, // AI search is a server setting, not edited in the admin
     ])
-    expect(open.content.find((c) => c.key === 'audios')).toMatchObject({
-      count: 4,
-      listHref: '/admin/collections/posts?where[format][equals]=audio',
-      createHref: '/admin/collections/posts/create',
-    })
-
     const locked = buildWebsite(input({ can: nothing }))
     expect(locked.homepage.every((r) => r.editHref === null)).toBe(true)
     expect(locked.site.every((r) => r.editHref === null)).toBe(true)
-    expect(locked.content.every((c) => c.count === null && c.createHref === null)).toBe(true)
+    expect(locked.homepageEditHref).toBeNull()
   })
 
   it('shows whether the WhatsApp button and AI search are on, and how to turn them on', () => {
@@ -288,26 +275,6 @@ describe('website manager model', () => {
     expect(note(1)).toMatch(/1 Audio post has no audio yet/)
     expect(note(0)).not.toMatch(/no audio yet/)
     expect(note(null)).not.toMatch(/no audio yet/)
-  })
-
-  it('lists the quick audio and video entries with counts and an "add" link', () => {
-    const counts = { ...input().counts, audioItems: 3, videoItems: 0 }
-    const content = buildWebsite(input({ counts })).content
-    expect(content.find((c) => c.key === 'audio-items')).toMatchObject({
-      count: 3,
-      listHref: '/admin/collections/audios',
-      createHref: '/admin/collections/audios/create',
-    })
-    expect(content.find((c) => c.key === 'video-items')).toMatchObject({
-      count: 0,
-      createHref: '/admin/collections/videos/create',
-    })
-    // A role that cannot read them sees no count and no add link.
-    const locked = buildWebsite(input({ can: nothing, counts })).content
-    expect(locked.find((c) => c.key === 'audio-items')).toMatchObject({
-      count: null,
-      createHref: null,
-    })
   })
 
   it('copes with an empty homepage', () => {

@@ -59,8 +59,11 @@ export const swCacheFirst = (pathname: string): boolean => startsWithAny(pathnam
 
 /**
  * The worker script. Network-first pages (fresh content online, last copy offline), cache-first
- * static assets, nothing else intercepted. A new version installs and then waits: the page shows
- * the "Update" toast, which posts SKIP_WAITING; the page reloads once the new worker takes over.
+ * static assets, nothing else intercepted. Installing also keeps the start page, so the installed
+ * app opens offline from day one. No navigation preload: admin and preview navigations pass the
+ * worker by untouched, and an unused preload would request each of them twice.
+ * A new version installs and then waits: the page shows the "Update" toast, which posts
+ * SKIP_WAITING; the page reloads once the new worker takes over.
  */
 export function serviceWorkerSource(version: string): string {
   return `/* Islam Malayalam service worker — ${version} */
@@ -75,7 +78,10 @@ const cacheFirst = (p) => CACHE_FIRST.some((x) => p.startsWith(x));
 const OFFLINE = '<!doctype html><html lang="ml"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title><body style="font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;text-align:center;padding:16px;color:#0a4398"><div><img src="/brand/icon-192.png" width="72" height="72" alt=""><h1 style="font-size:1.25rem">You are offline</h1><p style="color:#475569">Check your connection and try again.</p><button onclick="location.reload()" style="border:0;border-radius:999px;background:#1a6bc4;color:#fff;padding:10px 22px;font-size:1rem">Retry</button></div></body></html>';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(ASSETS).then((c) => c.addAll(['/brand/icon-192.png'])).catch(() => {}));
+  event.waitUntil(Promise.all([
+    caches.open(ASSETS).then((c) => c.addAll(['/brand/icon-192.png'])),
+    caches.open(PAGES).then((c) => c.add('/')),
+  ]).catch(() => {}));
 });
 
 self.addEventListener('activate', (event) => {

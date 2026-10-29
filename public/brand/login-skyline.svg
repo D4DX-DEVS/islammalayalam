@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="220" viewBox="0 0 600 220">
+  <!-- Far layer: a lighter row of domes and towers. -->
+  <g fill="#1d3156" fill-opacity="0.7">
+    <path d="M0 220v-46c18-6 30-4 44 2 4-14 14-22 24-24 10 2 20 10 24 24h20v-40h8v-10l4-10 4 10v10h8v40h40c6-16 18-26 30-28 12 2 24 12 30 28h60V220z"/>
+    <path d="M300 220v-38h40c4-12 12-18 20-20 8 2 16 8 20 20h220v38z"/>
+  </g>
+  <!-- Palms on the left. -->
+  <g fill="none" stroke="#0a1424" stroke-linecap="round">
+    <path d="M70 220q6-44-4-84" stroke-width="5"/>
+    <path d="M66 136q-22-8-38 6M66 136q-16-18-34-16M66 136q2-20 22-24M66 136q22-6 36 10M66 136q18 6 24 26" stroke-width="4"/>
+    <path d="M128 220q-4-36 6-66" stroke-width="4"/>
+    <path d="M134 154q-18-6-30 6M134 154q-10-14-26-12M134 154q4-16 20-18M134 154q18-2 26 12" stroke-width="3.5"/>
+  </g>
+  <!-- The mosque. -->
+  <g fill="#0a1424">
+    <rect x="300" y="62" width="11" height="158"/>
+    <rect x="296" y="96" width="19" height="6" rx="1"/>
+    <rect x="296" y="140" width="19" height="5" rx="1"/>
+    <path d="M300 62l5.5-20 5.5 20z"/>
+    <rect x="514" y="76" width="11" height="144"/>
+    <rect x="510" y="108" width="19" height="6" rx="1"/>
+    <path d="M514 76l5.5-20 5.5 20z"/>
+    <rect x="340" y="150" width="150" height="70"/>
+    <path d="M378 152c0-38 22-50 37-66 15 16 37 28 37 66z"/>
+    <rect x="414" y="66" width="2" height="22"/>
+    <path d="M346 160c0-18 9-24 14-32 5 8 14 14 14 32z"/>
+    <path d="M456 160c0-18 9-24 14-32 5 8 14 14 14 32z"/>
+    <path d="M0 210c120-8 240-6 360 0s180 4 240-2v12H0z"/>
+  </g>
+  <!-- Lit doorways and the crescent. -->
+  <g fill="#f2be4e">
+    <path d="M394 196v-10a3.5 3.5 0 0 1 7 0v10zM411.5 196v-14a3.5 3.5 0 0 1 7 0v14zM429 196v-10a3.5 3.5 0 0 1 7 0v10zM354 180v-8a3 3 0 0 1 6 0v8zM470 180v-8a3 3 0 0 1 6 0v8z" fill-opacity="0.55"/>
+    <path d="M262 40a13 13 0 1 0 10 22 10 10 0 1 1-10-22z" fill-opacity="0.9"/>
+  </g>
+</svg>

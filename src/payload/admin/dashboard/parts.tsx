@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { AlertTriangle, Info, type LucideIcon } from 'lucide-react'
+import { AlertTriangle, Info, Pencil, type LucideIcon } from 'lucide-react'
 import { timeAgo } from '@/lib/format'
 import type { ActivityRow, DashboardRow } from '../dashboardData'
 import { compact, full } from '../dashboardStats'
@@ -54,13 +54,14 @@ export function StatusChip({ row }: { row: Pick<DashboardRow, 'status' | 'needsR
   const label =
     row.status === 'published' ? 'Published' : row.needsReview ? 'Needs review' : 'Draft'
   return (
-    <span className={`im-chip im-chip--${tone}`}>
-      <span className="im-chip__dot" aria-hidden="true" />
+    <span className={`im-state im-state--${tone}`}>
+      <span className="im-state__dot" aria-hidden="true" />
       {label}
     </span>
   )
 }
 
+/** Recent posts as a compact table: title, number, category, status, last edit and Edit. */
 export function PostRows({
   rows,
   admin,
@@ -72,23 +73,53 @@ export function PostRows({
 }) {
   if (!rows.length) return <Empty>{empty}</Empty>
   return (
-    <ul className="im-dash__rows">
-      {rows.map((row) => (
-        <li key={row.id}>
-          <Link href={`${admin}/collections/posts/${row.id}`} className="im-dash__row">
-            <span className="im-dash__row-main">
-              <span className="im-dash__row-title">{row.title}</span>
-              <span className="im-dash__row-meta">
-                {row.postNumber ? <span>#{row.postNumber}</span> : null}
-                {row.updatedAt ? <span>Edited {timeAgo(row.updatedAt)}</span> : null}
-              </span>
-            </span>
-            {row.category ? <span className="im-dash__row-cat">{row.category}</span> : null}
-            <StatusChip row={row} />
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <div className="im-ptable__wrap">
+      <table className="im-ptable">
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col" className="im-ptable__num">
+              No.
+            </th>
+            <th scope="col" className="im-ptable__cat">
+              Category
+            </th>
+            <th scope="col">Status</th>
+            <th scope="col" className="im-ptable__when">
+              Edited
+            </th>
+            <th scope="col">
+              <span className="im-nav__sr">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const href = `${admin}/collections/posts/${row.id}`
+            return (
+              <tr key={row.id}>
+                <td>
+                  <Link href={href} className="im-ptable__title">
+                    {row.title}
+                  </Link>
+                </td>
+                <td className="im-ptable__num">{row.postNumber ?? '—'}</td>
+                <td className="im-ptable__cat">{row.category ?? '—'}</td>
+                <td>
+                  <StatusChip row={row} />
+                </td>
+                <td className="im-ptable__when">{row.updatedAt ? timeAgo(row.updatedAt) : '—'}</td>
+                <td className="im-ptable__act">
+                  <Link href={href} className="im-ptable__edit" aria-label={`Edit ${row.title}`}>
+                    <Pencil aria-hidden="true" />
+                  </Link>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
