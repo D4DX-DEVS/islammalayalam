@@ -1,0 +1,325 @@
+// The menu on phones: Payload's nav drawer (AdminNav / AdminNavClient) as a bottom sheet that rises
+// from the bar's Menu tab, instead of a full-screen navy page that pushes the screen aside. Light
+// paper, the links in grouped cards with icon chips, a grab handle and a dimmed screen behind it (a
+// tap outside, Escape or a pull down closes the sheet: useMenuSheet). Up to 768 px only; the desktop
+// sidebar stays as admin-nav.scss draws it. Loaded after admin-modern.scss, so these rules win there.
+
+@media (max-width: 768px) {
+  // The screen keeps its place under the sheet (Payload opens a 100vw grid column for the menu).
+  .template-default {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html:has(.nav--nav-open.nav--nav-hydrated) {
+    overflow: hidden;
+  }
+
+  // The scrim is Payload's own overlay on the screen: it shares .template-default's stacking context
+  // (isolation: isolate) with the sheet, so it can sit under it. A fixed element outside that context
+  // would cover the sheet too.
+  .template-default__wrap::before {
+    position: fixed;
+    background: rgb(8 15 28 / 0.42);
+    transition:
+      opacity 0.3s,
+      visibility 0s 0.3s;
+  }
+
+  .template-default--nav-hydrated.template-default--nav-open .template-default__wrap::before {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s;
+  }
+
+  // Payload keeps it display: none until hydrated, which also stops a flash of an open sheet.
+  .nav.nav--nav-hydrated {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 65;
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    max-width: 36rem;
+    height: auto;
+    max-height: calc(100dvh - 2.5rem);
+    margin-inline: auto;
+    border: 0;
+    border-radius: 1.5rem 1.5rem 0 0;
+    background: var(--im-canvas);
+    color: var(--im-ink);
+    box-shadow:
+      0 0 0 1px var(--im-border),
+      0 -18px 48px -16px rgb(15 27 46 / 0.4);
+    opacity: 1;
+    transform: translateY(calc(100% + 1rem));
+    visibility: hidden;
+    transition:
+      transform 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+      visibility 0s 0.4s;
+
+    // Grab handle, above the sticky header.
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0.55rem;
+      left: 50%;
+      z-index: 4;
+      width: 2.5rem;
+      height: 0.3rem;
+      border-radius: 999px;
+      background: var(--im-border-strong);
+      transform: translateX(-50%);
+    }
+  }
+
+  .nav.nav--nav-hydrated.nav--nav-open {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .nav__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    padding: 1.6rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+  }
+
+  // Payload's close button, as a round button at the end of the brand row.
+  .nav__header {
+    top: 1.65rem;
+    right: 1rem;
+    z-index: 3;
+    width: auto;
+    height: auto;
+  }
+
+  .nav__mobile-close {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border-radius: 999px;
+    background: var(--im-surface);
+    box-shadow: 0 0 0 1px var(--im-border);
+    color: var(--im-ink-2);
+    cursor: pointer;
+
+    .hamburger {
+      width: auto;
+      height: auto;
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+      color: inherit;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--im-ring);
+    }
+  }
+
+  .im-nav {
+    gap: 0;
+    color: var(--im-ink);
+  }
+
+  // The sheet's header: stays put (under the handle, beside the close button) while the list scrolls,
+  // reaching out over the scroller's padding so nothing shows around it.
+  .im-nav__brand {
+    position: sticky;
+    // Sticky offsets count from inside the scroller's padding; this pins it to the sheet's top edge.
+    top: -1.6rem;
+    z-index: 2;
+    min-height: 2.6rem;
+    margin: -1.6rem -1rem 1rem;
+    padding: 1.6rem 4.25rem 0.75rem 1.25rem;
+    background: var(--im-canvas);
+    box-shadow: 0 1px 0 var(--im-border);
+    color: var(--im-ink);
+
+    &:focus-visible {
+      box-shadow: var(--im-ring);
+    }
+  }
+
+  .im-nav__brand-sub {
+    color: var(--im-muted);
+  }
+
+  // Each group is one card; rows are split by hairlines that start after the icon.
+  .im-nav__list {
+    gap: 0;
+    padding: 0.25rem;
+    border-radius: 1rem;
+    background: var(--im-surface);
+    box-shadow:
+      0 0 0 1px var(--im-border),
+      var(--im-shadow-sm);
+
+    > li + li {
+      background: linear-gradient(var(--im-border), var(--im-border)) no-repeat 3.4rem 0 /
+        calc(100% - 4.15rem) 1px;
+    }
+  }
+
+  .im-nav__group,
+  .im-nav__group--tucked {
+    margin-top: 1.25rem;
+  }
+
+  .im-nav__group-label {
+    margin: 0 0 0.45rem;
+    padding: 0 0.85rem;
+    color: var(--im-muted);
+    font-size: 0.75rem;
+  }
+
+  .im-nav__link {
+    min-height: 3rem;
+    gap: 0.8rem;
+    padding: 0 0.65rem;
+    border-radius: 0.75rem;
+    color: var(--im-ink);
+    font-size: 1rem;
+    font-weight: 500;
+    -webkit-tap-highlight-color: transparent;
+
+    svg {
+      box-sizing: content-box;
+      width: 1.1rem;
+      height: 1.1rem;
+      padding: 0.4rem;
+      border-radius: 0.6rem;
+      background: var(--im-sunken);
+      color: var(--im-ink-2);
+    }
+
+    &:hover,
+    &:active {
+      background: var(--im-sunken);
+      color: var(--im-ink);
+
+      svg {
+        background: var(--im-surface);
+        color: var(--im-ink);
+      }
+    }
+
+    &[aria-current='page'] {
+      background: var(--im-brand-soft);
+      box-shadow: none;
+      color: var(--im-brand);
+      font-weight: 600;
+
+      svg {
+        background: var(--im-brand);
+        color: var(--im-on-brand);
+      }
+    }
+
+    &:focus-visible {
+      box-shadow: var(--im-ring);
+    }
+  }
+
+  // Migration tools: the toggle row is the card; its list opens inside it.
+  .im-nav__group--tucked {
+    padding: 0.25rem;
+    border-radius: 1rem;
+    background: var(--im-surface);
+    box-shadow:
+      0 0 0 1px var(--im-border),
+      var(--im-shadow-sm);
+
+    .im-nav__list {
+      padding: 0;
+      background: none;
+      box-shadow: none;
+
+      > li {
+        background: linear-gradient(var(--im-border), var(--im-border)) no-repeat 3.4rem 0 /
+          calc(100% - 4.15rem) 1px;
+      }
+    }
+  }
+
+  .im-nav__tuck,
+  .im-nav__tag {
+    color: var(--im-muted);
+  }
+
+  .im-nav__footer {
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+    padding-top: 0;
+    border-top: 0;
+
+    > .im-nav__link {
+      min-height: 3.25rem;
+      border-radius: 1rem;
+      background: var(--im-surface);
+      box-shadow: 0 0 0 1px var(--im-border);
+
+      &:focus-visible {
+        box-shadow: var(--im-ring);
+      }
+    }
+  }
+
+  .im-nav__user {
+    padding: 0.5rem;
+    border-radius: 1rem;
+    background: var(--im-surface);
+    box-shadow: 0 0 0 1px var(--im-border);
+  }
+
+  .im-nav__user-link {
+    color: var(--im-ink);
+
+    &:focus-visible {
+      box-shadow: var(--im-ring);
+    }
+  }
+
+  .im-nav__user-role {
+    color: var(--im-muted);
+  }
+
+  .im-nav__logout {
+    color: var(--im-danger);
+
+    &:hover {
+      background: var(--im-danger-soft);
+      color: var(--im-danger);
+    }
+
+    &:focus-visible {
+      box-shadow: var(--im-ring);
+    }
+  }
+
+  html[data-theme='dark'] {
+    .template-default__wrap::before {
+      background: rgb(0 0 0 / 0.6);
+    }
+
+    .nav.nav--nav-hydrated {
+      box-shadow:
+        0 0 0 1px var(--im-border),
+        0 -18px 48px -16px rgb(0 0 0 / 0.9);
+    }
+  }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .template-default__wrap::before,
+  .template-default--nav-hydrated.template-default--nav-open .template-default__wrap::before,
+  .nav.nav--nav-hydrated,
+  .nav.nav--nav-hydrated.nav--nav-open {
+    transition: none;
+  }
+}

@@ -12,6 +12,7 @@
 @use './admin-refresh';
 @use './admin-chrome';
 @use './admin-dock';
+@use './admin-menu-sheet';
 @use './admin-lists';
 
 :root {
@@ -134,4 +135,14 @@ html[data-theme='dark'] .im-logo__img--dark {
   display: block;
   width: 1.75rem;
   height: 1.75rem;
+}
+
+.im-brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.im-brand-mark__name {
+  display: none;
 }

@@ -1,6 +1,7 @@
 // Phone bottom bar (AdminDock.tsx; the Inbox tab is InboxBell's dock variant). Same shape as the
 // site's MobileDock: a floating glass bar, the current section under a sliding highlight, New post
-// as a filled circle. Up to 768 px wide only, where Payload's side menu becomes a drawer.
+// as a filled circle. Up to 768 px wide only, where Payload's side menu becomes a drawer. Also the
+// phone header bar above it: pinned to the top, it steps aside with the bottom bar.
 
 .im-dock {
   display: none;
@@ -8,12 +9,16 @@
 
 @media (max-width: 768px) {
   // The bar's height while it shows; <html data-im-dock="hidden"> (AdminDock) while it stepped aside.
+  // The same for the header bar (--im-header-h), which hides and returns with it.
   :root {
+    --app-header-height: 3.5rem;
     --im-dock-h: calc(4.75rem + env(safe-area-inset-bottom));
+    --im-header-h: var(--app-header-height);
   }
 
   :root[data-im-dock='hidden'] {
     --im-dock-h: 0px;
+    --im-header-h: 0px;
   }
 
   .im-dock {
@@ -99,9 +104,68 @@
     backdrop-filter: none;
   }
 
-  // The bar has its own Inbox tab.
-  .app-header .im-bell {
+  // Header bar: pinned to the top on a solid strip with a hairline, sliding up out of the way while
+  // scrolling down (data-im-dock, as the bottom bar). No backdrop-filter: it would pin the fixed
+  // account card (admin-header.scss) to the bar instead of the screen.
+  .app-header {
+    position: sticky;
+    top: 0;
+    background: color-mix(in srgb, var(--im-canvas) 94%, transparent);
+    box-shadow: 0 1px 0 var(--im-border);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  :root[data-im-dock='hidden'] .app-header {
+    transform: translateY(-100%);
+  }
+
+  // Payload's own top-pinned bars (Save / Publish, the rich-text toolbar) ride below it.
+  .doc-controls {
+    top: var(--im-header-h);
+    transition: top 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .sticky-toolbar {
+    top: calc(var(--im-header-h) + 40px);
+  }
+
+  // The bar has its own Inbox tab, and its Menu tab opens the menu: no second hamburger up top.
+  .app-header .im-bell,
+  .app-header__mobile-nav-toggler {
     display: none;
+  }
+
+  // The header's left end: the logo at a size that reads, with the name beside it on screens that
+  // have no breadcrumbs (the dashboard; Payload renders those as a <div>, crumbs as a <nav>).
+  .step-nav__home {
+    width: auto;
+    height: auto;
+
+    > span {
+      max-width: none;
+      overflow: visible;
+    }
+
+    .im-brand-mark {
+      max-width: none;
+      overflow: visible;
+    }
+
+    .im-icon {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.65rem;
+    }
+  }
+
+  div.step-nav .im-brand-mark__name {
+    display: block;
+    max-width: none;
+    color: var(--im-ink);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
   }
 }
 
@@ -262,7 +326,9 @@ html[data-theme='dark'] .im-dock__bar {
 
 @media (prefers-reduced-motion: reduce) {
   .im-dock,
-  .im-dock__pill {
+  .im-dock__pill,
+  .app-header,
+  .doc-controls {
     transition: none;
   }
 

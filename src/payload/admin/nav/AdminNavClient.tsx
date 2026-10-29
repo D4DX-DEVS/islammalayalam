@@ -257,7 +257,14 @@ export function AdminNavClient({ groups, user }: { groups: NavGroupData[]; user:
               <span className="im-nav__user-role">{ROLE_LABEL[user.role] ?? 'Staff'}</span>
             </span>
           </Link>
-          <Link href={logout} className="im-nav__logout" aria-label="Log out" title="Log out">
+          {/* data-im-sign-out: AdminEnhancements asks for confirmation first. */}
+          <Link
+            href={logout}
+            className="im-nav__logout"
+            aria-label="Sign out"
+            title="Sign out"
+            data-im-sign-out=""
+          >
             <LogOut aria-hidden="true" />
           </Link>
         </div>

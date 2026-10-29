@@ -28,15 +28,24 @@ export function AdminLogo() {
   )
 }
 
-/** Top-left of the navigation. */
+/**
+ * Top-left of the header (the breadcrumbs' home mark). The name beside it shows only on phones,
+ * on screens without breadcrumbs (admin-dock.scss); the image's alt text carries the name for
+ * screen readers everywhere.
+ */
 export function AdminIcon() {
   return (
-    <img
-      className="im-icon"
-      src="/brand/icon-192.png"
-      width={192}
-      height={192}
-      alt="Islam Malayalam"
-    />
+    <span className="im-brand-mark">
+      <img
+        className="im-icon"
+        src="/brand/icon-192.png"
+        width={192}
+        height={192}
+        alt="Islam Malayalam"
+      />
+      <span className="im-brand-mark__name" aria-hidden="true">
+        Islam Malayalam
+      </span>
+    </span>
   )
 }

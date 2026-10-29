@@ -20,6 +20,15 @@ function covers(pathname: string, href: string, exact: boolean): boolean {
   return page === base || page.startsWith(`${base}/`)
 }
 
+/**
+ * Whether a downward pull of the admin's menu sheet closes it: a long pull (`dy` px), or a short
+ * flick (fast over `ms`). Upward pulls and zero-time events never close it.
+ */
+export function sheetDismissed(dy: number, ms: number): boolean {
+  if (dy <= 0 || ms <= 0) return false
+  return dy >= 96 || (dy >= 24 && dy / ms >= 0.5)
+}
+
 /** Index of the tab that owns `pathname` (the longest matching section wins), or -1. */
 export function activeTab(pathname: string, tabs: readonly DockTarget[]): number {
   let best = -1
