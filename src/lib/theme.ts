@@ -8,3 +8,6 @@ export type Theme = 'light' | 'dark'
 
 export const parseTheme = (value: string | undefined): Theme | undefined =>
   value === 'dark' || value === 'light' ? value : undefined
+
+/** Browser / installed-app status bar (`theme-color`): the header's card colour in each theme. */
+export const THEME_COLOR: Record<Theme, string> = { light: '#ffffff', dark: '#0e1a2f' }

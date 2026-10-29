@@ -67,6 +67,9 @@ const nextConfig: NextConfig = {
       // Cover art of Spotify episodes (the Audios section).
       { protocol: 'https', hostname: 'i.scdn.co', pathname: '/image/**' },
       { protocol: 'https', hostname: '**.spotifycdn.com', pathname: '/image/**' },
+      // Insights from the site's Instagram account (features/instagram).
+      { protocol: 'https', hostname: '**.cdninstagram.com' },
+      { protocol: 'https', hostname: '**.fbcdn.net' },
     ],
     // WebP only: AVIF encoding took 1–3.5 s per image on the App Platform instance (and timed out
     // under load). Uploads are already WebP, so WebP resizes are fast and nearly as small.

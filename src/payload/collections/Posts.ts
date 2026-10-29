@@ -68,13 +68,18 @@ export const Posts: CollectionConfig = {
   slug: 'posts',
   admin: {
     useAsTitle: 'title',
-    group: 'Write',
+    group: 'Content',
     defaultColumns: ['title', 'postNumber', 'primaryCategory', '_status', 'publishedAt'],
     listSearchableFields: ['title', 'postNumber'],
+    // Filter chips above the list (status and "needs review" are tabs); every other field is under
+    // "Add filter". See src/payload/admin/lists/ListToolbar.tsx.
+    custom: { listFilters: ['format', 'categories', 'author', 'featured', 'publishedAt'] },
   },
   custom: totpPublicRead,
   defaultSort: '-publishedAt',
-  versions: { drafts: { autosave: { interval: 3000 } }, maxPerDoc: 30 },
+  // validate: a new post is only written once "Save draft" (or Publish) is clicked with a title.
+  // Without it Payload saves an empty "(untitled)" draft the moment the New post screen opens.
+  versions: { drafts: { autosave: { interval: 3000 }, validate: true }, maxPerDoc: 30 },
   access: {
     read: publishedOrStaff,
     readVersions: versionsOfOwnOrEditor,
@@ -98,6 +103,25 @@ export const Posts: CollectionConfig = {
   }),
   fields: [
     { name: 'title', type: 'text', required: true, maxLength: 300 },
+    {
+      // Right under the title: the one choice that decides what else the post needs (a YouTube
+      // link, a Spotify link, a PDF). Video and audio are only added this way.
+      name: 'format',
+      label: 'This post is',
+      type: 'radio',
+      defaultValue: 'standard',
+      required: true,
+      options: [
+        { label: 'An article', value: 'standard' },
+        { label: 'A video', value: 'video' },
+        { label: 'An audio', value: 'audio' },
+        { label: 'An e-book', value: 'ebook' },
+      ],
+      admin: {
+        layout: 'horizontal',
+        description: 'Video, audio and e-book posts get their link or PDF under Media & files.',
+      },
+    },
     {
       type: 'tabs',
       tabs: [
@@ -126,18 +150,6 @@ export const Posts: CollectionConfig = {
         {
           label: 'Media & files',
           fields: [
-            {
-              name: 'format',
-              type: 'select',
-              defaultValue: 'standard',
-              required: true,
-              options: [
-                { label: 'Standard', value: 'standard' },
-                { label: 'Video', value: 'video' },
-                { label: 'Audio', value: 'audio' },
-                { label: 'E-book', value: 'ebook' },
-              ],
-            },
             {
               name: 'video',
               type: 'group',

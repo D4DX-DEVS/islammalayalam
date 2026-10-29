@@ -16,7 +16,7 @@ export async function DashboardView({ payload, permissions, user }: Props) {
   if (!user) return null
   let data: DashboardData
   try {
-    data = await loadDashboard(payload, user)
+    data = await loadDashboard(payload, user, 'reports')
   } catch (err) {
     payload.logger.warn({ err }, 'Dashboard could not load')
     return (
@@ -29,7 +29,6 @@ export async function DashboardView({ payload, permissions, user }: Props) {
     <DashboardBody
       data={data}
       admin={payload.config.routes.admin}
-      api={payload.config.routes.api}
       permissions={permissions}
       user={user}
     />

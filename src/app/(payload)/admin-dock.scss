@@ -1,0 +1,273 @@
+// Phone bottom bar (AdminDock.tsx; the Inbox tab is InboxBell's dock variant). Same shape as the
+// site's MobileDock: a floating glass bar, the current section under a sliding highlight, New post
+// as a filled circle. Up to 768 px wide only, where Payload's side menu becomes a drawer.
+
+.im-dock {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  // The bar's height while it shows; <html data-im-dock="hidden"> (AdminDock) while it stepped aside.
+  :root {
+    --im-dock-h: calc(4.75rem + env(safe-area-inset-bottom));
+  }
+
+  :root[data-im-dock='hidden'] {
+    --im-dock-h: 0px;
+  }
+
+  .im-dock {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 30;
+    display: block;
+    padding: 0 0.75rem calc(env(safe-area-inset-bottom) + 0.625rem);
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  // Steps aside while scrolling down or with the menu open (data-hidden), and while typing: the
+  // on-screen keyboard needs the room.
+  .im-dock[data-hidden],
+  html:has(
+      :is(
+        input:not([type='checkbox'], [type='radio'], [type='button'], [type='submit']),
+        textarea,
+        select,
+        [contenteditable='true']
+      ):focus
+    )
+    .im-dock {
+    transform: translateY(110%);
+  }
+
+  // Room for the bar below the last row of every screen.
+  .template-default__wrap {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  // Payload pins these to the bottom edge: toasts (beating sonner's own two-attribute rule) and
+  // the bulk-action bar of lists ride above the bar; the 98 px pagination block just ends the list.
+  [data-sonner-toaster][data-sonner-toaster][data-y-position='bottom'] {
+    bottom: calc(var(--im-dock-h) + 0.75rem);
+    transition: bottom 0.3s;
+  }
+
+  // Ticked rows: a card above the bar whose actions wrap, instead of a strip running off-screen.
+  .collection-list__list-selection {
+    right: 0.75rem;
+    bottom: calc(var(--im-dock-h) + 0.5rem);
+    left: 0.75rem;
+    width: auto;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--style-radius-l);
+    background: var(--im-surface);
+    box-shadow:
+      0 0 0 1px var(--im-border),
+      0 14px 32px -14px rgb(15 27 46 / 0.45);
+    transition: bottom 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    .list-selection {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem 0.5rem;
+      width: auto;
+    }
+
+    // The "—" separators between count, Select all and the actions.
+    .list-selection > span:not(:first-child) {
+      display: none;
+    }
+
+    .list-selection__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    // Payload keeps it (an empty strip) even with no row ticked.
+    &:not(:has(button, a, input)) {
+      display: none;
+    }
+  }
+
+  // Not sticky here, so no blur either: a backdrop-filter would also trap the fixed bar above.
+  .page-controls {
+    position: static;
+    backdrop-filter: none;
+  }
+
+  // The bar has its own Inbox tab.
+  .app-header .im-bell {
+    display: none;
+  }
+}
+
+.im-dock__bar {
+  position: relative;
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 0.375rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--im-surface) 82%, transparent);
+  box-shadow:
+    0 0 0 1px var(--im-border),
+    0 1px 2px rgb(15 27 46 / 0.08),
+    0 14px 32px -14px rgb(15 27 46 / 0.45);
+  backdrop-filter: blur(20px) saturate(1.5);
+  pointer-events: auto;
+}
+
+html[data-theme='dark'] .im-dock__bar {
+  box-shadow:
+    0 0 0 1px var(--im-border),
+    0 1px 2px rgb(0 0 0 / 0.4),
+    0 16px 36px -14px rgb(0 0 0 / 0.9);
+}
+
+.im-dock__list {
+  position: relative;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// Under tab --i of --count; the inner width is the bar's padding box less its padding.
+.im-dock__pill {
+  position: absolute;
+  inset-block: 0.375rem;
+  inset-inline-start: 0.375rem;
+  width: calc((100% - 0.75rem) / var(--count));
+  border-radius: 999px;
+  background: var(--im-brand-soft);
+  transform: translateX(calc(var(--i) * 100%));
+  transition: transform 0.45s cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
+.im-dock__item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 0;
+  min-height: 3.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--im-muted);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  svg {
+    width: 1.3rem;
+    height: 1.3rem;
+    stroke-width: 1.9;
+  }
+
+  &:hover {
+    color: var(--im-ink);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+
+  &[aria-current='page'],
+  &[data-active] {
+    color: var(--im-brand);
+
+    svg {
+      stroke-width: 2.4;
+      animation: im-dock-pop 0.4s cubic-bezier(0.34, 1.36, 0.64, 1);
+    }
+  }
+}
+
+.im-dock__icon {
+  position: relative;
+  display: inline-flex;
+
+  .im-bell__badge {
+    top: -0.4rem;
+    right: -0.7rem;
+    border-color: var(--im-surface);
+  }
+}
+
+.im-dock__new {
+  display: grid;
+  place-items: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 999px;
+  background: var(--im-brand);
+  color: var(--im-on-brand);
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--im-brand) 80%, transparent);
+  transition: transform 0.15s;
+
+  svg {
+    width: 1.45rem;
+    height: 1.45rem;
+    stroke-width: 2.4;
+  }
+
+  .im-dock__item:active & {
+    transform: scale(0.94);
+  }
+}
+
+// The Inbox tab's menu opens upwards across the bar's width.
+.im-bell--dock {
+  position: static;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+
+  .im-bell__menu {
+    top: auto;
+    right: 0;
+    bottom: calc(100% + 0.9rem);
+    left: 0;
+    min-width: 0;
+  }
+}
+
+@keyframes im-dock-pop {
+  from {
+    transform: scale(0.8);
+  }
+
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .im-dock,
+  .im-dock__pill {
+    transition: none;
+  }
+
+  .im-dock__item[aria-current='page'] svg,
+  .im-dock__item[data-active] svg {
+    animation: none;
+  }
+}

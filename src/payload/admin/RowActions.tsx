@@ -4,8 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
-import { ConfirmationModal, toast, useAuth, useConfig, useModal } from '@payloadcms/ui'
+import { toast, useAuth, useConfig, useModal } from '@payloadcms/ui'
 import type { DefaultCellComponentProps } from 'payload'
+import { ConfirmDialog } from './enhancements/ConfirmDialog'
 
 /**
  * "Actions" column in admin lists: Edit (or View when read-only) and Delete with a confirmation.
@@ -57,7 +58,7 @@ export function RowActions({ collectionSlug, rowData }: DefaultCellComponentProp
         title={canUpdate ? 'Edit' : 'View'}
       >
         {canUpdate ? <Pencil aria-hidden="true" /> : <Eye aria-hidden="true" />}
-        <span>{canUpdate ? 'Edit' : 'View'}</span>
+        <span className="im-row-actions__label">{canUpdate ? 'Edit' : 'View'}</span>
       </Link>
       {canDelete && (
         <>
@@ -70,10 +71,11 @@ export function RowActions({ collectionSlug, rowData }: DefaultCellComponentProp
             onClick={() => openModal(modalSlug)}
           >
             <Trash2 aria-hidden="true" />
-            <span>Delete</span>
+            <span className="im-row-actions__label">Delete</span>
           </button>
-          <ConfirmationModal
-            className="im-confirm--danger"
+          <ConfirmDialog
+            tone="danger"
+            icon={<Trash2 />}
             modalSlug={modalSlug}
             heading={`Delete “${title}”?`}
             body="This permanently removes it from the admin and the website. It cannot be undone."

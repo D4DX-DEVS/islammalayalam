@@ -10,6 +10,7 @@ import { payloadTotp } from 'payload-totp'
 import { mfaPolicy } from '@/payload/plugins/mfaPolicy'
 import { totpGuard } from '@/payload/plugins/totpGuard'
 import { getEnv, spacesConfig } from '@/lib/env'
+import { SITE_URL } from '@/lib/site-url'
 import { MAX_PDF_BYTES } from '@/lib/media/file-policy'
 import { PREVIEW_COLLECTIONS, PREVIEW_GLOBALS, previewTargetFor, previewUrl } from '@/lib/preview'
 import { articleEditor } from '@/payload/editor'
@@ -64,8 +65,18 @@ const rowActionsField: Field = {
 // Admin users are editors, not developers: the API tab and API URL are hidden on every screen.
 const HIDE_API = { hideAPIURL: true } as const
 
+// Every list: status tabs, filter chips, a Columns menu and the result count, in place of Payload's
+// wall of column pills and its filter panel (src/payload/admin/lists/ListToolbar.tsx).
+const LIST_TOOLBAR = '/payload/admin/lists/ListToolbar#ListToolbar'
+
 const withListDefaults = (collection: CollectionConfig): CollectionConfig => {
-  const admin = { pagination: LIST_PAGINATION, ...HIDE_API, ...collection.admin }
+  const own = collection.admin?.components
+  const admin = {
+    pagination: LIST_PAGINATION,
+    ...HIDE_API,
+    ...collection.admin,
+    components: { ...own, beforeListTable: [LIST_TOOLBAR, ...(own?.beforeListTable ?? [])] },
+  }
   if (!ROW_ACTIONS.has(collection.slug)) return { ...collection, admin }
   return {
     ...collection,
@@ -113,9 +124,12 @@ function storagePlugins(): Plugin[] {
 
 export default buildConfig({
   secret: env.PAYLOAD_SECRET,
-  serverURL: env.NEXT_PUBLIC_SERVER_URL,
-  csrf: [env.NEXT_PUBLIC_SERVER_URL],
-  cors: [env.NEXT_PUBLIC_SERVER_URL],
+  // SITE_URL, not the raw variable: in production a missing or localhost value falls back to the
+  // real domain. csrf is the only origin whose browser requests carry the sign-in cookie, so a wrong
+  // value here signs every admin fetch out (403 on save, delete and uploads).
+  serverURL: SITE_URL,
+  csrf: [SITE_URL],
+  cors: [SITE_URL],
   telemetry: false,
   graphQL: { disable: true },
   defaultDepth: 1,
@@ -132,8 +146,11 @@ export default buildConfig({
       // Replaces Payload's own icons; /favicon.ico is added by app/favicon.ico.
       icons: [
         { rel: 'icon', type: 'image/png', sizes: '192x192', url: '/brand/icon-192.png' },
-        { rel: 'apple-touch-icon', sizes: '180x180', url: '/brand/apple-touch-icon.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', url: '/brand/admin-apple-touch.png' },
       ],
+      // Installable as its own app (app/admin.webmanifest/route.ts), not as the public site.
+      manifest: '/admin.webmanifest',
+      appleWebApp: { capable: true, title: 'IM Admin', statusBarStyle: 'default' },
     },
     components: {
       graphics: {
@@ -141,10 +158,21 @@ export default buildConfig({
         Icon: '/payload/admin/graphics#AdminIcon',
       },
       Nav: '/payload/admin/nav/AdminNav#AdminNav',
-      // Right side of the header: dark-mode switch, then the account dropdown card.
+      // Phones: the bottom bar (Home · Posts · New post · Inbox · Menu). Rendered once per signed-in
+      // screen, outside the menu drawer, so its fixed position holds.
+      header: ['/payload/admin/dock/AdminDock#AdminDock'],
+      // Sign-in screen: a welcome panel beside the form (styles: admin-refresh.scss).
+      beforeLogin: [
+        '/payload/admin/login/LoginIntro#LoginIntro',
+        '/payload/admin/login/LoginIntro#LoginHeading',
+      ],
+      // Right side of the header. Payload lays these out right to left, so on screen they read:
+      // search (Ctrl+K), dark-mode switch, inbox bell, account card.
       actions: [
-        '/payload/admin/header/ThemeSwitch#ThemeSwitch',
         '/payload/admin/header/AccountMenu#AccountMenu',
+        '/payload/admin/header/InboxBell#InboxBell',
+        '/payload/admin/header/ThemeSwitch#ThemeSwitch',
+        '/payload/admin/header/GlobalSearch#GlobalSearch',
       ],
       views: {
         dashboard: { Component: '/payload/admin/dashboard/DashboardView#DashboardView' },
@@ -152,12 +180,6 @@ export default buildConfig({
         website: {
           Component: '/payload/admin/website/WebsiteView#WebsiteView',
           path: '/website',
-          exact: true,
-        },
-        // Totals and charts, kept off the Today screen.
-        reports: {
-          Component: '/payload/admin/dashboard/ReportsView#ReportsView',
-          path: '/reports',
           exact: true,
         },
       },

@@ -33,7 +33,7 @@ function mediaLinks(config: {
     labels: { singular: config.singular, plural: config.plural },
     admin: {
       useAsTitle: 'label',
-      group: 'Library',
+      group: 'Media',
       defaultColumns: ['moveArrows', 'label', 'author', 'link', 'active', 'createdAt'],
       listSearchableFields: ['label', 'title', 'author', 'link'],
       description: config.siteHelp,

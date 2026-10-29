@@ -8,6 +8,7 @@ import {
   ReelsBlock,
   ShortsBlock,
 } from './homepage-engage'
+import { SECTION_GROUPS, SECTION_NAMES } from './sectionNames'
 
 /**
  * Homepage / sidebar layout blocks. Editors compose the homepage from these in the Homepage
@@ -54,7 +55,8 @@ const category = (required = true): Field => ({
 export const FeaturedSliderBlock: Block = {
   slug: 'featuredSlider',
   interfaceName: 'FeaturedSliderBlock',
-  labels: { singular: 'Hero: featured stories', plural: 'Hero blocks' },
+  labels: { singular: SECTION_NAMES.featuredSlider!, plural: 'Hero sliders' },
+  admin: { group: SECTION_GROUPS.stories },
   fields: [
     {
       name: 'source',
@@ -80,7 +82,8 @@ export const FeaturedSliderBlock: Block = {
 export const CategoryFeatureBlock: Block = {
   slug: 'categoryFeature',
   interfaceName: 'CategoryFeatureBlock',
-  labels: { singular: 'Category: lead + list', plural: 'Category: lead + list' },
+  labels: { singular: SECTION_NAMES.categoryFeature!, plural: 'Lead stories + lists' },
+  admin: { group: SECTION_GROUPS.stories },
   fields: [
     width,
     category(),
@@ -103,7 +106,8 @@ export const CategoryFeatureBlock: Block = {
 export const TopicGridBlock: Block = {
   slug: 'topicGrid',
   interfaceName: 'TopicGridBlock',
-  labels: { singular: 'Topics: category tiles', plural: 'Topics: category tiles' },
+  labels: { singular: SECTION_NAMES.topicGrid!, plural: 'Topic tiles' },
+  admin: { group: SECTION_GROUPS.stories },
   fields: [
     width,
     { ...title, defaultValue: 'തിരഞ്ഞെടുക്ക വിഷയങ്ങൾ', admin: { description: 'Section heading.' } },
@@ -125,7 +129,8 @@ export const TopicGridBlock: Block = {
 export const CategoryGridBlock: Block = {
   slug: 'categoryGrid',
   interfaceName: 'CategoryGridBlock',
-  labels: { singular: 'Category: card grid', plural: 'Category: card grids' },
+  labels: { singular: SECTION_NAMES.categoryGrid!, plural: 'Card grids' },
+  admin: { group: SECTION_GROUPS.stories },
   fields: [
     width,
     category(),
@@ -145,7 +150,8 @@ export const CategoryGridBlock: Block = {
 export const CategoryListBlock: Block = {
   slug: 'categoryList',
   interfaceName: 'CategoryListBlock',
-  labels: { singular: 'Category: compact list', plural: 'Category: compact lists' },
+  labels: { singular: SECTION_NAMES.categoryList!, plural: 'Compact lists' },
+  admin: { group: SECTION_GROUPS.stories },
   fields: [
     width,
     category(),
@@ -159,7 +165,8 @@ export const CategoryListBlock: Block = {
 export const MediaShelfBlock: Block = {
   slug: 'mediaShelf',
   interfaceName: 'MediaShelfBlock',
-  labels: { singular: 'Media: videos / audios / e-books', plural: 'Media sections' },
+  labels: { singular: SECTION_NAMES.mediaShelf!, plural: 'Media sections' },
+  admin: { group: SECTION_GROUPS.media },
   fields: [
     width,
     {
@@ -194,7 +201,8 @@ export const MediaShelfBlock: Block = {
 export const QuickLinksBlock: Block = {
   slug: 'quickLinks',
   interfaceName: 'QuickLinksBlock',
-  labels: { singular: 'Quick links', plural: 'Quick links' },
+  labels: { singular: SECTION_NAMES.quickLinks!, plural: 'Quick links' },
+  admin: { group: SECTION_GROUPS.extras },
   fields: [
     { ...title, defaultValue: 'Quick Links' },
     { name: 'links', type: 'array', minRows: 1, maxRows: 20, fields: [linkGroup('link')] },
@@ -204,7 +212,8 @@ export const QuickLinksBlock: Block = {
 export const RichTextBlock: Block = {
   slug: 'richText',
   interfaceName: 'RichTextBlock',
-  labels: { singular: 'Text', plural: 'Text' },
+  labels: { singular: SECTION_NAMES.richText!, plural: 'Text' },
+  admin: { group: SECTION_GROUPS.extras },
   fields: [
     width,
     title,
@@ -215,7 +224,8 @@ export const RichTextBlock: Block = {
 export const BannerBlock: Block = {
   slug: 'banner',
   interfaceName: 'BannerBlock',
-  labels: { singular: 'Banner image', plural: 'Banner images' },
+  labels: { singular: SECTION_NAMES.banner!, plural: 'Banner images' },
+  admin: { group: SECTION_GROUPS.promo },
   fields: [
     width,
     {
@@ -238,17 +248,22 @@ export const BannerBlock: Block = {
 export const TopAdsBlock: Block = {
   slug: 'topAds',
   interfaceName: 'TopAdsBlock',
-  labels: {
-    singular: 'Top ads banner (pictures are set in Ads banners)',
-    plural: 'Top ads banner',
-  },
-  fields: [],
+  labels: { singular: SECTION_NAMES.topAds!, plural: 'Top ads banner' },
+  admin: { group: SECTION_GROUPS.promo },
+  fields: [
+    {
+      name: 'picturesNote',
+      type: 'ui',
+      admin: { components: { Field: '/payload/admin/homepage/TopAdsNote#TopAdsNote' } },
+    },
+  ],
 }
 
 export const FollowUsBlock: Block = {
   slug: 'followUs',
   interfaceName: 'FollowUsBlock',
-  labels: { singular: 'Follow us (social links)', plural: 'Follow us' },
+  labels: { singular: SECTION_NAMES.followUs!, plural: 'Follow us' },
+  admin: { group: SECTION_GROUPS.extras },
   fields: [
     {
       ...title,
@@ -261,14 +276,18 @@ export const FollowUsBlock: Block = {
 export const QuickContactBlock: Block = {
   slug: 'quickContact',
   interfaceName: 'QuickContactBlock',
-  labels: { singular: 'Quick contact form', plural: 'Quick contact forms' },
+  labels: { singular: SECTION_NAMES.quickContact!, plural: 'Contact forms' },
+  admin: { group: SECTION_GROUPS.extras },
   fields: [
     { ...title, defaultValue: 'Quick Contact' },
     { name: 'intro', type: 'textarea', maxLength: 300 },
   ],
 }
 
-/** Every homepage section can be switched off without deleting it (and its settings). */
+/**
+ * Every homepage section can be switched off without deleting it (and its settings), and gets the
+ * one-line header (name · kind · Hidden) instead of Payload's type pill + block-name input.
+ */
 const hiddenField: Field = {
   name: 'hidden',
   type: 'checkbox',
@@ -276,10 +295,15 @@ const hiddenField: Field = {
   label: 'Hide this section',
   admin: { description: 'Keeps the settings but stops showing the section on the site.' },
 }
+const SECTION_LABEL = '/payload/admin/homepage/SectionLabel#SectionLabel'
 const visible = new Map<Block, Block>()
 const withHide = (blocks: Block[]): Block[] =>
   blocks.map((block) => {
-    const wrapped = visible.get(block) ?? { ...block, fields: [hiddenField, ...block.fields] }
+    const wrapped = visible.get(block) ?? {
+      ...block,
+      admin: { ...block.admin, components: { ...block.admin?.components, Label: SECTION_LABEL } },
+      fields: [hiddenField, ...block.fields],
+    }
     visible.set(block, wrapped)
     return wrapped
   })

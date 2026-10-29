@@ -2,6 +2,7 @@
 /* DO NOT MODIFY IT BECAUSE IT COULD BE REWRITTEN AT ANY TIME. */
 import config from '@payload-config'
 import '@payloadcms/next/css'
+import type { Viewport } from 'next'
 import type { ServerFunctionClient } from 'payload'
 import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
 import React from 'react'
@@ -12,6 +13,18 @@ import './custom.scss'
 
 type Args = {
   children: React.ReactNode
+}
+
+// Status bar in the admin's paper / dark canvas (admin-theme.scss), and room to pad the phone
+// bottom bar above the iPhone home indicator (env(safe-area-inset-bottom), admin-dock.scss).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f4f3ef' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b1220' },
+  ],
 }
 
 const serverFunction: ServerFunctionClient = async function (args) {

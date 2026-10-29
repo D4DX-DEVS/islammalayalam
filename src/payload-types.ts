@@ -120,6 +120,7 @@ export interface Config {
     'ads-banners': AdsBanner;
     footer: Footer;
     'security-settings': SecuritySetting;
+    'instagram-connection': InstagramConnection;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
@@ -128,6 +129,7 @@ export interface Config {
     'ads-banners': AdsBannersSelect<false> | AdsBannersSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     'security-settings': SecuritySettingsSelect<false> | SecuritySettingsSelect<true>;
+    'instagram-connection': InstagramConnectionSelect<false> | InstagramConnectionSelect<true>;
   };
   locale: null;
   widgets: {
@@ -165,6 +167,10 @@ export interface Post {
   id: string;
   title: string;
   /**
+   * Video, audio and e-book posts get their link or PDF under Media & files.
+   */
+  format: 'standard' | 'video' | 'audio' | 'ebook';
+  /**
    * Short summary for cards and search results
    */
   excerpt?: string | null;
@@ -187,7 +193,6 @@ export interface Post {
     };
     [k: string]: unknown;
   } | null;
-  format: 'standard' | 'video' | 'audio' | 'ebook';
   video?: {
     url?: string | null;
     /**
@@ -289,7 +294,7 @@ export interface Post {
 export interface Media {
   id: string;
   /**
-   * Describe the image for screen readers. Required for images added by editors.
+   * Describe the image for screen readers. Left empty, the file name is used — replace it with a real description.
    */
   alt?: string | null;
   caption?: string | null;
@@ -615,7 +620,7 @@ export interface Page {
   createdAt: string;
 }
 /**
- * Posters and thoughts for the homepage “Insights” slider (the first 5 in this list) and its “View More” archive. Drag the rows or use the arrows to set the order: the top one comes first.
+ * Posters and thoughts for the homepage “Insights” slider (the first 5 in this list) and its “View More” archive. Drag the rows or use the arrows to set the order: the top one comes first. Once the Instagram account is connected (docs/INSTAGRAM.md), Insights show its newest picture posts instead, and this list is only used if Instagram cannot be reached.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "quotes".
@@ -718,6 +723,9 @@ export interface Redirect {
   to?: string | null;
   code: '301' | '308' | '410';
   source?: ('manual' | 'auto' | 'migration') | null;
+  /**
+   * Visits this redirect has served (counted since Oct 2026)
+   */
   hits?: number | null;
   updatedAt: string;
   createdAt: string;
@@ -956,10 +964,10 @@ export interface PayloadMigration {
  */
 export interface PostsSelect<T extends boolean = true> {
   title?: T;
+  format?: T;
   excerpt?: T;
   featuredImage?: T;
   content?: T;
-  format?: T;
   video?:
     | T
     | {
@@ -1432,23 +1440,14 @@ export interface SiteSetting {
    */
   logo?: (string | null) | Media;
   /**
-   * Partner logo (right), e.g. Dialogue Centre Kerala
+   * Shown on the right, e.g. Dialogue Centre Kerala
    */
   partnerLogo?: (string | null) | Media;
   partnerUrl?: string | null;
   /**
-   * Fallback social-share image (1200×630)
+   * Used when a shared page has no picture of its own (1200 × 630).
    */
   defaultOgImage?: (string | null) | Media;
-  social?: {
-    facebook?: string | null;
-    x?: string | null;
-    instagram?: string | null;
-    youtube?: string | null;
-    whatsapp?: string | null;
-    telegram?: string | null;
-    spotify?: string | null;
-  };
   contact?: {
     email?: string | null;
     /**
@@ -1466,6 +1465,15 @@ export interface SiteSetting {
     whatsappMessage?: string | null;
     address?: string | null;
   };
+  social?: {
+    facebook?: string | null;
+    x?: string | null;
+    instagram?: string | null;
+    youtube?: string | null;
+    whatsapp?: string | null;
+    telegram?: string | null;
+    spotify?: string | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1475,38 +1483,6 @@ export interface SiteSetting {
  */
 export interface Header {
   id: string;
-  /**
-   * Small links beside the logo on desktop and at the bottom of the mobile menu (e.g. About Us · Postal Library).
-   */
-  topBarLinks?:
-    | {
-        link: {
-          type?: ('reference' | 'custom' | 'none') | null;
-          newTab?: boolean | null;
-          label: string;
-          reference?:
-            | ({
-                relationTo: 'pages';
-                value: string | Page;
-              } | null)
-            | ({
-                relationTo: 'posts';
-                value: string | Post;
-              } | null)
-            | ({
-                relationTo: 'categories';
-                value: string | Category;
-              } | null);
-          url?: string | null;
-        };
-        highlight?: boolean | null;
-        id?: string | null;
-      }[]
-    | null;
-  showSocialInTopBar?: boolean | null;
-  /**
-   * Blue navigation bar. Up to three levels.
-   */
   mainMenu?:
     | {
         link: {
@@ -1579,6 +1555,32 @@ export interface Header {
         id?: string | null;
       }[]
     | null;
+  topBarLinks?:
+    | {
+        link: {
+          type?: ('reference' | 'custom' | 'none') | null;
+          newTab?: boolean | null;
+          label: string;
+          reference?:
+            | ({
+                relationTo: 'pages';
+                value: string | Page;
+              } | null)
+            | ({
+                relationTo: 'posts';
+                value: string | Post;
+              } | null)
+            | ({
+                relationTo: 'categories';
+                value: string | Category;
+              } | null);
+          url?: string | null;
+        };
+        highlight?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  showSocialInTopBar?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1589,7 +1591,7 @@ export interface Header {
 export interface Homepage {
   id: string;
   /**
-   * Main column, top to bottom
+   * Top to bottom, as visitors see them. Drag ⋮⋮ to reorder, click a section to change it, and tick “Hide this section” to take it off the page without deleting it.
    */
   layout?:
     | (
@@ -1610,7 +1612,7 @@ export interface Homepage {
       )[]
     | null;
   /**
-   * Right sidebar on desktop; shown after the main column on mobile
+   * Right-hand column on desktop; shown after the main sections on phones.
    */
   sidebar?:
     | (
@@ -2203,9 +2205,6 @@ export interface AdsBanner {
  */
 export interface Footer {
   id: string;
-  /**
-   * Dark footer columns (original: Quick Links · Quick Contact · Follow Us)
-   */
   columns?:
     | {
         title: string;
@@ -2267,12 +2266,26 @@ export interface Footer {
   createdAt?: string | null;
 }
 /**
+ * Asks everyone for a 6-digit code from an authenticator app after their password. Changes take effect at the next sign-in.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "security-settings".
  */
 export interface SecuritySetting {
   id: string;
   requireTwoFactor?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "instagram-connection".
+ */
+export interface InstagramConnection {
+  id: string;
+  token?: string | null;
+  refreshedAt?: string | null;
+  sourceHash?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2288,6 +2301,16 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   partnerLogo?: T;
   partnerUrl?: T;
   defaultOgImage?: T;
+  contact?:
+    | T
+    | {
+        email?: T;
+        secondEmail?: T;
+        phone?: T;
+        whatsappNumber?: T;
+        whatsappMessage?: T;
+        address?: T;
+      };
   social?:
     | T
     | {
@@ -2299,16 +2322,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         telegram?: T;
         spotify?: T;
       };
-  contact?:
-    | T
-    | {
-        email?: T;
-        secondEmail?: T;
-        phone?: T;
-        whatsappNumber?: T;
-        whatsappMessage?: T;
-        address?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -2318,22 +2331,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
-  topBarLinks?:
-    | T
-    | {
-        link?:
-          | T
-          | {
-              type?: T;
-              newTab?: T;
-              label?: T;
-              reference?: T;
-              url?: T;
-            };
-        highlight?: T;
-        id?: T;
-      };
-  showSocialInTopBar?: T;
   mainMenu?:
     | T
     | {
@@ -2376,6 +2373,22 @@ export interface HeaderSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  topBarLinks?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              label?: T;
+              reference?: T;
+              url?: T;
+            };
+        highlight?: T;
+        id?: T;
+      };
+  showSocialInTopBar?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -2804,6 +2817,18 @@ export interface FooterSelect<T extends boolean = true> {
  */
 export interface SecuritySettingsSelect<T extends boolean = true> {
   requireTwoFactor?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "instagram-connection_select".
+ */
+export interface InstagramConnectionSelect<T extends boolean = true> {
+  token?: T;
+  refreshedAt?: T;
+  sourceHash?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

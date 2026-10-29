@@ -25,11 +25,11 @@ export const Quotes: CollectionConfig = {
   labels: { singular: 'Insight', plural: 'Insights' },
   admin: {
     useAsTitle: 'label',
-    group: 'Library',
+    group: 'Media',
     defaultColumns: ['moveArrows', 'poster', 'label', 'showOn', 'active', 'createdAt'],
     listSearchableFields: ['label', 'text', 'source'],
     description:
-      'Posters and thoughts for the homepage “Insights” slider (the first 5 in this list) and its “View More” archive. Drag the rows or use the arrows to set the order: the top one comes first.',
+      'Posters and thoughts for the homepage “Insights” slider (the first 5 in this list) and its “View More” archive. Drag the rows or use the arrows to set the order: the top one comes first. Once the Instagram account is connected (docs/INSTAGRAM.md), Insights show its newest picture posts instead, and this list is only used if Instagram cannot be reached.',
     components: {
       beforeListTable: ['/payload/admin/media/ListOrderHint#ListOrderHint'],
       edit: { SaveButton: '/payload/admin/media/SaveButtons#SaveButtons' },

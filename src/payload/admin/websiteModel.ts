@@ -60,22 +60,14 @@ export type SectionRow = {
   viewHref: string
 }
 
-export type ContentCard = {
-  key: string
-  label: string
-  hint: string
-  count: number | null
-  listHref: string
-  createHref: string | null
-}
-
 export type WebsiteData = {
   site: SectionRow[]
   homepage: SectionRow[]
   sidebar: SectionRow[]
-  content: ContentCard[]
   /** True when the Homepage editor has no sections yet. */
   homepageEmpty: boolean
+  /** The Homepage editor, when this role may change it: one button for the whole section list. */
+  homepageEditHref: string | null
 }
 
 /** What a role may do, reduced to the questions the page asks. */
@@ -100,21 +92,10 @@ export type WebsiteInput = {
   /** AI search is switched on (an API key is set on the server). */
   aiSearchOn: boolean
   counts: {
-    articles: number | null
-    videos: number | null
-    audios: number | null
-    ebooks: number | null
-    pages: number | null
-    authors: number | null
-    media: number | null
-    redirects: number | null
     /** Active quotes, shown as "Insights" (the homepage sidebar slider and its archive). */
     quotes?: number | null
     /** Published audio posts that have neither a Spotify link nor a hosted audio link. */
     audiosWithoutAudio?: number | null
-    /** Quick audio / video entries (link, title, author) added from the dashboard. */
-    audioItems?: number | null
-    videoItems?: number | null
   }
 }
 
@@ -305,91 +286,11 @@ export function buildWebsite({
     },
   ]
 
-  const card = (
-    key: string,
-    label: string,
-    hint: string,
-    n: number | null,
-    slug: string,
-    filter?: string,
-  ): ContentCard => ({
-    key,
-    label,
-    hint,
-    count: can.readCollection(slug) ? n : null,
-    listHref: filter ? `${col(slug)}?${filter}` : col(slug),
-    createHref: can.createCollection(slug) ? `${col(slug)}/create` : null,
-  })
-  const f = (format: string) => `where[format][equals]=${format}`
-
   return {
     site,
     homepage: rows,
     sidebar,
     homepageEmpty: layout.length === 0,
-    content: [
-      card(
-        'articles',
-        'Articles',
-        'News, Q&A and opinion pieces',
-        counts.articles,
-        'posts',
-        f('standard'),
-      ),
-      card(
-        'videos',
-        'Videos',
-        'YouTube links, shown in the blue video band',
-        counts.videos,
-        'posts',
-        f('video'),
-      ),
-      card(
-        'audios',
-        'Audios',
-        'Spotify or hosted audio, shown in the player',
-        counts.audios,
-        'posts',
-        f('audio'),
-      ),
-      card(
-        'audio-items',
-        'Quick audio',
-        'Just a link, title and author (all optional): first in the Audios player',
-        counts.audioItems ?? null,
-        'audios',
-      ),
-      card(
-        'video-items',
-        'Quick video',
-        'Just a link, title and author (all optional): first in the Videos band',
-        counts.videoItems ?? null,
-        'videos',
-      ),
-      card('ebooks', 'E-books', 'A cover image and a PDF', counts.ebooks, 'posts', f('ebook')),
-      card(
-        'pages',
-        'Pages',
-        'Static and knowledge-base pages (tabs, sub-pages)',
-        counts.pages,
-        'pages',
-      ),
-      card(
-        'categories',
-        'Categories',
-        'Order, icon and visibility of topics',
-        categories.length || null,
-        'categories',
-      ),
-      card('authors', 'Authors', 'Bylines shown on articles', counts.authors, 'authors'),
-      card('media', 'Media library', 'Images and PDFs', counts.media, 'media'),
-      card(
-        'redirects',
-        'Redirects',
-        'Old addresses that forward to new ones',
-        counts.redirects,
-        'redirects',
-      ),
-    ],
+    homepageEditHref: homeEdit.href,
   }
 }

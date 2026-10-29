@@ -22,7 +22,7 @@ import { SITE_URL } from '@/lib/site-url'
 import { absolute, siteJsonLd } from '@/lib/seo'
 import { shareImage } from '@/lib/media'
 import { JsonLd } from '@/components/seo/JsonLd'
-import { parseTheme, THEME_COOKIE } from '@/lib/theme'
+import { parseTheme, THEME_COLOR, THEME_COOKIE } from '@/lib/theme'
 import './globals.css'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -43,6 +43,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: { card: 'summary_large_image' },
     formatDetection: { telephone: false },
+    // iPhone "Add to Home Screen": opens full-screen like the installed app on Android.
+    appleWebApp: { capable: true, title: settings.siteName, statusBarStyle: 'default' },
     // The site's own emblem (public/brand). app/favicon.ico and app/manifest.ts add their own tags.
     icons: {
       icon: [
@@ -54,12 +56,16 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: '#ffffff',
-  // Lets the dock pad itself for the iPhone home indicator (env(safe-area-inset-bottom)).
-  viewportFit: 'cover',
+export async function generateViewport(): Promise<Viewport> {
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value) ?? 'light'
+  return {
+    width: 'device-width',
+    initialScale: 1,
+    // Status bar in the header's colour for the chosen theme (ThemeToggle updates it on a switch).
+    themeColor: THEME_COLOR[theme],
+    // Lets the dock pad itself for the iPhone home indicator (env(safe-area-inset-bottom)).
+    viewportFit: 'cover',
+  }
 }
 
 export default async function FrontendLayout({ children }: { children: ReactNode }) {

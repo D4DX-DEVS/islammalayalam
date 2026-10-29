@@ -4,7 +4,7 @@ import { loadWebsite } from '../websiteData'
 import { WebsiteManager } from './WebsiteManager'
 
 /**
- * Admin → Website manager (admin.components.views.website, path /website). Payload has already
+ * Admin → Site → Overview (admin.components.views.website, path /website). Payload has already
  * required a signed-in session before this runs; the data is then read as that user, so a role only
  * sees (and can only open Edit links for) what its access rules allow.
  */

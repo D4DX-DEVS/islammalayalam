@@ -32,6 +32,8 @@ export type DashboardRow = {
 }
 
 export type DashboardStats = {
+  /** Every post this person can see (published and drafts). */
+  all: number
   published: number
   drafts: number
   needsReview: number
@@ -84,7 +86,7 @@ export type QueueEdges = {
   draftOldest: string | null
 }
 
-/** "today" feeds the home screen; "reports" adds the totals and charts that live on Reports. */
+/** "today" is the task list alone; "reports" adds the totals and charts (the Dashboard shows both). */
 export type DashboardScope = 'today' | 'reports'
 
 export type DashboardData = {
@@ -96,6 +98,8 @@ export type DashboardData = {
   recent: DashboardRow[]
   drafts: DashboardRow[]
   published: DashboardRow[]
+  /** Flagged for review, latest edit first. */
+  review: DashboardRow[]
   categories: CategoryCount[]
   messages: MessageRow[]
   activity: ActivityRow[]
@@ -346,9 +350,11 @@ export async function loadDashboard(
     media,
     newMessages,
     newRequests,
+    allPosts,
     recentList,
     draftList,
     publishedList,
+    reviewList,
     messageList,
     activityList,
     categories,
@@ -367,6 +373,7 @@ export async function loadDashboard(
     reports ? payload.count({ collection: 'media', ...as }) : none,
     payload.count({ collection: 'contact-messages', where: newMessagesWhere, ...as }),
     payload.count({ collection: 'postal-requests', where: newRequestsWhere, ...as }),
+    payload.count({ collection: 'posts', where: recentWhere, ...as }),
     payload.find({
       collection: 'posts',
       where: recentWhere,
@@ -392,6 +399,14 @@ export async function loadDashboard(
       ...as,
     }),
     payload.find({
+      collection: 'posts',
+      where: reviewWhere,
+      limit: LIST_LIMIT,
+      draft: true,
+      ...rows,
+      ...as,
+    }),
+    payload.find({
       collection: 'contact-messages',
       sort: '-createdAt',
       limit: 5,
@@ -403,7 +418,7 @@ export async function loadDashboard(
     payload.find({
       collection: 'audit-logs',
       sort: '-createdAt',
-      limit: 8,
+      limit: LIST_LIMIT,
       depth: 1,
       pagination: false,
       ...as,
@@ -448,6 +463,7 @@ export async function loadDashboard(
   return {
     ownDraftsOnly,
     stats: {
+      all: allPosts.totalDocs,
       published: published.totalDocs,
       drafts: drafts.totalDocs,
       needsReview: needsReview.totalDocs,
@@ -460,6 +476,7 @@ export async function loadDashboard(
     recent: recentList.docs.map((d) => toRow(d as Record<string, unknown>)),
     drafts: draftList.docs.map((d) => toRow(d as Record<string, unknown>)),
     published: publishedList.docs.map((d) => toRow(d as Record<string, unknown>)),
+    review: reviewList.docs.map((d) => toRow(d as Record<string, unknown>)),
     categories,
     messages: messageList.docs.map((d) => {
       const doc = d as Record<string, unknown>
