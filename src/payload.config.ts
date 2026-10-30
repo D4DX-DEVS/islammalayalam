@@ -3,7 +3,6 @@ import { fileURLToPath } from 'url'
 import { buildConfig } from 'payload'
 import type { CollectionConfig, Field, Plugin } from 'payload'
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
-import { seoPlugin } from '@payloadcms/plugin-seo'
 import { s3Storage } from '@payloadcms/storage-s3'
 import sharp from 'sharp'
 import { payloadTotp } from 'payload-totp'
@@ -229,15 +228,6 @@ export default buildConfig({
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   sharp,
   plugins: [
-    seoPlugin({
-      collections: ['posts', 'pages', 'categories'],
-      globals: ['homepage'],
-      uploadsCollection: 'media',
-      tabbedUI: false,
-      generateTitle: ({ doc }) => (doc?.title ? `${doc.title} | ${SITE_NAME}` : SITE_NAME),
-      generateDescription: ({ doc }) =>
-        typeof doc?.excerpt === 'string' ? doc.excerpt.slice(0, 160) : '',
-    }),
     ...storagePlugins(),
     // Must follow every plugin that adds collections/globals: it wraps the access of everything before it.
     payloadTotp({

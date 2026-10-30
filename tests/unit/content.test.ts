@@ -19,6 +19,10 @@ describe('validateLexical', () => {
       para(text('ഇസ്‌ലാം')),
       { type: 'heading', tag: 'h2', children: [text('h')] },
       { type: 'list', children: [{ type: 'listitem', children: [text('i')] }] },
+      {
+        type: 'table',
+        children: [{ type: 'tablerow', children: [{ type: 'tablecell', children: [para()] }] }],
+      },
     )
     expect(validateLexical(state, RICH_TEXT_BLOCKS)).toEqual([])
   })

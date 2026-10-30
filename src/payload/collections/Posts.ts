@@ -19,6 +19,7 @@ import {
   reviewFlags,
   searchKeyField,
   searchTextField,
+  seoField,
   validateSpotifyLink,
 } from '@/payload/fields'
 import { contentHooks } from '@/payload/hooks'
@@ -29,7 +30,7 @@ import {
   setCreatedBy,
 } from '@/payload/hooks/editorial'
 import { addEbookCategory } from '@/payload/hooks/ebook'
-import { articleEditor } from '@/payload/editor'
+import { articleEditor, richTextHooks } from '@/payload/editor'
 import { isSafeHref, youtubeId } from '@/lib/security/url'
 
 /**
@@ -144,7 +145,7 @@ export const Posts: CollectionConfig = {
                   'For an e-book this is the book cover (a portrait image looks best on the shelf).',
               },
             },
-            { name: 'content', type: 'richText', editor: articleEditor },
+            { name: 'content', type: 'richText', editor: articleEditor, hooks: richTextHooks },
           ],
         },
         {
@@ -289,6 +290,7 @@ export const Posts: CollectionConfig = {
     createdByField,
     searchTextField,
     searchKeyField,
+    seoField({ title: 'the title', description: 'the excerpt', image: 'the featured image' }),
     legacyFields({ withUrls: true }),
   ],
 }

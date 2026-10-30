@@ -41,6 +41,15 @@ export function withoutLeadingTitle<T>(data: T, title: string | null | undefined
   return { ...(data as object), root: { ...root, children: children.slice(at + 1) } } as T
 }
 
+/**
+ * `null` for a document whose root has no children: the editor cannot open such a state (Lexical
+ * error #38). Anything else is returned unchanged.
+ */
+export function withoutEmptyRoot<T>(data: T): T | null {
+  const children = (data as LexicalDoc | null | undefined)?.root?.children
+  return Array.isArray(children) && children.length === 0 ? null : data
+}
+
 /** True when the document has at least one block. */
 export function hasBlocks(data: unknown): boolean {
   const children = (data as LexicalDoc | null | undefined)?.root?.children

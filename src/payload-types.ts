@@ -265,6 +265,20 @@ export interface Post {
   createdBy?: (string | null) | User;
   searchText?: string | null;
   searchKey?: string | null;
+  meta?: {
+    /**
+     * Empty: the title is used.
+     */
+    title?: string | null;
+    /**
+     * Empty: the excerpt is used.
+     */
+    description?: string | null;
+    /**
+     * Empty: the featured image is used (WhatsApp, Facebook, X).
+     */
+    image?: (string | null) | Media;
+  };
   legacy?: {
     wpId?: number | null;
     legacySlugs?: string[] | null;
@@ -274,14 +288,6 @@ export interface Post {
      */
     sourceHash?: string | null;
     migratedAt?: string | null;
-  };
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (string | null) | Media;
   };
   updatedAt: string;
   createdAt: string;
@@ -413,6 +419,12 @@ export interface Category {
    * Placement-only category (e.g. the old "slider" flag): not listed publicly
    */
   hidden?: boolean | null;
+  meta?: {
+    /**
+     * Empty: the category description is used.
+     */
+    description?: string | null;
+  };
   legacy?: {
     wpId?: number | null;
     legacySlugs?: string[] | null;
@@ -421,14 +433,6 @@ export interface Category {
      */
     sourceHash?: string | null;
     migratedAt?: string | null;
-  };
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (string | null) | Media;
   };
   updatedAt: string;
   createdAt: string;
@@ -598,6 +602,20 @@ export interface Page {
   createdBy?: (string | null) | User;
   searchText?: string | null;
   searchKey?: string | null;
+  meta?: {
+    /**
+     * Empty: the title is used.
+     */
+    title?: string | null;
+    /**
+     * Empty: the start of the content is used.
+     */
+    description?: string | null;
+    /**
+     * Empty: the featured image is used (WhatsApp, Facebook, X).
+     */
+    image?: (string | null) | Media;
+  };
   legacy?: {
     wpId?: number | null;
     legacySlugs?: string[] | null;
@@ -607,14 +625,6 @@ export interface Page {
      */
     sourceHash?: string | null;
     migratedAt?: string | null;
-  };
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (string | null) | Media;
   };
   updatedAt: string;
   createdAt: string;
@@ -1012,6 +1022,13 @@ export interface PostsSelect<T extends boolean = true> {
   createdBy?: T;
   searchText?: T;
   searchKey?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
   legacy?:
     | T
     | {
@@ -1020,13 +1037,6 @@ export interface PostsSelect<T extends boolean = true> {
         legacyUrls?: T;
         sourceHash?: T;
         migratedAt?: T;
-      };
-  meta?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1065,6 +1075,13 @@ export interface PagesSelect<T extends boolean = true> {
   createdBy?: T;
   searchText?: T;
   searchKey?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
   legacy?:
     | T
     | {
@@ -1073,13 +1090,6 @@ export interface PagesSelect<T extends boolean = true> {
         legacyUrls?: T;
         sourceHash?: T;
         migratedAt?: T;
-      };
-  meta?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1097,6 +1107,11 @@ export interface CategoriesSelect<T extends boolean = true> {
   showInStrip?: T;
   order?: T;
   hidden?: T;
+  meta?:
+    | T
+    | {
+        description?: T;
+      };
   legacy?:
     | T
     | {
@@ -1104,13 +1119,6 @@ export interface CategoriesSelect<T extends boolean = true> {
         legacySlugs?: T;
         sourceHash?: T;
         migratedAt?: T;
-      };
-  meta?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1628,14 +1636,6 @@ export interface Homepage {
         | FaqBlock
       )[]
     | null;
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (string | null) | Media;
-  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2429,13 +2429,6 @@ export interface HomepageSelect<T extends boolean = true> {
         reels?: T | ReelsBlockSelect<T>;
         callToAction?: T | CallToActionBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
-      };
-  meta?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
       };
   updatedAt?: T;
   createdAt?: T;

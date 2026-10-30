@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isEditor, publicOrStaff, totpPublicRead } from '@/payload/access'
-import { legacyFields, slugField } from '@/payload/fields'
+import { legacyFields, seoField, slugField } from '@/payload/fields'
 import { contentHooks } from '@/payload/hooks'
 import { redirectOnSlugChange } from '@/payload/hooks/paths'
 import { CATEGORY_ICON_OPTIONS } from '@/lib/category-icon-names'
@@ -57,6 +57,7 @@ export const Categories: CollectionConfig = {
         description: 'Placement-only category (e.g. the old "slider" flag): not listed publicly',
       },
     },
+    seoField({ description: 'the category description' }),
     legacyFields(),
   ],
 }

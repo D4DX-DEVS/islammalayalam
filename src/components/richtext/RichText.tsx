@@ -23,6 +23,15 @@ type LinkFields = {
   doc?: { relationTo?: string; value?: unknown }
 }
 type LinkNode = { fields: LinkFields; children: never[] }
+type TableCellNode = {
+  headerState?: number
+  colSpan?: number
+  rowSpan?: number
+  backgroundColor?: string | null
+  children: never[]
+}
+/** Cell colours come from the editor's palette; anything that is not a plain hex colour is dropped. */
+const HEX_COLOR = /^#[0-9a-f]{3,8}$/i
 
 function internalHref(doc: LinkFields['doc']): string | null {
   const value = doc?.value
@@ -93,6 +102,34 @@ const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
       </a>
     ) : (
       <span>{content}</span>
+    )
+  },
+  // Tables scroll sideways inside their own box, so a wide table never widens the page on a phone.
+  table: ({ node, nodesToJSX }) => (
+    <div className="overflow-x-auto rounded-2xl border border-line">
+      <table className="w-full border-collapse text-[0.9375rem] [&_tr:last-child>*]:border-b-0">
+        <tbody>{nodesToJSX({ nodes: (node as { children: never[] }).children })}</tbody>
+      </table>
+    </div>
+  ),
+  tablerow: ({ node, nodesToJSX }) => (
+    <tr className="even:bg-surface/60">
+      {nodesToJSX({ nodes: (node as { children: never[] }).children })}
+    </tr>
+  ),
+  tablecell: ({ node, nodesToJSX }) => {
+    const cell = node as unknown as TableCellNode
+    const Cell = cell.headerState ? 'th' : 'td'
+    const background = cell.backgroundColor && HEX_COLOR.test(cell.backgroundColor)
+    return (
+      <Cell
+        colSpan={cell.colSpan && cell.colSpan > 1 ? cell.colSpan : undefined}
+        rowSpan={cell.rowSpan && cell.rowSpan > 1 ? cell.rowSpan : undefined}
+        style={background ? { backgroundColor: cell.backgroundColor! } : undefined}
+        className={`min-w-28 border-b border-e border-line px-3 py-2 text-start align-top last:border-e-0 ${cell.headerState ? 'bg-brand-soft font-semibold text-ink' : ''}`}
+      >
+        {nodesToJSX({ nodes: cell.children })}
+      </Cell>
     )
   },
   upload: ({ node }) => {

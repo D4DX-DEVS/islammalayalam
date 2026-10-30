@@ -66,6 +66,57 @@ export function legacyFields(opts: { withUrls?: boolean } = {}): Field {
 }
 
 /** Review flags raised by the migration (audit: tampered dates, empty titles). Editors clear them. */
+type SeoPart = 'title' | 'description' | 'image'
+
+/**
+ * Optional search and share overrides, stored as `meta.title` / `meta.description` / `meta.image`
+ * (the shape the old SEO plugin used, so saved values keep working). Collapsed: left empty, the site
+ * uses the document's own title, summary and picture. `fallbacks` names what each override replaces;
+ * only the parts the site actually reads are offered.
+ */
+export function seoField(fallbacks: Partial<Record<SeoPart, string>>): Field {
+  const parts: Record<SeoPart, Field> = {
+    title: {
+      name: 'title',
+      type: 'text',
+      label: 'Title on Google',
+      admin: { description: `Empty: ${fallbacks.title} is used.` },
+    },
+    description: {
+      name: 'description',
+      type: 'textarea',
+      label: 'Summary on Google',
+      admin: { description: `Empty: ${fallbacks.description} is used.` },
+    },
+    image: {
+      name: 'image',
+      type: 'upload',
+      relationTo: 'media',
+      label: 'Picture when the link is shared',
+      filterOptions: { mimeType: { contains: 'image' } },
+      admin: { description: `Empty: ${fallbacks.image} is used (WhatsApp, Facebook, X).` },
+    },
+  }
+  return {
+    type: 'collapsible',
+    label: 'Google and sharing (optional)',
+    admin: {
+      initCollapsed: true,
+      description:
+        'Nothing to fill in: these are taken from the content automatically. Change them only to show something different on Google or when the link is shared.',
+    },
+    fields: [
+      {
+        name: 'meta',
+        type: 'group',
+        label: false,
+        admin: { hideGutter: true },
+        fields: (Object.keys(fallbacks) as SeoPart[]).map((part) => parts[part]),
+      },
+    ],
+  }
+}
+
 export const reviewFlags: Field = {
   name: 'flags',
   type: 'group',

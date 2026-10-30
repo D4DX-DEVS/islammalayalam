@@ -6,12 +6,13 @@ import {
   reviewFlags,
   searchKeyField,
   searchTextField,
+  seoField,
   slugField,
 } from '@/payload/fields'
 import { contentHooks } from '@/payload/hooks'
 import { derivePageFields, setCreatedBy } from '@/payload/hooks/editorial'
 import { cascadePagePath, computePagePath } from '@/payload/hooks/paths'
-import { articleEditor, simpleEditor } from '@/payload/editor'
+import { articleEditor, simpleEditor, richTextHooks } from '@/payload/editor'
 
 /**
  * Knowledge-base tree and static pages, served at their hierarchical path (/kb/salah/wudu/).
@@ -68,8 +69,8 @@ export const Pages: CollectionConfig = {
           'Standard shows the body as an article. The request form adds the membership form: Content is the introduction, Sections are the conditions.',
       },
     },
-    { name: 'intro', type: 'richText', editor: simpleEditor },
-    { name: 'content', type: 'richText', editor: articleEditor },
+    { name: 'intro', type: 'richText', editor: simpleEditor, hooks: richTextHooks },
+    { name: 'content', type: 'richText', editor: articleEditor, hooks: richTextHooks },
     {
       name: 'sections',
       type: 'array',
@@ -77,7 +78,7 @@ export const Pages: CollectionConfig = {
       admin: { description: 'Shown as tabs (e.g. ഖുര്‍ആന്‍ സൂക്തങ്ങള്‍ / നബി വചനങ്ങള്‍)' },
       fields: [
         { name: 'title', type: 'text', required: true, maxLength: 120 },
-        { name: 'content', type: 'richText', editor: articleEditor },
+        { name: 'content', type: 'richText', editor: articleEditor, hooks: richTextHooks },
       ],
     },
     {
@@ -107,6 +108,11 @@ export const Pages: CollectionConfig = {
     createdByField,
     searchTextField,
     searchKeyField,
+    seoField({
+      title: 'the title',
+      description: 'the start of the content',
+      image: 'the featured image',
+    }),
     legacyFields({ withUrls: true }),
   ],
 }

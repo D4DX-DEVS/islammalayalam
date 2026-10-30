@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { bodyStartsWith, hasBlocks, plainText, withoutLeadingTitle } from '@/lib/text/lexical'
+import {
+  bodyStartsWith,
+  hasBlocks,
+  plainText,
+  withoutEmptyRoot,
+  withoutLeadingTitle,
+} from '@/lib/text/lexical'
 
 const text = (value: string) => ({ type: 'text', text: value })
 const heading = (value: string, tag = 'h2') => ({ type: 'heading', tag, children: [text(value)] })
@@ -116,5 +122,17 @@ describe('bodyStartsWith', () => {
     expect(bodyStartsWith(body, null)).toBe(false)
     expect(bodyStartsWith(null, 'Question: സമ്പന്നർ കൂടുതൽ സമ്പന്നരാവുകയും')).toBe(false)
     expect(bodyStartsWith(doc(), 'Question: സമ്പന്നർ കൂടുതൽ സമ്പന്നരാവുകയും')).toBe(false)
+  })
+})
+
+describe('withoutEmptyRoot', () => {
+  it('turns a root with no children into null (Lexical error #38)', () => {
+    expect(withoutEmptyRoot(doc())).toBeNull()
+  })
+  it('keeps documents with blocks, and non-documents, unchanged', () => {
+    const d = doc(paragraph('x'))
+    expect(withoutEmptyRoot(d)).toBe(d)
+    expect(withoutEmptyRoot(null)).toBeNull()
+    expect(withoutEmptyRoot(undefined)).toBeUndefined()
   })
 })
