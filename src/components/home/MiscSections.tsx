@@ -98,8 +98,9 @@ export function FollowUsSection({
   block: FollowUsBlock
   settings: SiteSetting
 }) {
+  // Phones and tablets get the same buttons in the footer right below, so the panel is desktop-only.
   return (
-    <section className={PANEL}>
+    <section className={`${PANEL} max-lg:hidden`}>
       <SectionHeading title={block.title || 'Follow Us'} icon={Users} />
       <SocialLinks social={settings.social} size="md" variant="solid" className="flex-wrap" />
     </section>

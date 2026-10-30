@@ -70,12 +70,20 @@ export function ReelsSection({ block, compact }: { block: ReelsBlock; compact: b
       <ul
         className={
           compact
-            ? 'grid grid-cols-2 gap-3'
+            ? // A swipe row while the panel is full width; a 2×2 grid once it sits in a column (lg).
+              'no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 sm:-mx-6 sm:scroll-px-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0'
             : 'no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-5'
         }
       >
         {reels.map((r) => (
-          <li key={r.key} className={compact ? '' : 'w-[45%] shrink-0 snap-start sm:w-auto'}>
+          <li
+            key={r.key}
+            className={
+              compact
+                ? 'w-[42%] shrink-0 snap-start sm:w-[30%] lg:w-auto'
+                : 'w-[45%] shrink-0 snap-start sm:w-auto'
+            }
+          >
             <ReelPlayer id={r.id} title={r.title} />
           </li>
         ))}
@@ -191,14 +199,15 @@ export function CallToActionSection({
           </dl>
         ) : null}
         {buttons.length ? (
-          <div className="flex flex-wrap gap-3 pt-1">
+          // One row on phones: the buttons share the width instead of stacking.
+          <div className="flex gap-2 pt-1 sm:flex-wrap sm:gap-3">
             {buttons.map((b) => (
               <SmartLink
                 key={b.key}
                 href={b.href}
                 external={b.external}
                 newTab={b.newTab}
-                className={`inline-flex min-h-12 items-center rounded-full px-7 text-sm font-semibold transition hover:-translate-y-px ${
+                className={`inline-flex min-h-12 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-full px-3 text-sm font-semibold transition hover:-translate-y-px sm:flex-none sm:px-7 ${
                   b.style === 'secondary' ? tone.secondary : tone.primary
                 }`}
               >

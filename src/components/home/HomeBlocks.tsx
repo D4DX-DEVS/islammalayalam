@@ -172,14 +172,20 @@ export function HomeBlocks({
           <div>{cells}</div>
         )
         // Rows after the first two are rendered lazily (see .lazy-section in globals.css).
-        const lazy = page && r >= 2 && row[0]!.blockType !== 'topAds' ? 'lazy-section' : ''
+        const rowClass = [
+          page && r >= 2 && row[0]!.blockType !== 'topAds' ? 'lazy-section' : '',
+          // Follow Us is desktop-only (FollowUsSection); drop its row too so no empty gap is left.
+          row.every((b) => b.blockType === 'followUs') ? 'max-lg:hidden' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')
         const out: ReactNode[] = [
           page && !bleed ? (
-            <Container key={`row-${r}`} className={lazy}>
+            <Container key={`row-${r}`} className={rowClass}>
               {content}
             </Container>
           ) : (
-            <div key={`row-${r}`} className={lazy}>
+            <div key={`row-${r}`} className={rowClass}>
               {content}
             </div>
           ),

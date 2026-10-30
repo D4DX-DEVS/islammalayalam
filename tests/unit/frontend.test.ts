@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { resolveLink } from '@/lib/links'
-import { isActive, isCurrent, toNavTree } from '@/lib/nav'
+import { isActive, isCurrent, toNavGroups, toNavTree, uniqueNavGroups } from '@/lib/nav'
 import { quoteIndexForDate } from '@/lib/quote'
 import { formatDate, parsePage, withoutSiteName } from '@/lib/format'
 import { mediaSrc } from '@/lib/media'
@@ -67,6 +67,39 @@ describe('navigation state', () => {
     expect(isActive(tree[0]!, encoded)).toBe(false)
     expect(isActive(tree[0]!, '/')).toBe(true)
     expect(isCurrent(tree[1]!.children[0]!, `/${encodeURIComponent('ആദർശം')}/`)).toBe(true)
+  })
+})
+
+describe('mobile menu groups', () => {
+  const shown = toNavTree([
+    { link: { type: 'custom', label: 'Home', url: '/' } },
+    {
+      link: { type: 'none', label: 'ഖുര്‍ആന്‍' },
+      children: [{ link: { type: 'custom', label: 'A', url: '/ആദർശം/' } }],
+    },
+    { link: { type: 'custom', label: 'About', url: '/about/' } },
+  ])
+  const groups = toNavGroups([
+    {
+      kind: 'links',
+      title: 'Quick Links',
+      links: [
+        { link: { type: 'custom', label: 'Home again', url: '/' } },
+        { link: { type: 'custom', label: 'A (encoded)', url: `/${encodeURIComponent('ആദർശം')}/` } },
+        { link: { type: 'custom', label: 'About', url: '/about' } },
+        { link: { type: 'custom', label: 'Contact', url: '/contact/' } },
+      ],
+    },
+    {
+      kind: 'links',
+      title: 'Same again',
+      links: [{ link: { type: 'custom', label: 'Home', url: '/' } }],
+    },
+  ])
+  it('drops links already in the menu (any depth, encoded or not) and groups left empty', () => {
+    const unique = uniqueNavGroups(groups, shown)
+    expect(unique).toHaveLength(1)
+    expect(unique[0]!.links.map((l) => l.label)).toEqual(['Contact'])
   })
 })
 

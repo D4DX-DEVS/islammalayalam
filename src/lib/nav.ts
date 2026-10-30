@@ -35,7 +35,10 @@ export function toNavTree(nodes: MenuNode[] | null | undefined, prefix = 'n'): N
 
 /** The footer's link columns as menu groups; columns with no usable link are left out. */
 export function toNavGroups(
-  columns: { id?: string | null; kind: string; title: string; links?: MenuNode[] | null }[] | null | undefined,
+  columns:
+    | { id?: string | null; kind: string; title: string; links?: MenuNode[] | null }[]
+    | null
+    | undefined,
 ): NavGroup[] {
   return (columns ?? []).flatMap((column, i) => {
     if (column.kind !== 'links') return []
@@ -43,6 +46,30 @@ export function toNavGroups(
     const links = toNavTree(column.links, id)
     return links.length ? [{ id, title: column.title, links }] : []
   })
+}
+
+/**
+ * The mobile menu lists the footer columns under the main menu; editors often repeat the same pages
+ * there. Keeps each group's links whose page is not already shown (at any depth, or in an earlier
+ * group) and drops groups left empty.
+ */
+export function uniqueNavGroups(groups: NavGroup[], shown: NavItem[]): NavGroup[] {
+  const seen = new Set<string>()
+  const add = (items: NavItem[]) =>
+    items.forEach((item) => {
+      if (item.href) seen.add(hrefKey(item.href))
+      add(item.children)
+    })
+  add(shown)
+  return groups.flatMap((group) => {
+    const links = group.links.filter((link) => !link.href || !seen.has(hrefKey(link.href)))
+    add(links)
+    return links.length ? [{ ...group, links }] : []
+  })
+}
+
+function hrefKey(href: string): string {
+  return safeDecode(href).replace(/(.)\/+$/, '$1')
 }
 
 /** True when `pathname` is the item's page or inside its subtree (for aria-current / highlight). */
