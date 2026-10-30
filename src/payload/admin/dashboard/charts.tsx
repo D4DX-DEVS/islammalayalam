@@ -1,25 +1,23 @@
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
-import { full, niceScale, shareLabel, type DayCount } from '../dashboardStats'
-import type { CategoryCount, FormatCount } from '../dashboardData'
+import {
+  axisLabelIndexes,
+  full,
+  monotonePath,
+  niceScale,
+  shareLabel,
+  type DayCount,
+  type PlotPoint,
+} from '../dashboardStats'
+import type { FormatCount } from '../dashboardData'
 import { Empty } from './parts'
 
 /**
- * Dashboard charts, drawn with HTML + CSS (styles: app/(payload)/admin-dashboard.scss) so text stays
- * crisp and the layout flows on every screen width. They follow the data-viz rules: one colour for a
- * single series, thin marks with a rounded data end, hairline grid, labels only on the extremes, a
- * legend for the multi-series mix, and a table view next to every chart whose values aren't all
- * printed. Tooltips only repeat what the table and labels already say.
+ * Dashboard charts (styles: app/(payload)/styles/dashboard.scss). Lines and areas are SVG in a
+ * 100 × 100 box stretched to the plot (so they follow every width); grid lines, axis labels, points
+ * and tooltips are HTML, so text stays crisp. One colour per single series, a hairline grid, labels
+ * on the extremes only, and a table view next to every chart whose values are not all printed.
  */
-
-type Column = {
-  key: string
-  label: string
-  /** Shown instead of `label` on narrow screens (e.g. ’18 for 2018). */
-  short?: string
-  value: number
-}
-
 function TableView({
   heads,
   rows,
@@ -50,27 +48,52 @@ function TableView({
   )
 }
 
-/** Single-series columns (e.g. posts per year). The peak and the last column carry a value label. */
-export function ColumnChart({
-  columns,
-  noun,
-  heads,
-}: {
-  columns: Column[]
-  /** "post" → "166 posts" in the tooltip / screen-reader name. */
-  noun: string
-  heads: [string, string]
-}) {
-  const peak = Math.max(0, ...columns.map((c) => c.value))
-  if (!columns.length || peak === 0) return <Empty>Nothing to chart yet.</Empty>
-  const scale = niceScale(peak)
-  const peakAt = columns.findIndex((c) => c.value === peak)
-  const lastAt = columns.length - 1
-  const name = (c: Column) => `${c.label}: ${full(c.value)} ${noun}${c.value === 1 ? '' : 's'}`
+const fmt = (n: number) => Math.round(n * 100) / 100
+
+/** Points for `values` in the 100 × 100 box, the first at the left edge and the last at the right. */
+function plotPoints(values: number[], max: number): PlotPoint[] {
+  const n = values.length
+  return values.map((v, i) => [
+    fmt(n === 1 ? 50 : (i / (n - 1)) * 100),
+    fmt(100 - (Math.max(0, v) / max) * 100),
+  ])
+}
+
+/** A tiny trend line for a stat card: no axes, no labels (the card's words carry the meaning). */
+export function Sparkline({ values }: { values: number[] }) {
+  if (values.length < 2) return null
+  const max = Math.max(1, ...values)
+  const points = plotPoints(values, max)
+  const line = monotonePath(points)
+  return (
+    <svg className="im-spark" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <path className="im-spark__area" d={`${line} L 100 100 L 0 100 Z`} />
+      <path className="im-spark__line" d={line} vectorEffect="non-scaling-stroke" />
+    </svg>
+  )
+}
+
+/** Posts per day over the last weeks: an area line with a point (and tooltip) for every day. */
+export function TrendLine({ days, noun }: { days: DayCount[]; noun: string }) {
+  if (!days.length) return <Empty>Nothing to chart yet.</Empty>
+  const peak = Math.max(0, ...days.map((d) => d.count))
+  const scale = niceScale(peak, 3)
+  const points = plotPoints(
+    days.map((d) => d.count),
+    scale.max,
+  )
+  const line = monotonePath(points)
+  const total = days.reduce((sum, d) => sum + d.count, 0)
+  const name = (d: DayCount) => `${d.label}: ${full(d.count)} ${noun}${d.count === 1 ? '' : 's'}`
+  const labelled = axisLabelIndexes(days.length)
 
   return (
-    <figure className="im-viz">
-      <div className="im-viz__plot">
+    <figure className="im-trend" style={{ '--n': days.length } as CSSProperties}>
+      <div
+        className="im-trend__plot"
+        role="img"
+        aria-label={`${full(total)} ${noun}${total === 1 ? '' : 's'} over ${days.length} days, peak ${full(peak)}`}
+      >
         <div className="im-viz__grid" aria-hidden="true">
           {scale.ticks.map((tick, i) => (
             <span
@@ -82,30 +105,42 @@ export function ColumnChart({
             </span>
           ))}
         </div>
-        <ol className="im-viz__cols" style={{ '--n': columns.length } as CSSProperties}>
-          {columns.map((c, i) => (
-            <li key={c.key} className="im-viz__slot" tabIndex={0} aria-label={name(c)}>
-              <span
-                className={`im-viz__bar${c.value === 0 ? ' im-viz__bar--zero' : ''}`}
-                style={{ height: `${(c.value / scale.max) * 100}%` }}
-                aria-hidden="true"
-              >
-                {i === peakAt || i === lastAt ? (
-                  <span className="im-viz__val">{full(c.value)}</span>
-                ) : null}
-              </span>
-              <span className={`im-viz__x${c.short ? ' im-viz__x--short' : ''}`} aria-hidden="true">
-                <span className="im-viz__x-full">{c.label}</span>
-                {c.short ? <span className="im-viz__x-short">{c.short}</span> : null}
-              </span>
-              <span className="im-viz__tip" aria-hidden="true">
-                {name(c)}
-              </span>
+        {peak > 0 ? (
+          <svg
+            className="im-trend__svg"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="im-trend-fill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" className="im-trend__stop im-trend__stop--top" />
+                <stop offset="1" className="im-trend__stop im-trend__stop--bottom" />
+              </linearGradient>
+            </defs>
+            <path className="im-trend__area" d={`${line} L 100 100 L 0 100 Z`} />
+            <path className="im-trend__line" d={line} vectorEffect="non-scaling-stroke" />
+          </svg>
+        ) : null}
+        <ol className="im-trend__pts" aria-hidden="true">
+          {days.map((d, i) => (
+            <li
+              key={d.key}
+              className={d.count === peak && peak > 0 ? 'im-trend__pt im-trend__pt--peak' : 'im-trend__pt'}
+              style={{ '--x': `${points[i]![0]}%`, '--y': `${points[i]![1]}%` } as CSSProperties}
+            >
+              <span className="im-trend__dot" />
+              <span className="im-trend__tip">{name(d)}</span>
             </li>
           ))}
         </ol>
       </div>
-      <TableView heads={heads} rows={columns.map((c) => [c.label, c.value])} />
+      <ol className="im-trend__axis" aria-hidden="true">
+        {days.map((d, i) => (
+          <li key={d.key}>{labelled.has(i) ? d.label : ''}</li>
+        ))}
+      </ol>
+      <TableView heads={['Day', `${noun[0]!.toUpperCase()}${noun.slice(1)}s`]} rows={days.map((d) => [d.label, d.count])} />
     </figure>
   )
 }
@@ -150,45 +185,56 @@ export function FormatMix({ formats, admin }: { formats: FormatCount[]; admin: s
   )
 }
 
-/** Ranked horizontal bars, one colour (the categories have no order), the count at each tip. */
-export function CategoryBars({
+export type RankRow = { id: string; name: string; count: number; href: string }
+
+/** Ranked horizontal bars (one colour: the rows have no order of their own), the count at each tip. */
+export function RankBars({
   rows,
-  admin,
-  limit = 8,
+  limit = 6,
+  more,
+  avatars = false,
 }: {
-  rows: CategoryCount[]
-  admin: string
+  rows: RankRow[]
   limit?: number
+  /** "category" → "+ 3 more categories". */
+  more: string
+  /** Show a lettered avatar before each name (people). */
+  avatars?: boolean
 }) {
-  if (!rows.length) return <Empty>No categories yet.</Empty>
+  if (!rows.length) return <Empty>Nothing to rank yet.</Empty>
   const top = rows.slice(0, limit)
-  const max = Math.max(1, ...top.map((c) => c.posts))
+  const max = Math.max(1, ...top.map((r) => r.count))
+  const rest = rows.length - top.length
   return (
     <>
-      <ul className="im-bars">
-        {top.map((c) => (
-          <li key={c.id}>
-            <Link
-              href={`${admin}/collections/posts?where[primaryCategory][equals]=${c.id}`}
-              className="im-bars__row"
-            >
-              <span className="im-bars__top">
-                <span className="im-bars__name">{c.name}</span>
-                <span className="im-bars__count">{full(c.posts)}</span>
-              </span>
-              <span className="im-bars__track" aria-hidden="true">
-                <span
-                  className="im-bars__fill"
-                  style={{ width: `${c.posts > 0 ? Math.max(2, (c.posts / max) * 100) : 0}%` }}
-                />
+      <ol className="im-bars">
+        {top.map((r) => (
+          <li key={r.id}>
+            <Link href={r.href} className="im-bars__row">
+              {avatars ? (
+                <span className="im-avatar im-avatar--sm" aria-hidden="true">
+                  {r.name.trim().charAt(0).toUpperCase() || '?'}
+                </span>
+              ) : null}
+              <span className="im-bars__body">
+                <span className="im-bars__top">
+                  <span className="im-bars__name">{r.name}</span>
+                  <span className="im-bars__count">{full(r.count)}</span>
+                </span>
+                <span className="im-bars__track" aria-hidden="true">
+                  <span
+                    className="im-bars__fill"
+                    style={{ width: `${r.count > 0 ? Math.max(2, (r.count / max) * 100) : 0}%` }}
+                  />
+                </span>
               </span>
             </Link>
           </li>
         ))}
-      </ul>
-      {rows.length > limit ? (
+      </ol>
+      {rest > 0 ? (
         <p className="im-bars__more">
-          + {rows.length - limit} more {rows.length - limit === 1 ? 'category' : 'categories'}
+          + {rest} more {rest === 1 ? more : `${more.replace(/y$/, 'ie')}s`}
         </p>
       ) : null}
     </>

@@ -83,17 +83,19 @@ function Group({
   children: ReactNode
 }) {
   return (
-    <section className="im-dash__panel im-site__group">
+    <section className="im-card im-dash__panel im-site__group">
       <header className="im-dash__panel-head">
-        <h2>
-          <span className="im-dash__panel-icon">
-            <Icon aria-hidden="true" />
-          </span>
-          {title}
-        </h2>
+        <div className="im-dash__panel-titles">
+          <h2>
+            <span className="im-dash__panel-icon">
+              <Icon aria-hidden="true" />
+            </span>
+            {title}
+          </h2>
+          <p className="im-dash__panel-sub">{hint}</p>
+        </div>
         {actions ? <div className="im-site__group-actions">{actions}</div> : null}
       </header>
-      <p className="im-site__hint">{hint}</p>
       {children}
     </section>
   )
@@ -138,7 +140,7 @@ function Row({
       <div className="im-site__actions">
         {row.move ? <MoveSection {...row.move} label={row.label} /> : null}
         {!ownEdit ? null : row.editHref ? (
-          <Link href={row.editHref} className="im-dash__btn im-dash__btn--primary im-site__btn">
+          <Link href={row.editHref} className="im-btn im-btn--sm">
             <Pencil aria-hidden="true" />
             {row.editLabel}
           </Link>
@@ -146,7 +148,7 @@ function Row({
           <span className="im-site__locked">{row.readOnly ?? 'View only'}</span>
         )}
         {row.moreHref ? (
-          <Link href={row.moreHref} className="im-dash__btn im-site__btn">
+          <Link href={row.moreHref} className="im-btn im-btn--sm">
             <ImageIcon aria-hidden="true" />
             {row.moreLabel ?? 'Edit'}
           </Link>
@@ -198,36 +200,36 @@ export function WebsiteManager({
 }) {
   const homeLinks = { editHref: data.homepageEditHref, viewHref: '/' }
   return (
-    <div className="im-dash im-dash--view im-site">
-      <SiteTabs description="" />
-      <header className="im-dash__hero">
+    <div className="im-page im-site">
+      <header className="im-page__head">
         <div>
-          <p className="im-dash__eyebrow">Site</p>
-          <h1 className="im-dash__title">Your website at a glance</h1>
-          <p className="im-dash__lead">
-            Every section in the order visitors see it. Use the tabs above to change the homepage,
+          <p className="im-eyebrow">Website</p>
+          <h1 className="im-page__title">Your website at a glance</h1>
+          <p className="im-page__lead">
+            Every section in the order visitors see it. Use the tabs below to change the homepage,
             menu, footer, banners or contact details.
           </p>
         </div>
-        <div className="im-dash__hero-actions">
-          <a href="/" target="_blank" rel="noopener noreferrer" className="im-dash__btn">
+        <div className="im-page__actions">
+          <a href="/" target="_blank" rel="noopener noreferrer" className="im-btn">
             <Globe aria-hidden="true" />
             Open the site
           </a>
-          {postCreateHref ? (
-            <Link href={postCreateHref} className="im-dash__btn">
-              <Plus aria-hidden="true" />
-              New post
-            </Link>
-          ) : null}
           {mediaCreateHref ? (
-            <Link href={mediaCreateHref} className="im-dash__btn im-dash__btn--primary">
+            <Link href={mediaCreateHref} className="im-btn">
               <Upload aria-hidden="true" />
               Upload media
             </Link>
           ) : null}
+          {postCreateHref ? (
+            <Link href={postCreateHref} className="im-btn im-btn--primary">
+              <Plus aria-hidden="true" />
+              New post
+            </Link>
+          ) : null}
         </div>
       </header>
+      <SiteTabs description="" />
 
       <Group
         icon={LayoutTemplate}
@@ -235,20 +237,12 @@ export function WebsiteManager({
         hint="Top to bottom. The arrows move a section up or down; add, rename or hide sections in the editor."
         actions={
           <>
-            <a
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="im-dash__btn im-site__btn"
-            >
+            <a href="/" target="_blank" rel="noopener noreferrer" className="im-btn im-btn--sm">
               <Eye aria-hidden="true" />
               View
             </a>
             {data.homepageEditHref ? (
-              <Link
-                href={data.homepageEditHref}
-                className="im-dash__btn im-dash__btn--primary im-site__btn"
-              >
+              <Link href={data.homepageEditHref} className="im-btn im-btn--primary im-btn--sm">
                 <Pencil aria-hidden="true" />
                 Edit homepage
               </Link>
@@ -292,7 +286,7 @@ export function WebsiteManager({
         </ul>
       </Group>
 
-      <details className="im-dash__panel im-site__help">
+      <details className="im-card im-dash__panel im-site__help">
         <summary>
           <HelpCircle aria-hidden="true" />
           How to add pictures, PDFs, videos and audio

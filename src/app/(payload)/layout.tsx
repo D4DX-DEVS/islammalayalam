@@ -15,14 +15,14 @@ type Args = {
   children: React.ReactNode
 }
 
-// Status bar in the admin's paper / dark canvas (admin-theme.scss), and room to pad the phone
-// bottom bar above the iPhone home indicator (env(safe-area-inset-bottom), admin-dock.scss).
+// Status bar in the admin's canvas colour (styles/tokens.scss --im-canvas), and room to pad the
+// phone bottom bar above the iPhone home indicator (env(safe-area-inset-bottom), admin-dock.scss).
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f4f3ef' },
+    { media: '(prefers-color-scheme: light)', color: '#f5f7fb' },
     { media: '(prefers-color-scheme: dark)', color: '#0b1220' },
   ],
 }

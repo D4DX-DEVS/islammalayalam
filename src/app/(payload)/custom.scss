@@ -1,157 +1,26 @@
-// Admin branding and design tokens. Payload's own styles sit in `@layer payload-default`, so these
-// unlayered rules win without !important. The admin has its own palette and typefaces (warm paper,
-// navy menu, royal blue); the public site keeps the tokens in app/(frontend)/globals.css.
-@use './admin-theme';
-@use './admin-nav';
-@use './admin-dashboard';
-@use './admin-website';
-@use './admin-header';
-@use './admin-security';
-@use './admin-dialog';
-@use './admin-modern';
-@use './admin-refresh';
-@use './admin-chrome';
-@use './admin-dock';
-@use './admin-menu-sheet';
-@use './admin-lists';
-@use './admin-system';
-
-:root {
-  // Modern minimal light system: royal blue accent on white, one step toward blue's palest tint for ground
-  // Paper, surfaces and lines
-  --im-canvas: #f9fafb; // ground one step toward blue's palest tint
-  --im-surface: #fff; // white surfaces
-  --im-border: #e6e9ef; // hairline borders (~1.2:1 contrast)
-  --im-border-strong: #d0d5dd; // control borders, one step darker
-  --im-sunken: #f3f4f6; // raised/sunken surfaces
-  // Ink
-  --im-ink: #111418; // text, full strength
-  --im-ink-2: #4b5260; // secondary text
-  --im-muted: #5f6670; // meta text
-  // Sidebar and nav: LIGHT on page ground, never dark
-  --im-nav: #f9fafb; // same as canvas or white with 1px hairline
-  --im-nav-raised: #ffffff; // nav surface if separated
-  --im-nav-active: #e8f0fb; // active row: pale blue tint
-  --im-nav-text: #111418; // nav text in full ink
-  --im-nav-muted: #5f6670; // nav group labels in meta grey
-  // Brand blue (actions, active states, data) - full strength ONLY on small marks
-  --im-brand: #0a56b8; // royal blue light, full strength only on filled button, data series, active icon
-  --im-brand-strong: #083f8a; // dark ink for blue tints
-  --im-brand-soft: #e8f0fb; // pale tint for active nav row, badges, progress
-  --im-accent: #0a56b8; // use brand for accent (same hue)
-  --im-accent-ink: #083f8a; // text on brand tint
-  --im-on-brand: #fff; // text/icon on full-strength brand
-  // Status: every one is also shown with a word, never colour alone
-  --im-ok: #14633f; // keep existing
-  --im-ok-soft: #e3f3ea;
-  --im-draft: #4a5565;
-  --im-draft-soft: #f1f3f6; // neutral, not warm
-  --im-warn: #8a5100;
-  --im-warn-soft: #fcefd3;
-  --im-danger: #8c1d18;
-  --im-danger-soft: #fbe7e5;
-  --im-danger-line: #e5b8b4;
-  // Shape: 36px controls on desktop, 44px on touch; 8px cards, 6px controls, 4px chips
-  --im-control-h: 2.4rem; // 36px at the 15px root (desktop)
-  // Typefaces: Figtree for Latin, Noto Sans Malayalam for Malayalam (variables set on <html> by
-  // app/(payload)/layout.tsx from src/lib/admin-fonts.ts).
-  --font-body: var(--font-figtree), var(--font-noto-malayalam), system-ui, sans-serif;
-}
-
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-body);
-}
-
-html[data-theme='dark'] {
-  // True neutral darks, same rules as light mode
-  --im-canvas: #0b0b0c; // ground
-  --im-surface: #141416; // surface
-  --im-border: #26262a; // hairline borders
-  --im-border-strong: #35353d; // control borders
-  --im-sunken: #1c1c1f; // raised/sunken
-  --im-ink: #f3f4f6; // text, full strength
-  --im-ink-2: #b4b4bb; // secondary text
-  --im-muted: #9a9aa2; // meta text
-  --im-nav: #0b0b0c; // nav on ground
-  --im-nav-raised: #141416; // nav surface if separated
-  --im-nav-active: #1a2a3f; // active row: darker blue tint (adjusted for dark mode)
-  --im-nav-text: #f3f4f6; // nav text in light
-  --im-nav-muted: #9a9aa2; // nav group labels in meta grey
-  --im-brand: #6aa5ff; // blue on dark (lighter variant)
-  --im-brand-strong: #93c5fd; // lighter for dark text on tint
-  --im-brand-soft: #1a2a3f; // darker blue tint for areas
-  --im-accent: #6aa5ff;
-  --im-accent-ink: #93c5fd;
-  --im-on-brand: #000000; // text/icon on full-strength brand
-  // Status colors adjusted for dark mode
-  --im-ok: #4ade80;
-  --im-ok-soft: rgb(74 222 128 / 0.14);
-  --im-draft: #b6c0d0;
-  --im-draft-soft: rgb(148 163 184 / 0.16);
-  --im-warn: #fbbf24;
-  --im-warn-soft: rgb(251 191 36 / 0.14);
-  --im-danger: #fca5a5;
-  --im-danger-soft: rgb(248 113 113 / 0.14);
-  --im-danger-line: rgb(248 113 113 / 0.4);
-}
-
-// ---- Buttons, links, focus ---------------------------------------------------------------------
-.btn--style-primary:not(.btn--disabled) {
-  --bg-color: var(--im-brand);
-  --hover-bg: var(--im-brand-strong);
-  --color: var(--im-on-brand);
-  --hover-color: var(--im-on-brand);
-}
-
-:focus-visible {
-  outline-color: var(--im-brand);
-}
-
-// ---- Logo (login / TOTP screens) and nav icon --------------------------------------------------
-// The site's own logo: blue lettering on the light theme, white lettering on the dark theme.
-.im-logo {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.im-logo__img {
-  display: block;
-  width: auto;
-  height: 4.5rem;
-}
-
-.im-logo__img--dark,
-html[data-theme='dark'] .im-logo__img--light {
-  display: none;
-}
-
-html[data-theme='dark'] .im-logo__img--dark {
-  display: block;
-}
-
-.im-logo__sub {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--im-accent-ink);
-}
-
-.im-icon {
-  display: block;
-  width: 1.75rem;
-  height: 1.75rem;
-}
-
-.im-brand-mark {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.im-brand-mark__name {
-  display: none;
-}
+// The admin's design system, in load order. Payload's own styles sit in `@layer payload-default`,
+// so these unlayered rules win without !important.
+//
+//   tokens     every colour, size, radius and shadow (light + dark), mapped onto Payload's variables
+//   base       Payload's stock screens (lists, editor, fields, menus, dialogs) in the admin's look
+//   ui         the admin's own kit: page heads, cards, buttons, pills, avatars, small widgets
+//   nav        the sidebar (and its icon rail)
+//   header     the top bar: breadcrumbs, search, dark-mode switch, inbox bell, account
+//   dashboard  the Dashboard
+//   login      sign-in, two-step and password screens
+//
+// Module files still to be folded into the system (one per redesigned module):
+//   admin-lists, admin-dialog, admin-security, admin-website, admin-dock, admin-menu-sheet
+@use './styles/tokens';
+@use './styles/base';
+@use './styles/ui';
+@use './styles/nav';
+@use './styles/header';
+@use './styles/dashboard';
+@use './styles/login';
+@use './styles/admin-lists';
+@use './styles/admin-dialog';
+@use './styles/admin-security';
+@use './styles/admin-website';
+@use './styles/admin-dock';
+@use './styles/admin-menu-sheet';

@@ -20,6 +20,7 @@ import {
   searchKeyField,
   searchTextField,
   seoField,
+  sidebarSection,
   validateSpotifyLink,
 } from '@/payload/fields'
 import { contentHooks } from '@/payload/hooks'
@@ -67,6 +68,9 @@ const setPublishedAt: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
+  // One collection for every kind of content (src/cms/content-types.ts): the sidebar offers each
+  // kind as its own filtered list, and the list heading says "All content".
+  labels: { singular: 'Post', plural: 'All content' },
   admin: {
     useAsTitle: 'title',
     group: 'Content',
@@ -239,58 +243,75 @@ export const Posts: CollectionConfig = {
         },
       ],
     },
-    {
-      name: 'postNumber',
-      type: 'number',
-      unique: true,
-      index: true,
-      admin: {
-        position: 'sidebar',
-        readOnly: true,
-        description: 'Public URL: /<number>/. Assigned automatically.',
+    // The right-hand column, as cards (presentational: field names and stored data are unchanged).
+    sidebarSection('Publishing', [
+      {
+        name: 'publishedAt',
+        label: 'Publish date',
+        type: 'date',
+        index: true,
+        admin: {
+          date: { pickerAppearance: 'dayAndTime', displayFormat: 'd MMM yyyy, h:mm a' },
+          description: 'Set automatically when the post is first published.',
+        },
       },
-      access: { create: () => false, update: () => false },
-    },
-    {
-      name: 'publishedAt',
-      type: 'date',
-      index: true,
-      admin: { position: 'sidebar', date: { pickerAppearance: 'dayAndTime' } },
-    },
-    {
-      name: 'categories',
-      type: 'relationship',
-      relationTo: 'categories',
-      hasMany: true,
-      index: true,
-      admin: { position: 'sidebar' },
-    },
-    {
-      name: 'primaryCategory',
-      type: 'relationship',
-      relationTo: 'categories',
-      admin: { position: 'sidebar', description: 'Defaults to the first category' },
-    },
-    { name: 'author', type: 'relationship', relationTo: 'authors', admin: { position: 'sidebar' } },
-    {
-      name: 'featured',
-      type: 'checkbox',
-      defaultValue: false,
-      index: true,
-      admin: { position: 'sidebar', description: 'Show in the homepage slider' },
-      access: { create: editorFieldOnly, update: editorFieldOnly },
-    },
-    {
-      name: 'readingMinutes',
-      type: 'number',
-      admin: { position: 'sidebar', readOnly: true },
-      access: { create: () => false, update: () => false },
-    },
+      { name: 'author', type: 'relationship', relationTo: 'authors' },
+      {
+        name: 'featured',
+        label: 'Feature on the homepage',
+        type: 'checkbox',
+        defaultValue: false,
+        index: true,
+        admin: { description: 'Shows the post in the homepage slider.' },
+        access: { create: editorFieldOnly, update: editorFieldOnly },
+      },
+      {
+        name: 'postNumber',
+        label: 'Post number',
+        type: 'number',
+        unique: true,
+        index: true,
+        admin: {
+          readOnly: true,
+          description: 'The post’s address on the site is /<number>/. Set automatically.',
+        },
+        access: { create: () => false, update: () => false },
+      },
+    ]),
+    sidebarSection('Categories', [
+      {
+        name: 'categories',
+        type: 'relationship',
+        relationTo: 'categories',
+        hasMany: true,
+        index: true,
+      },
+      {
+        name: 'primaryCategory',
+        label: 'Main category',
+        type: 'relationship',
+        relationTo: 'categories',
+        admin: { description: 'Shown on the post’s cards. Empty: the first category.' },
+      },
+    ]),
     reviewFlags,
-    createdByField,
+    sidebarSection(
+      'Details',
+      [
+        {
+          name: 'readingMinutes',
+          label: 'Reading time (minutes)',
+          type: 'number',
+          admin: { readOnly: true, description: 'Worked out from the text.' },
+          access: { create: () => false, update: () => false },
+        },
+        createdByField,
+        legacyFields({ withUrls: true }),
+      ],
+      { collapsed: true },
+    ),
     searchTextField,
     searchKeyField,
     seoField({ title: 'the title', description: 'the excerpt', image: 'the featured image' }),
-    legacyFields({ withUrls: true }),
   ],
 }

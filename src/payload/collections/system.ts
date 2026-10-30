@@ -26,7 +26,7 @@ export const Redirects: CollectionConfig = {
   slug: 'redirects',
   admin: {
     useAsTitle: 'from',
-    group: 'Advanced',
+    group: 'Tools',
     defaultColumns: ['from', 'to', 'code', 'source', 'hits'],
   },
   access: { read: isEditor, create: isEditor, update: isEditor, delete: isEditor },
@@ -87,7 +87,7 @@ export const ContactMessages: CollectionConfig = {
   labels: { singular: 'Message', plural: 'Messages' },
   admin: {
     useAsTitle: 'subject',
-    group: 'Communication',
+    group: 'Inbox',
     defaultColumns: ['name', 'subject', 'status', 'createdAt'],
   },
   // Created only by the site's server action (Local API, rate-limited); never via the REST API.
@@ -119,7 +119,7 @@ export const AuditLogs: CollectionConfig = {
   labels: { singular: 'Activity entry', plural: 'Activity log' },
   admin: {
     useAsTitle: 'target',
-    group: 'Advanced',
+    group: 'Tools',
     defaultColumns: ['createdAt', 'action', 'target', 'docId', 'user'],
   },
   defaultSort: '-createdAt',
@@ -144,7 +144,7 @@ export const MigrationRuns: CollectionConfig = {
   labels: { singular: 'Migration run', plural: 'Migration runs' },
   admin: {
     useAsTitle: 'runId',
-    group: 'Advanced',
+    group: 'Tools',
     // The WordPress import finished (2026-09-30): kept for the record, out of the sidebar.
     hidden: true,
     defaultColumns: ['runId', 'status', 'startedAt', 'finishedAt'],
@@ -179,7 +179,7 @@ export const MigrationIssues: CollectionConfig = {
   labels: { singular: 'Migration issue', plural: 'Migration issues' },
   admin: {
     useAsTitle: 'summary',
-    group: 'Advanced',
+    group: 'Tools',
     // The WordPress import finished (2026-09-30): kept for the record, out of the sidebar.
     hidden: true,
     defaultColumns: ['severity', 'entity', 'wpId', 'gate', 'resolved'],

@@ -1,0 +1,396 @@
+// The sidebar (AdminNavClient.tsx): a white rail on the left with the brand, the groups by job and
+// View website. Rows are rounded; the current one is filled with the brand blue. On wide screens
+// it folds to an icon rail (html[data-im-nav='rail']); on phones admin-menu-sheet.scss turns
+// Payload's drawer into a bottom sheet and reuses these class names.
+@use './ui';
+
+.nav {
+  --nav-trans-time: 180ms;
+  width: var(--nav-width);
+  border-right: 1px solid var(--im-border);
+  background: var(--im-nav);
+  transition: width var(--nav-trans-time) ease;
+}
+
+// Payload opens its sidebar only above 1440px and otherwise waits for a hamburger. From 1025px up
+// the sidebar is simply always there (folded to a rail on request, see the end of this file);
+// below that Payload's drawer stays, and admin-menu-sheet.scss shapes it on phones.
+@media (min-width: 1025px) {
+  .template-default,
+  .template-default--nav-hydrated {
+    grid-template-columns: var(--nav-width) auto;
+  }
+
+  .nav,
+  .nav.nav--nav-hydrated {
+    display: block;
+    opacity: 1;
+  }
+}
+
+// Payload pads this by the header height and the page gutter; the sidebar sets its own spacing
+// (the phone sheet sets its own again in admin-menu-sheet.scss).
+.nav__scroll {
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--im-border-strong) transparent;
+}
+
+// Payload's own close button in the drawer header: the sheet has its own.
+.nav__header {
+  display: none;
+}
+
+.im-nav {
+  display: flex;
+  flex-direction: column;
+  // Payload's .nav__wrap packs items to the left; every row should span the sidebar.
+  align-items: stretch;
+  min-height: 100%;
+  padding: 0 0.75rem 1rem;
+  color: var(--im-nav-text);
+  font-size: 0.92rem;
+}
+
+// The brand row is as tall as the top bar and shares its bottom line.
+.im-nav__top {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: var(--app-header-height);
+  margin: 0 -0.75rem 0.75rem;
+  padding: 0 0.75rem;
+  border-bottom: 1px solid var(--im-border);
+}
+
+.im-nav__brand {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: var(--im-radius);
+  color: var(--im-ink);
+  text-decoration: none;
+
+  img {
+    flex: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+  }
+
+  &:hover {
+    background: var(--im-nav-raised);
+    text-decoration: none;
+  }
+}
+
+.im-nav__brand-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.im-nav__brand-name {
+  overflow: hidden;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-nav__brand-sub {
+  color: var(--im-nav-muted);
+  font-size: 0.74rem;
+  font-weight: 500;
+}
+
+.im-nav__rail-toggle {
+  display: none;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--im-radius-sm);
+  background: transparent;
+  color: var(--im-nav-muted);
+  cursor: pointer;
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  &:hover {
+    background: var(--im-nav-raised);
+    color: var(--im-ink);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+
+  @media (min-width: 1025px) {
+    display: inline-flex;
+  }
+}
+
+.im-nav__group {
+  margin-top: 1rem;
+}
+
+.im-nav__group-label {
+  margin: 0 0 0.3rem;
+  padding: 0 0.75rem;
+  color: var(--im-nav-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.im-nav__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.im-nav__list--sub {
+  margin: 2px 0 0.25rem 1.1rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--im-border);
+}
+
+.im-nav__link {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-radius: var(--im-radius-sm);
+  background: transparent;
+  color: var(--im-nav-text);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.12s,
+    color 0.12s;
+
+  &:hover {
+    background: var(--im-nav-raised);
+    color: var(--im-ink);
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+
+  &[aria-current='page'] {
+    background: var(--im-nav-active);
+    color: var(--im-on-brand);
+    font-weight: 600;
+    box-shadow: 0 2px 8px var(--im-brand-glow);
+
+    .im-nav__icon {
+      background: rgb(255 255 255 / 0.18);
+      color: inherit;
+    }
+
+    .im-nav__badge {
+      background: rgb(255 255 255 / 0.9);
+      color: var(--im-brand-strong);
+    }
+  }
+
+  &--sub {
+    min-height: 2.15rem;
+    font-size: 0.88rem;
+
+    .im-nav__icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      background: transparent;
+    }
+  }
+}
+
+.im-nav__icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 8px;
+  background: var(--im-nav-raised);
+  color: var(--im-nav-muted);
+  transition:
+    background-color 0.12s,
+    color 0.12s;
+
+  svg {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  [data-open='true'] {
+    transform: rotate(90deg);
+  }
+}
+
+.im-nav__link:hover .im-nav__icon {
+  color: var(--im-brand);
+}
+
+.im-nav__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-nav__badge {
+  flex: none;
+  min-width: 1.4rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--im-accent);
+  color: #3b2600;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.4rem;
+  text-align: center;
+}
+
+.im-nav__sr {
+  @extend .im-sr;
+}
+
+.im-nav__tuck {
+  color: var(--im-nav-muted);
+  font-size: 0.86rem;
+}
+
+.im-nav__footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--im-border);
+}
+
+// Who is signed in: the header's account button covers desktop; this row is for the phone sheet.
+.im-nav__user {
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.4rem 0;
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+}
+
+.im-nav__user-link {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--im-ink);
+  text-decoration: none;
+}
+
+.im-nav__avatar {
+  @extend .im-avatar;
+}
+
+.im-nav__user-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.im-nav__user-name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-nav__user-role {
+  color: var(--im-nav-muted);
+  font-size: 0.78rem;
+}
+
+.im-nav__logout {
+  @extend .im-icon-btn;
+}
+
+// ---- Icon rail (wide screens) ------------------------------------------------------------------------
+@media (min-width: 1025px) {
+  html[data-im-nav='rail'] {
+    .im-nav {
+      padding-inline: 0.6rem;
+    }
+
+    .im-nav__top {
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .im-nav__brand {
+      justify-content: center;
+      padding: 0.3rem;
+    }
+
+    .im-nav__brand-text,
+    .im-nav__text,
+    .im-nav__group-label,
+    .im-nav__list--sub,
+    .im-nav__user-text {
+      display: none;
+    }
+
+    .im-nav__link {
+      justify-content: center;
+      padding: 0.35rem;
+    }
+
+    .im-nav__badge {
+      position: absolute;
+      top: 0.15rem;
+      right: 0.15rem;
+      min-width: 1.1rem;
+      padding: 0 0.25rem;
+      font-size: 0.62rem;
+      line-height: 1.1rem;
+    }
+
+    .im-nav__group {
+      margin-top: 0.75rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--im-border);
+    }
+  }
+}

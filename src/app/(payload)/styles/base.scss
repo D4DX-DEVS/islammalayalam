@@ -1,0 +1,917 @@
+// Payload's stock screens in the admin's own clothes: lists, the document editor, fields, buttons,
+// menus, dialogs and toasts. Payload's styles sit in `@layer payload-default`, so these unlayered
+// rules win without !important. Only --im-* tokens (styles/tokens.scss) are used here.
+
+html {
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--im-canvas);
+  color: var(--im-ink);
+  font-family: var(--im-font);
+  font-size: 1rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--im-ink);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+a {
+  color: var(--im-brand);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--im-ring);
+}
+
+// ---- Shell -----------------------------------------------------------------------------------
+.template-default__wrap {
+  min-width: 0;
+  background: var(--im-canvas);
+}
+
+// Payload's hamburger lives in the header on phones; the desktop one (next to the nav) is not needed.
+.template-default__nav-toggler-wrapper {
+  display: none;
+}
+
+.gutter {
+  padding-inline: var(--gutter-h);
+}
+
+// ---- Buttons ---------------------------------------------------------------------------------
+.btn {
+  --box-shadow: none;
+  border-radius: var(--im-radius-sm);
+  font-family: var(--im-font);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    color 0.15s,
+    transform 0.05s;
+
+  &:active:not(.btn--disabled) {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.btn--size-medium,
+.btn--size-large {
+  min-height: var(--im-control-h);
+}
+
+.btn--style-primary:not(.btn--disabled) {
+  --bg-color: var(--im-brand);
+  --hover-bg: var(--im-brand-strong);
+  --color: var(--im-on-brand);
+  --hover-color: var(--im-on-brand);
+  box-shadow: 0 1px 2px rgb(8 63 138 / 0.2);
+}
+
+.btn--style-secondary:not(.btn--disabled),
+.btn--style-pill:not(.btn--disabled) {
+  --bg-color: var(--im-surface);
+  --hover-bg: var(--im-brand-soft);
+  --color: var(--im-ink);
+  --hover-color: var(--im-brand-strong);
+  --box-shadow: inset 0 0 0 1px var(--im-border-strong);
+  --hover-box-shadow: inset 0 0 0 1px var(--im-brand);
+}
+
+.btn--style-pill {
+  border-radius: 999px;
+}
+
+.btn--style-icon-label,
+.btn--style-none {
+  color: var(--im-ink-2);
+
+  &:hover {
+    color: var(--im-brand);
+  }
+}
+
+.btn--icon-style-without-border .btn__icon {
+  background: transparent;
+}
+
+// ---- Pills (status, counts) ------------------------------------------------------------------
+.pill {
+  border-radius: 999px;
+  background: var(--im-sunken);
+  color: var(--im-ink-2);
+  font-weight: 600;
+  font-size: 0.82rem;
+  line-height: 1.6;
+
+  &--style-success {
+    background: var(--im-ok-soft);
+    color: var(--im-ok);
+  }
+
+  &--style-warning {
+    background: var(--im-warn-soft);
+    color: var(--im-warn);
+  }
+
+  &--style-error {
+    background: var(--im-danger-soft);
+    color: var(--im-danger);
+  }
+}
+
+// ---- Inputs ----------------------------------------------------------------------------------
+// Not .rs__input: react-select's own typing box sits inside the styled .rs__control.
+.field-type input:not([type='checkbox']):not([type='radio']):not(.rs__input),
+.field-type textarea,
+.search-filter__input,
+.react-select .rs__control {
+  border: 1px solid var(--im-border-strong);
+  border-radius: var(--im-radius-sm);
+  background: var(--im-surface);
+  color: var(--im-ink);
+  font-family: var(--im-font);
+  box-shadow: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+
+  &:hover {
+    border-color: var(--im-faint);
+  }
+}
+
+.field-type input:not([type='checkbox']):not([type='radio']):not([type='file']):not(.rs__input),
+.search-filter__input,
+.react-select .rs__control {
+  min-height: var(--im-control-h);
+}
+
+.field-type input:not([type='checkbox']):not([type='radio']):not(.rs__input):focus,
+.field-type textarea:focus,
+.search-filter__input:focus,
+.react-select .rs__control--is-focused {
+  border-color: var(--im-brand);
+  box-shadow: var(--im-ring);
+  outline: none;
+}
+
+.field-type input:read-only:not([type='checkbox']):not([type='radio']),
+.field-type input:disabled,
+.field-type.read-only input {
+  background: var(--im-sunken);
+  color: var(--im-ink-2);
+  border-color: var(--im-border);
+}
+
+.field-type {
+  margin-bottom: 1.25rem;
+}
+
+.field-label {
+  margin-bottom: 0.35rem;
+  color: var(--im-ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  .required {
+    color: var(--im-danger);
+  }
+}
+
+.field-description {
+  margin-top: 0.35rem;
+  color: var(--im-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.field-error,
+.error-pill {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.rs__menu {
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  box-shadow: var(--im-shadow-md);
+  overflow: hidden;
+}
+
+.rs__option {
+  border-radius: var(--im-radius-xs);
+}
+
+.rs__placeholder,
+.rs__multi-value {
+  font-family: var(--im-font);
+}
+
+.rs__multi-value {
+  border-radius: 999px;
+  background: var(--im-brand-soft);
+  color: var(--im-brand-strong);
+}
+
+.checkbox-input__input,
+.radio-input__styled-radio {
+  border-color: var(--im-border-strong);
+}
+
+.checkbox-input__input {
+  border-radius: 5px;
+}
+
+.checkbox-input--checked .checkbox-input__input,
+.radio-input--is-selected .radio-input__styled-radio {
+  background: var(--im-brand);
+  border-color: var(--im-brand);
+}
+
+.radio-input--is-selected .radio-input__styled-radio::after {
+  background: var(--im-on-brand);
+}
+
+.radio-group__group,
+.checkbox-input {
+  gap: 0.5rem 1.25rem;
+}
+
+.date-time-picker .react-datepicker {
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  box-shadow: var(--im-shadow-md);
+  font-family: var(--im-font);
+}
+
+// ---- Groups, collapsibles, arrays, blocks, tabs -------------------------------------------------
+.field-type.group-field > .group-field__wrap,
+.field-type.collapsible-field > .collapsible,
+.array-field__row,
+.blocks-field__row {
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  background: var(--im-surface);
+  box-shadow: none;
+}
+
+.collapsible__toggle-wrap,
+.array-field__row-header,
+.blocks-field__block-header {
+  border-radius: var(--im-radius) var(--im-radius) 0 0;
+  background: transparent;
+}
+
+.collapsible--collapsed .collapsible__toggle-wrap {
+  border-radius: var(--im-radius);
+}
+
+// The toggle is a transparent button laid over the whole header (its "Toggle block" text is for
+// screen readers); the visible title is the row label beside it.
+.collapsible__toggle {
+  color: transparent;
+}
+
+.collapsible__header-wrap .row-label {
+  color: var(--im-ink);
+  font-weight: 600;
+}
+
+.collapsible__content,
+.group-field__wrap > .render-fields {
+  padding: 1rem;
+}
+
+.blocks-field__block-pill,
+.array-field__row-count {
+  border-radius: 999px;
+  background: var(--im-brand-soft);
+  color: var(--im-brand-strong);
+}
+
+.tabs-field__tabs {
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--im-border);
+}
+
+.tabs-field__tab-button {
+  border-radius: var(--im-radius-sm) var(--im-radius-sm) 0 0;
+  color: var(--im-muted);
+  font-weight: 600;
+
+  &:hover {
+    color: var(--im-ink);
+    background: var(--im-sunken);
+  }
+
+  &--active {
+    color: var(--im-brand);
+    box-shadow: inset 0 -2px 0 var(--im-brand);
+  }
+}
+
+// ---- Rich text (Lexical) -----------------------------------------------------------------------
+.rich-text-lexical {
+  .editor-shell,
+  .ContentEditable__root {
+    font-family: var(--im-font);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .fixed-toolbar,
+  .inline-toolbar {
+    border-color: var(--im-border);
+    border-radius: var(--im-radius-sm);
+    background: var(--im-surface);
+  }
+
+  .fixed-toolbar {
+    position: sticky;
+    top: var(--app-header-height);
+    z-index: 3;
+  }
+
+  .toolbar-popup__button,
+  .toolbar-popup__dropdown {
+    border-radius: var(--im-radius-xs);
+  }
+
+  .LexicalEditorTheme__tableCell {
+    border: 1px solid var(--im-border-strong);
+  }
+
+  .LexicalEditorTheme__tableCellHeader {
+    background: var(--im-sunken);
+  }
+}
+
+// ---- Uploads -----------------------------------------------------------------------------------
+.dropzone,
+.upload__dropzone {
+  border: 1.5px dashed var(--im-border-strong);
+  border-radius: var(--im-radius);
+  background: var(--im-sunken);
+
+  &:hover,
+  &--is-dragging {
+    border-color: var(--im-brand);
+    background: var(--im-brand-soft);
+  }
+}
+
+.thumbnail,
+.file-details__thumbnail {
+  border-radius: var(--im-radius-sm);
+  overflow: hidden;
+}
+
+// ---- Lists ------------------------------------------------------------------------------------
+.list-header {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  gap: 0.75rem 1rem;
+}
+
+.list-header__title,
+.list-header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.list-header__title-and-actions {
+  align-items: center;
+}
+
+// "Create New" beside the list title: the screen's main action, so a solid button.
+.list-create-new-doc__create-new-button.btn {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  min-height: 2.25rem;
+  padding: 0 0.95rem;
+  border-radius: var(--im-radius-sm);
+  background: var(--im-brand);
+  color: var(--im-on-brand);
+  box-shadow: 0 1px 2px rgb(8 63 138 / 0.25);
+
+  &:hover {
+    background: var(--im-brand-strong);
+    color: var(--im-on-brand);
+  }
+
+  .btn__label {
+    font-weight: 600;
+  }
+}
+
+.list-controls {
+  margin-bottom: 1rem;
+}
+
+.search-filter__input {
+  padding-inline: 2.5rem 0.9rem;
+}
+
+.collection-list__wrap .table,
+.table {
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius-lg);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-xs);
+  overflow: auto;
+
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  thead th {
+    border-bottom: 1px solid var(--im-border);
+    background: var(--im-sunken);
+    color: var(--im-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  td,
+  th {
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--im-line);
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    background: transparent;
+    transition: background-color 0.12s;
+
+    &:hover {
+      background: var(--im-canvas);
+    }
+
+    &:last-child td {
+      border-bottom: 0;
+    }
+  }
+
+  tbody td a {
+    color: var(--im-ink);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--im-brand);
+    }
+  }
+}
+
+.sort-column__label {
+  color: inherit;
+}
+
+// Titles get the room (Malayalam titles are long); short columns stay on one line.
+.table td.cell-title {
+  min-width: 15rem;
+}
+
+.table td.cell-postNumber,
+.table td.cell-_status,
+.table td.cell-publishedAt {
+  white-space: nowrap;
+}
+
+// Laptop widths: tighter cells and headers so a typical list fits without sideways scrolling.
+@media (max-width: 1440px) {
+  .collection-list__wrap .table,
+  .table {
+    td,
+    th {
+      padding: 0.6rem 0.6rem;
+    }
+
+    thead th {
+      font-size: 0.72rem;
+      letter-spacing: 0.03em;
+    }
+  }
+
+  .table td.cell-title {
+    min-width: 13rem;
+  }
+
+  .sort-column__buttons {
+    gap: 0;
+  }
+}
+
+.sort-column__buttons .sort-column__button--active {
+  color: var(--im-brand);
+}
+
+.page-controls {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-xs);
+}
+
+.page-controls__page-info,
+.per-page {
+  color: var(--im-muted);
+  font-size: 0.86rem;
+}
+
+.paginator__page {
+  min-width: 2.2rem;
+  height: 2.2rem;
+  border-radius: var(--im-radius-sm);
+  font-weight: 600;
+
+  &:hover:not(.paginator__page--is-current) {
+    background: var(--im-sunken);
+  }
+
+  &--is-current {
+    background: var(--im-brand);
+    color: var(--im-on-brand);
+  }
+}
+
+.list-selection {
+  border-radius: var(--im-radius);
+  background: var(--im-brand-soft);
+  color: var(--im-brand-strong);
+}
+
+.no-results,
+.collection-list__no-results {
+  padding: 3rem 1rem;
+  border: 1px dashed var(--im-border-strong);
+  border-radius: var(--im-radius-lg);
+  background: var(--im-surface);
+  text-align: center;
+}
+
+// ---- Document (edit) screen --------------------------------------------------------------------
+.doc-header {
+  margin-bottom: 0.5rem;
+
+  // Phones: Payload drops the space above the title, which then touches the top bar.
+  @media (max-width: 768px) {
+    padding-top: 1rem;
+  }
+}
+
+.doc-header__title,
+.doc-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.doc-controls {
+  border-bottom: 1px solid var(--im-border);
+  background: color-mix(in srgb, var(--im-canvas) 85%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+// One quiet line: a status pill, then "Saved …", "Last modified …", "Created …" in small grey text.
+.doc-controls__meta {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1.1rem;
+  color: var(--im-muted);
+  font-size: 0.84rem;
+}
+
+.doc-controls__list-item {
+  display: flex;
+  align-items: baseline;
+}
+
+.doc-controls__label,
+.doc-controls__value {
+  margin: 0;
+  font-size: 0.84rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.doc-controls__label {
+  color: var(--im-muted);
+  font-weight: 500;
+}
+
+.doc-controls__value {
+  color: var(--im-ink-2);
+  font-weight: 500;
+}
+
+.document-fields__main,
+.collection-edit__main,
+.global-edit__main {
+  background: transparent;
+}
+
+.document-fields__edit {
+  padding-top: 1.5rem;
+}
+
+// The right-hand column: a grey rail of white cards (Posts: Publishing, Categories, Review,
+// Details), each a collapsible or group with its title as the card heading.
+.document-fields__sidebar {
+  border-left: 1px solid var(--im-border);
+  background: var(--im-canvas);
+}
+
+.document-fields__sidebar-fields {
+  padding-top: 1.25rem;
+
+  // Payload spaces top-level fields 40px apart; cards sit closer.
+  > .render-fields > .field-type {
+    margin: 0 0 1rem;
+  }
+
+  .field-type.collapsible-field > .collapsible,
+  .field-type.group-field > .group-field__wrap {
+    box-shadow: var(--im-shadow-xs);
+  }
+
+  .collapsible__content,
+  .group-field__wrap > .render-fields {
+    padding: 0.25rem 1rem 1rem;
+  }
+
+  .collapsible__content .render-fields > .field-type,
+  .group-field__wrap > .render-fields > .field-type {
+    margin-bottom: 1rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .collapsible__toggle-wrap {
+    padding: 0.75rem 0.75rem 0.75rem 1rem;
+  }
+
+  .collapsible__header-wrap .row-label,
+  .group-field__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .group-field__header {
+    padding: 0.85rem 1rem 0;
+  }
+
+  // Payload bleeds top-level groups to the column's edges with their own padding; here a group is
+  // a card like the collapsibles around it.
+  .group-field--top-level {
+    margin-inline: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  // A group inside a card (e.g. "From the old site" in Details) is plain, not a card in a card.
+  .collapsible__content .field-type.group-field > .group-field__wrap {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+
+    > .render-fields {
+      padding: 0;
+    }
+  }
+
+  .collapsible__content .group-field__header {
+    padding: 0 0 0.5rem;
+  }
+
+  .field-description {
+    font-size: 0.8rem;
+  }
+}
+
+.doc-tabs {
+  border-bottom: 1px solid var(--im-border);
+}
+
+.doc-tab {
+  border-radius: var(--im-radius-sm) var(--im-radius-sm) 0 0;
+  color: var(--im-muted);
+  font-weight: 600;
+
+  &--active,
+  &:hover {
+    color: var(--im-brand);
+  }
+
+  &--active {
+    box-shadow: inset 0 -2px 0 var(--im-brand);
+  }
+}
+
+.status {
+  color: var(--im-muted);
+  font-size: 0.86rem;
+}
+
+// The editor's status as a pill ("Status:" stays for screen readers only).
+.doc-controls__status .status {
+  .status__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .status__value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.15rem 0.65rem;
+    border-radius: 999px;
+    background: var(--im-sunken);
+    color: var(--im-ink-2);
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    &::before {
+      content: '';
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: currentColor;
+    }
+  }
+
+  &[title*='Published'] .status__value {
+    background: var(--im-ok-soft);
+    color: var(--im-ok);
+  }
+
+  &[title*='Changed'] .status__value {
+    background: var(--im-warn-soft);
+    color: var(--im-warn);
+  }
+}
+
+.autosave {
+  color: var(--im-muted);
+  font-size: 0.82rem;
+}
+
+.live-preview-window,
+.live-preview-iframe {
+  border-left: 1px solid var(--im-border);
+}
+
+.versions,
+.version-view {
+  .table {
+    box-shadow: none;
+  }
+}
+
+// ---- Popups, menus, drawers, modals, toasts ----------------------------------------------------
+.popup__content {
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-md);
+  overflow: hidden;
+}
+
+.popup-button-list__button {
+  border-radius: var(--im-radius-xs);
+  color: var(--im-ink);
+  font-weight: 500;
+
+  &:hover {
+    background: var(--im-sunken);
+  }
+}
+
+.drawer__content {
+  background: var(--im-canvas);
+}
+
+.drawer__header {
+  border-bottom: 1px solid var(--im-border);
+  background: var(--im-surface);
+}
+
+.payload__modal-item {
+  backdrop-filter: none;
+}
+
+.confirmation-modal__wrapper {
+  max-width: 30rem;
+  padding: 1.75rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius-lg);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-lg);
+
+  h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  p {
+    color: var(--im-muted);
+    line-height: 1.55;
+  }
+}
+
+.payload-toast-container {
+  font-family: var(--im-font);
+}
+
+.payload-toast-item {
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  background: var(--im-surface);
+  color: var(--im-ink);
+  box-shadow: var(--im-shadow-md);
+}
+
+.tooltip,
+.tooltip-content {
+  border-radius: var(--im-radius-xs);
+  font-family: var(--im-font);
+}
+
+// ---- Account / minimal screens ---------------------------------------------------------------
+.template-minimal {
+  min-height: 100vh;
+  background: var(--im-canvas);
+}
+
+.template-minimal__wrap {
+  width: 100%;
+  max-width: 26rem;
+  padding: 2rem 1.75rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius-xl);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-lg);
+
+  @media (max-width: 480px) {
+    padding: 1.5rem 1.1rem;
+    border-radius: var(--im-radius-lg);
+  }
+
+  .btn {
+    width: 100%;
+    min-height: var(--im-control-h-lg);
+  }
+}
+
+.auth-fields {
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  background: var(--im-surface);
+}
+
+// The dark/light radio on the account page is replaced by the header switch.
+.payload-settings .radio-group {
+  display: none;
+}

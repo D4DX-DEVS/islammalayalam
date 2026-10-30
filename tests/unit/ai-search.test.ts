@@ -235,6 +235,7 @@ describe('AI search: environment', () => {
     NODE_ENV: 'development',
     MONGODB_URI: 'mongodb+srv://u:p@c.example.mongodb.net/islammalayalam?x=1',
     PAYLOAD_SECRET: 'x'.repeat(32),
+    ALLOW_LIVE_DATA: 'yes',
   }
 
   it('is optional, and validates the key, model and daily limit when present', () => {

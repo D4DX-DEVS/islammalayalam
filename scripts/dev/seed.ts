@@ -5,7 +5,7 @@
  * clearly-labelled synthetic posts/images. Every write goes through the normal Payload hooks
  * (content guard, media guard), exactly like editor or migration writes.
  */
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { getPayload } from 'payload'
 import type { Payload, Where } from 'payload'
@@ -22,6 +22,7 @@ import {
   sampleTitle,
 } from './fixtures'
 import { seedGlobals } from './seed-globals'
+import { seedAuthors, seedDrafts, seedInbox, seedLibrary, seedUsers } from './seed-extras'
 
 type IaItem = { title: string; href: string; children?: IaItem[] }
 type Slug = 'posts' | 'pages' | 'categories' | 'authors' | 'media' | 'users'
@@ -55,10 +56,24 @@ export async function upsert(
   return String(created.id)
 }
 
-async function seedAdmin(payload: Payload): Promise<void> {
-  const email = process.env.DEV_ADMIN_EMAIL
-  const password = process.env.DEV_ADMIN_PASSWORD
-  if (!email || !password) throw new Error('DEV_ADMIN_EMAIL / DEV_ADMIN_PASSWORD missing from .env')
+/**
+ * The dev admin's sign-in. Without DEV_ADMIN_EMAIL / DEV_ADMIN_PASSWORD in .env a local account is
+ * made up and both are appended to .env (never printed), like the TOTP secret below. Local DB only.
+ */
+async function seedAdmin(payload: Payload): Promise<{ email: string; password: string }> {
+  let email = process.env.DEV_ADMIN_EMAIL
+  let password = process.env.DEV_ADMIN_PASSWORD
+  if (!email) {
+    email = 'dev-admin@islammalayalam.test'
+    appendLocalEnv('DEV_ADMIN_EMAIL', email)
+  }
+  if (!password) {
+    password = randomBytes(18).toString('base64url')
+    appendLocalEnv('DEV_ADMIN_PASSWORD', password)
+    payload.logger.info(
+      `Dev admin ${email}: a password was generated and written to .env (DEV_ADMIN_PASSWORD).`,
+    )
+  }
   const found = await payload.find({
     collection: 'users',
     where: { email: { equals: email } },
@@ -91,6 +106,7 @@ async function seedAdmin(payload: Payload): Promise<void> {
       overrideAccess: true,
       context: CTX,
     })
+  return { email, password }
 }
 
 const CATEGORIES = [
@@ -150,10 +166,14 @@ async function removeStalePlaceholders(payload: Payload, keep: string[]): Promis
 async function seedPosts(
   payload: Payload,
   categoryIds: Map<string, string>,
-  authorId: string,
+  authorIds: string[],
   images: string[],
 ): Promise<void> {
   let n = 0
+  // Spread over the last ~6 weeks with uneven gaps (6 hours to 2½ days, repeating), so the
+  // dashboard's 30-day views show busy days, quiet days and a trend rather than a flat line.
+  const gapHours = [6, 50, 17, 39, 28, 6, 61, 17]
+  let at = Date.now() - 2 * 36e5
   for (const cat of CATEGORIES) {
     for (let i = 0; i < cat.posts; i++, n++) {
       const title = sampleTitle(cat.name, i)
@@ -170,12 +190,13 @@ async function seedPosts(
           featuredImage: noImage ? null : images[n % images.length],
           format: 'format' in cat ? cat.format : 'standard',
           categories: [categoryIds.get(cat.slug)],
-          author: authorId,
+          author: authorIds[n % authorIds.length],
           featured: (cat.slug === 'news' || cat.slug === 'ലേഖനം') && i < 3,
-          publishedAt: new Date(Date.UTC(2026, 8, 20) - n * 36e5 * 20).toISOString(),
+          publishedAt: new Date(at).toISOString(),
           _status: 'published',
         },
       )
+      at -= gapHours[n % gapHours.length]! * 36e5
     }
   }
 }
@@ -248,7 +269,7 @@ async function main(): Promise<void> {
     topbar: IaItem[][]
   }
 
-  await seedAdmin(payload)
+  const admin = await seedAdmin(payload)
   const authorId = await upsert(
     payload,
     'authors',
@@ -268,13 +289,31 @@ async function main(): Promise<void> {
     )
   }
   const images = await seedMedia(payload, 12)
-  await seedPosts(payload, categoryIds, authorId, images)
+  const extras = { context: CTX, categoryIds, images, password: admin.password }
+  const authorIds = [authorId, ...(await seedAuthors(payload, extras))]
+  await seedPosts(payload, categoryIds, authorIds, images)
   await removeStalePlaceholders(payload, images)
   const pageIds = await seedPages(payload, ia.menu)
   await seedGlobals(payload, { menu: ia.menu, categoryIds, pageIds, context: CTX })
+  await seedUsers(payload, extras)
+  await seedDrafts(payload, extras, authorIds)
+  await seedInbox(payload, extras)
+  await seedLibrary(payload, extras)
 
   const counts = await Promise.all(
-    (['posts', 'pages', 'categories', 'media'] as const).map(
+    (
+      [
+        'posts',
+        'pages',
+        'categories',
+        'authors',
+        'media',
+        'quotes',
+        'contact-messages',
+        'postal-requests',
+        'users',
+      ] as const
+    ).map(
       async (c) =>
         `${c}=${(await payload.count({ collection: c, overrideAccess: true })).totalDocs}`,
     ),

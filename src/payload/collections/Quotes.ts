@@ -25,7 +25,7 @@ export const Quotes: CollectionConfig = {
   labels: { singular: 'Insight', plural: 'Insights' },
   admin: {
     useAsTitle: 'label',
-    group: 'Media',
+    group: 'Library',
     defaultColumns: ['moveArrows', 'poster', 'label', 'showOn', 'active', 'createdAt'],
     listSearchableFields: ['label', 'text', 'source'],
     description:

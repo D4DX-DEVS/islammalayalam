@@ -4,7 +4,13 @@ import { cdnUrl, spacesEndpoint, spacesFolder } from '@/lib/spaces'
 
 const LIVE_DB =
   'mongodb+srv://user:secret@cluster0.example.mongodb.net/islammalayalam?retryWrites=true'
-const BASE = { NODE_ENV: 'development', MONGODB_URI: LIVE_DB, PAYLOAD_SECRET: 'x'.repeat(32) }
+// Development only reaches the live data on purpose (ALLOW_LIVE_DATA, see env-live-data.test.ts).
+const BASE = {
+  NODE_ENV: 'development',
+  MONGODB_URI: LIVE_DB,
+  PAYLOAD_SECRET: 'x'.repeat(32),
+  ALLOW_LIVE_DATA: 'yes',
+}
 const SPACES = {
   DO_SPACES_BUCKET: 'bucket',
   DO_SPACES_ENDPOINT: 'blr1.digitaloceanspaces.com',
@@ -22,7 +28,7 @@ const NO_SPACES = {
 }
 
 describe('server env: database', () => {
-  it('reads MONGODB_URI, the same remote database locally and in production', () => {
+  it('reads MONGODB_URI: the live database in production, and in development when asked for', () => {
     expect(parseServerEnv(BASE).MONGODB_URI).toBe(LIVE_DB)
     expect(parseServerEnv({ ...BASE, NODE_ENV: 'production' }).MONGODB_URI).toBe(LIVE_DB)
   })

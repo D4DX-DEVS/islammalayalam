@@ -114,3 +114,81 @@ export function niceScale(max: number, steps = 4): { max: number; ticks: number[
   }
   return { max: ticks[ticks.length - 1]!, ticks }
 }
+
+export type PlotPoint = [number, number]
+
+const round2 = (n: number): number => Math.round(n * 100) / 100
+
+/**
+ * An SVG path through `points` (x ascending) that is smooth but never overshoots them, so a day
+ * with nothing published never dips below the axis and a peak is never drawn taller than it is
+ * (Fritsch–Carlson monotone cubic interpolation, written as cubic Béziers).
+ */
+export function monotonePath(points: PlotPoint[]): string {
+  const n = points.length
+  if (n === 0) return ''
+  if (n === 1) return `M ${round2(points[0]![0])} ${round2(points[0]![1])}`
+  const run: number[] = []
+  const slope: number[] = []
+  for (let i = 0; i < n - 1; i += 1) {
+    const dx = points[i + 1]![0] - points[i]![0]
+    run.push(dx)
+    slope.push(dx === 0 ? 0 : (points[i + 1]![1] - points[i]![1]) / dx)
+  }
+  const tangent: number[] = [slope[0]!]
+  for (let i = 1; i < n - 1; i += 1) {
+    const before = slope[i - 1]!
+    const after = slope[i]!
+    tangent.push(before * after <= 0 ? 0 : (before + after) / 2)
+  }
+  tangent.push(slope[n - 2]!)
+  for (let i = 0; i < n - 1; i += 1) {
+    if (slope[i] === 0) {
+      tangent[i] = 0
+      tangent[i + 1] = 0
+      continue
+    }
+    const a = tangent[i]! / slope[i]!
+    const b = tangent[i + 1]! / slope[i]!
+    const size = a * a + b * b
+    if (size > 9) {
+      const tau = 3 / Math.sqrt(size)
+      tangent[i] = tau * a * slope[i]!
+      tangent[i + 1] = tau * b * slope[i]!
+    }
+  }
+  const d = [`M ${round2(points[0]![0])} ${round2(points[0]![1])}`]
+  for (let i = 0; i < n - 1; i += 1) {
+    const [x0, y0] = points[i]!
+    const [x1, y1] = points[i + 1]!
+    const third = run[i]! / 3
+    d.push(
+      `C ${round2(x0 + third)} ${round2(y0 + tangent[i]! * third)} ${round2(x1 - third)} ${round2(y1 - tangent[i + 1]! * third)} ${round2(x1)} ${round2(y1)}`,
+    )
+  }
+  return d.join(' ')
+}
+
+/**
+ * Which of `n` evenly spaced axis labels to print so that about `want` show: always the first and
+ * the last, the rest a whole number of steps apart and never closer than half a step to the last.
+ */
+export function axisLabelIndexes(n: number, want = 5): Set<number> {
+  const last = Math.max(0, Math.floor(n) - 1)
+  const picked = new Set<number>([0, last])
+  if (last === 0) return picked
+  const step = Math.max(1, Math.round(last / Math.max(1, want - 1)))
+  for (let i = step; i < last; i += step) if (last - i >= step / 2) picked.add(i)
+  return picked
+}
+
+/** `values` summed into `groups` consecutive buckets of (nearly) equal size, in order. */
+export function bucketSums(values: number[], groups: number): number[] {
+  if (!values.length) return []
+  const count = Math.max(1, Math.min(Math.floor(groups), values.length))
+  const out = new Array<number>(count).fill(0)
+  values.forEach((v, i) => {
+    out[Math.min(count - 1, Math.floor((i * count) / values.length))]! += v
+  })
+  return out
+}

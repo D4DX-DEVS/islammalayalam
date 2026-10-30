@@ -1,0 +1,243 @@
+// The admin's design tokens: every colour, radius, shadow and size the admin uses, light and dark,
+// plus the mapping onto Payload's own variables (--theme-*) so Payload's built-in fields, buttons
+// and drawers pick up the same look. Only --im-* tokens are used by the other style files.
+//
+// Palette: a cool light canvas, white sheets, the brand's royal blue at full strength on small
+// marks (the primary button, the active nav row, chart lines) and its pale tint doing the area work.
+// A few extra hues (violet, green, amber, rose, teal) colour icon tiles and status pills; the
+// words always carry the meaning, the colour only backs them up.
+
+:root {
+  // Payload sizes everything from a 13px root; 15px reads better for body text and Malayalam.
+  // --base-body-size keeps Payload's own spacing steps (base(1) = 20px) unchanged.
+  --base-body-size: 15;
+
+  // ---- Surfaces and lines -------------------------------------------------------------------
+  --im-canvas: #f5f7fb;
+  --im-surface: #ffffff;
+  --im-sunken: #eef2f7;
+  --im-border: #e4e8f0;
+  --im-border-strong: #cbd3e1;
+  --im-line: #edf0f5;
+
+  // ---- Ink ----------------------------------------------------------------------------------
+  --im-ink: #0f172a;
+  --im-ink-2: #334155;
+  --im-muted: #64748b;
+  --im-faint: #94a3b8;
+
+  // ---- Brand --------------------------------------------------------------------------------
+  --im-brand: #0a56b8;
+  --im-brand-strong: #083f8a;
+  --im-brand-soft: #e8f0fb;
+  --im-brand-soft-2: #d4e3f8;
+  --im-brand-glow: rgb(10 86 184 / 0.18);
+  --im-on-brand: #ffffff;
+  // The logo's gold: inbox counts and highlights.
+  --im-accent: #d9a21b;
+  --im-accent-ink: #8a5a00;
+  --im-accent-soft: #fdf3d8;
+
+  // ---- Status (always shown with a word, never colour alone) --------------------------------
+  --im-ok: #0f8a5f;
+  --im-ok-soft: #e3f5ec;
+  --im-draft: #475569;
+  --im-draft-soft: #eef2f7;
+  --im-warn: #b45309;
+  --im-warn-soft: #fdf1dc;
+  --im-danger: #c0304e;
+  --im-danger-soft: #fce8ee;
+  --im-danger-line: #f2b8c6;
+  --im-info: var(--im-brand);
+  --im-info-soft: var(--im-brand-soft);
+
+  // ---- Tile hues (stat cards, queue icons) ---------------------------------------------------
+  --im-blue: var(--im-brand);
+  --im-blue-soft: var(--im-brand-soft);
+  --im-violet: #6d4fd4;
+  --im-violet-soft: #efeafc;
+  --im-green: var(--im-ok);
+  --im-green-soft: var(--im-ok-soft);
+  --im-amber: var(--im-warn);
+  --im-amber-soft: var(--im-warn-soft);
+  --im-rose: #c0304e;
+  --im-rose-soft: #fce8ee;
+  --im-teal: #0f7f8f;
+  --im-teal-soft: #e0f4f6;
+
+  // ---- Sidebar ------------------------------------------------------------------------------
+  --im-nav: #ffffff;
+  --im-nav-raised: #f5f7fb;
+  --im-nav-active: var(--im-brand);
+  --im-nav-text: var(--im-ink-2);
+  --im-nav-muted: var(--im-muted);
+  --im-nav-w: 268px;
+  --im-rail-w: 76px;
+
+  // ---- Shape, depth, focus ------------------------------------------------------------------
+  --im-radius-xs: 6px;
+  --im-radius-sm: 8px;
+  --im-radius: 12px;
+  --im-radius-lg: 16px;
+  --im-radius-xl: 20px;
+  --im-shadow-xs: 0 1px 2px rgb(15 23 42 / 0.04);
+  --im-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 14px rgb(15 23 42 / 0.05);
+  --im-shadow-md: 0 8px 24px rgb(15 23 42 / 0.1);
+  --im-shadow-lg: 0 18px 50px rgb(15 23 42 / 0.18);
+  --im-ring: 0 0 0 3px rgb(10 86 184 / 0.25);
+  --im-control-h: 2.5rem; // 37.5px at the 15px root
+  --im-control-h-lg: 2.75rem;
+
+  // ---- Type ---------------------------------------------------------------------------------
+  // Figtree for Latin, Noto Sans Malayalam for Malayalam (variables set on <html> by
+  // app/(payload)/layout.tsx from src/lib/admin-fonts.ts).
+  --im-font: var(--font-figtree), var(--font-noto-malayalam), system-ui, sans-serif;
+
+  // ---- Payload's variables, mapped onto the tokens --------------------------------------------
+  --font-body: var(--im-font);
+  --theme-bg: var(--im-canvas);
+  --theme-input-bg: var(--im-surface);
+  --theme-text: var(--im-ink);
+  --theme-border-color: var(--im-border);
+  --theme-elevation-0: #ffffff;
+  --theme-elevation-50: #f5f7fb;
+  --theme-elevation-100: #eef2f7;
+  --theme-elevation-150: #e4e8f0;
+  --theme-elevation-200: #d9dfea;
+  --theme-elevation-250: #cbd3e1;
+  --theme-elevation-300: #b7c1d1;
+  --theme-elevation-400: #94a3b8;
+  --theme-elevation-500: #7b8aa3;
+  --theme-elevation-600: #64748b;
+  --theme-elevation-700: #475569;
+  --theme-elevation-800: #334155;
+  --theme-elevation-900: #1e293b;
+  --theme-elevation-1000: #0f172a;
+  --theme-success-50: #e3f5ec;
+  --theme-success-100: #c6ebd9;
+  --theme-success-500: #0f8a5f;
+  --theme-success-600: #0c7350;
+  --theme-success-900: #064632;
+  --theme-error-50: #fce8ee;
+  --theme-error-100: #f8cfda;
+  --theme-error-500: #c0304e;
+  --theme-error-600: #a0273f;
+  --theme-error-900: #5c1526;
+  --theme-warning-50: #fdf1dc;
+  --theme-warning-100: #fbe3b8;
+  --theme-warning-500: #b45309;
+  --theme-warning-600: #92400e;
+  --theme-warning-900: #4a2105;
+  --style-radius-s: var(--im-radius-sm);
+  --style-radius-m: var(--im-radius);
+  --style-radius-l: var(--im-radius-lg);
+  --nav-width: var(--im-nav-w);
+  --app-header-height: 4rem;
+  --doc-controls-height: 4rem;
+  --gutter-h: 2rem;
+}
+
+// Touch devices: 44px control minimum.
+@media (pointer: coarse) {
+  :root {
+    --im-control-h: 2.75rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --gutter-h: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --gutter-h: 1rem;
+    --app-header-height: 3.5rem;
+  }
+}
+
+// The sidebar folded to an icon rail (AdminNavClient sets data-im-nav on <html>).
+html[data-im-nav='rail'] {
+  --nav-width: var(--im-rail-w);
+}
+
+html[data-theme='dark'] {
+  --im-canvas: #0b1220;
+  --im-surface: #111a2b;
+  --im-sunken: #172238;
+  --im-border: #223049;
+  --im-border-strong: #2f4160;
+  --im-line: #1b2740;
+  --im-ink: #e6ebf5;
+  --im-ink-2: #b6c2d6;
+  --im-muted: #8b99b3;
+  --im-faint: #627391;
+  --im-brand: #5b9cf6;
+  --im-brand-strong: #8ebaf9;
+  --im-brand-soft: rgb(91 156 246 / 0.16);
+  --im-brand-soft-2: rgb(91 156 246 / 0.28);
+  --im-brand-glow: rgb(91 156 246 / 0.3);
+  --im-on-brand: #06142b;
+  --im-accent: #f0bd4a;
+  --im-accent-ink: #f6cf6f;
+  --im-accent-soft: rgb(240 189 74 / 0.16);
+  --im-ok: #4cc593;
+  --im-ok-soft: rgb(76 197 147 / 0.16);
+  --im-draft: #b6c2d6;
+  --im-draft-soft: rgb(182 194 214 / 0.14);
+  --im-warn: #f2b35b;
+  --im-warn-soft: rgb(242 179 91 / 0.16);
+  --im-danger: #f27c93;
+  --im-danger-soft: rgb(242 124 147 / 0.16);
+  --im-danger-line: rgb(242 124 147 / 0.4);
+  --im-violet: #a995f2;
+  --im-violet-soft: rgb(169 149 242 / 0.16);
+  --im-rose: #f27c93;
+  --im-rose-soft: rgb(242 124 147 / 0.16);
+  --im-teal: #5fc8d6;
+  --im-teal-soft: rgb(95 200 214 / 0.16);
+  --im-nav: #0e1626;
+  --im-nav-raised: #172238;
+  --im-nav-text: #b6c2d6;
+  --im-nav-muted: #8b99b3;
+  --im-shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --im-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 14px rgb(0 0 0 / 0.25);
+  --im-shadow-md: 0 8px 24px rgb(0 0 0 / 0.4);
+  --im-shadow-lg: 0 18px 50px rgb(0 0 0 / 0.55);
+  --im-ring: 0 0 0 3px rgb(91 156 246 / 0.35);
+
+  --theme-bg: var(--im-canvas);
+  --theme-input-bg: var(--im-surface);
+  --theme-text: var(--im-ink);
+  --theme-border-color: var(--im-border);
+  --theme-elevation-0: #111a2b;
+  --theme-elevation-50: #172238;
+  --theme-elevation-100: #1b2740;
+  --theme-elevation-150: #223049;
+  --theme-elevation-200: #2a3a56;
+  --theme-elevation-250: #2f4160;
+  --theme-elevation-300: #3c5073;
+  --theme-elevation-400: #627391;
+  --theme-elevation-500: #7a8ba8;
+  --theme-elevation-600: #8b99b3;
+  --theme-elevation-700: #a3b0c6;
+  --theme-elevation-800: #b6c2d6;
+  --theme-elevation-900: #d2dae8;
+  --theme-elevation-1000: #e6ebf5;
+  --theme-success-50: rgb(76 197 147 / 0.16);
+  --theme-success-100: rgb(76 197 147 / 0.28);
+  --theme-success-500: #4cc593;
+  --theme-success-600: #6ad2a6;
+  --theme-success-900: #c3efdb;
+  --theme-error-50: rgb(242 124 147 / 0.16);
+  --theme-error-100: rgb(242 124 147 / 0.28);
+  --theme-error-500: #f27c93;
+  --theme-error-600: #f598ab;
+  --theme-error-900: #fbd5dd;
+  --theme-warning-50: rgb(242 179 91 / 0.16);
+  --theme-warning-100: rgb(242 179 91 / 0.28);
+  --theme-warning-500: #f2b35b;
+  --theme-warning-600: #f5c47e;
+  --theme-warning-900: #fbe7c6;
+}

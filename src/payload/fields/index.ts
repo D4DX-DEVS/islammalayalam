@@ -30,16 +30,35 @@ export function slugField(source = 'title', opts: { unique?: boolean } = {}): Fi
 }
 
 /**
- * Read-only references back to WordPress, written only by the migration (Local API, overrideAccess).
- * Never offered as list columns; only the WordPress id and old URLs stay filterable (Advanced).
+ * A titled card in the editor's right-hand column. Presentational only (a collapsible): the fields
+ * inside keep their own names, so stored data, the API and list columns/filters are unchanged.
+ */
+export function sidebarSection(
+  label: string,
+  fields: Field[],
+  opts: { collapsed?: boolean } = {},
+): Field {
+  return {
+    type: 'collapsible',
+    label,
+    admin: { position: 'sidebar', initCollapsed: opts.collapsed ?? false },
+    fields,
+  }
+}
+
+/**
+ * Read-only references to the old site, written only by the migration (Local API, overrideAccess).
+ * The editor shows the old post id and old addresses; the bookkeeping (old slugs, source hash,
+ * import time) stays stored but is never shown. Never list columns; only the old id and old
+ * addresses stay filterable.
  */
 export function legacyFields(opts: { withUrls?: boolean } = {}): Field {
   const ref = { readOnly: true, disableListColumn: true } as const
-  const internal = { ...ref, disableListFilter: true } as const
+  const internal = { ...ref, hidden: true, disableListFilter: true } as const
   return {
     name: 'legacy',
     type: 'group',
-    label: 'Legacy WordPress reference',
+    label: 'From the old site',
     admin: {
       position: 'sidebar',
       readOnly: true,
@@ -47,19 +66,21 @@ export function legacyFields(opts: { withUrls?: boolean } = {}): Field {
     },
     access: { read: staffFieldOnly, create: () => false, update: () => false },
     fields: [
-      { name: 'wpId', type: 'number', index: true, admin: ref },
+      { name: 'wpId', label: 'Old post ID', type: 'number', index: true, admin: ref },
       { name: 'legacySlugs', type: 'text', hasMany: true, admin: internal },
       ...(opts.withUrls
-        ? [{ name: 'legacyUrls', type: 'text', hasMany: true, index: true, admin: ref } as Field]
+        ? [
+            {
+              name: 'legacyUrls',
+              label: 'Old addresses',
+              type: 'text',
+              hasMany: true,
+              index: true,
+              admin: ref,
+            } as Field,
+          ]
         : []),
-      {
-        name: 'sourceHash',
-        type: 'text',
-        admin: {
-          ...internal,
-          description: 'Hash of the sanitized source record (idempotent re-runs)',
-        },
-      },
+      { name: 'sourceHash', type: 'text', admin: internal },
       { name: 'migratedAt', type: 'date', admin: internal },
     ],
   }
@@ -117,32 +138,53 @@ export function seoField(fallbacks: Partial<Record<SeoPart, string>>): Field {
   }
 }
 
+/**
+ * Review: "needs review" plus a note for the editor. The two checks raised by the import (a title
+ * made from the text, a doubtful date) only show on the documents that have them; unticking one
+ * marks it as checked.
+ */
 export const reviewFlags: Field = {
   name: 'flags',
+  label: 'Review',
   type: 'group',
   access: { read: staffFieldOnly },
   admin: { position: 'sidebar' },
   fields: [
-    { name: 'needsReview', type: 'checkbox', defaultValue: false, index: true },
     {
-      name: 'titleDerived',
+      name: 'needsReview',
+      label: 'Needs an editor’s review',
       type: 'checkbox',
       defaultValue: false,
-      admin: { description: 'Title was generated from the text (WordPress title was empty)' },
+      index: true,
+    },
+    {
+      name: 'titleDerived',
+      label: 'Check the title',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description: 'The title was made from the opening text. Untick once it reads well.',
+        condition: (_, sibling) => sibling?.titleDerived === true,
+      },
     },
     {
       name: 'dateSuspect',
+      label: 'Check the publish date',
       type: 'checkbox',
       defaultValue: false,
-      admin: { description: 'Publish date looked tampered/invalid in WordPress' },
+      admin: {
+        description: 'The original publish date looked wrong. Untick once it is right.',
+        condition: (_, sibling) => sibling?.dateSuspect === true,
+      },
     },
-    { name: 'reviewNote', type: 'textarea', maxLength: 1000 },
+    { name: 'reviewNote', label: 'Note for the editor', type: 'textarea', maxLength: 1000 },
   ],
 }
 
 /** Who created the document (drives author-level access). Set by hook, never by clients. */
 export const createdByField: Field = {
   name: 'createdBy',
+  label: 'Created by',
   type: 'relationship',
   relationTo: 'users',
   index: true,

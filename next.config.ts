@@ -49,6 +49,9 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // A second dev server (Playwright, a local-data playground beside `dev:live`) needs its own build
+  // folder: NEXT_DIST_DIR=.next-local. Unset, the default .next is used.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   poweredByHeader: false,
   env: { NEXT_PUBLIC_APP_VERSION: `${appVersion()}-${Date.now().toString(36)}` },
   // Keep the dev-only Next badge clear of the admin sidebar's account card (bottom-left).

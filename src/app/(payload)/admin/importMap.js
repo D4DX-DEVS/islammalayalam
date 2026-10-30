@@ -36,6 +36,7 @@ import { BannerRowLabel as BannerRowLabel_26aeab33fcdb780bad1ef2199780a0a1 } fro
 import { TwoStepSwitch as TwoStepSwitch_0376b53c672cc593bbbb7182da800ca7 } from '../../../payload/admin/mfa/TwoStepSwitch'
 import { NoSaveButton as NoSaveButton_468e712a4a4ae597d52b9393bc65afa4 } from '../../../payload/admin/mfa/NoSaveButton'
 import { AdminNav as AdminNav_74e3fe0496955cab51bfdd544405d262 } from '../../../payload/admin/nav/AdminNav'
+import { LiveDataBanner as LiveDataBanner_d19c9288cd9b0d327fc983d36d967252 } from '../../../payload/admin/LiveDataBanner'
 import { AdminDock as AdminDock_8aa529c4c2d2e21324a7f9ca9a25db46 } from '../../../payload/admin/dock/AdminDock'
 import { AdminIcon as AdminIcon_5a7677049bffc15cb0bb8cd55f4b061a } from '../../../payload/admin/graphics'
 import { AdminLogo as AdminLogo_5a7677049bffc15cb0bb8cd55f4b061a } from '../../../payload/admin/graphics'
@@ -52,7 +53,6 @@ import { TOTPVerify as TOTPVerify_4eaf6cb33cfb75be01716613e3c9a512 } from 'paylo
 import { DashboardView as DashboardView_01c7b037f23d5242659990f28a9e7ce6 } from '../../../payload/admin/dashboard/DashboardView'
 import { WebsiteView as WebsiteView_aaafc6918e592ff07194187458f2e9fe } from '../../../payload/admin/website/WebsiteView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
-import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
@@ -94,6 +94,7 @@ export const importMap = {
   "/payload/admin/mfa/TwoStepSwitch#TwoStepSwitch": TwoStepSwitch_0376b53c672cc593bbbb7182da800ca7,
   "/payload/admin/mfa/NoSaveButton#NoSaveButton": NoSaveButton_468e712a4a4ae597d52b9393bc65afa4,
   "/payload/admin/nav/AdminNav#AdminNav": AdminNav_74e3fe0496955cab51bfdd544405d262,
+  "/payload/admin/LiveDataBanner#LiveDataBanner": LiveDataBanner_d19c9288cd9b0d327fc983d36d967252,
   "/payload/admin/dock/AdminDock#AdminDock": AdminDock_8aa529c4c2d2e21324a7f9ca9a25db46,
   "/payload/admin/graphics#AdminIcon": AdminIcon_5a7677049bffc15cb0bb8cd55f4b061a,
   "/payload/admin/graphics#AdminLogo": AdminLogo_5a7677049bffc15cb0bb8cd55f4b061a,
@@ -109,6 +110,5 @@ export const importMap = {
   "payload-totp/rsc#TOTPVerify": TOTPVerify_4eaf6cb33cfb75be01716613e3c9a512,
   "/payload/admin/dashboard/DashboardView#DashboardView": DashboardView_01c7b037f23d5242659990f28a9e7ce6,
   "/payload/admin/website/WebsiteView#WebsiteView": WebsiteView_aaafc6918e592ff07194187458f2e9fe,
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
-  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

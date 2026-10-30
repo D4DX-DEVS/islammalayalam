@@ -1,28 +1,34 @@
+import { CONTENT_TYPES, contentListPath } from '@/cms/content-types'
+
 /**
- * The admin sidebar's structure as plain data (no Payload, no React), so the grouping, the order and
- * the permission rules are unit-tested. Jobs, not data types: Content, Media, Communication, Site, Team, with
- * the rarely used Advanced tools (redirects, activity log) tucked away at the bottom.
+ * The admin sidebar's structure as plain data (no Payload, no React), so the grouping, the order
+ * and the permission rules are unit-tested. Grouped by job: Content, Library, Inbox, Website, Team,
+ * with the rarely used Tools (redirects, activity log) folded away at the bottom.
  *
  * Item names come from each collection's / global's own label (set next to its config), so the
- * sidebar, the list headings and the breadcrumbs always use the same word. Only entries that are not
- * a collection or global (Site) are named here.
+ * sidebar, the list headings and the breadcrumbs always use the same word. Only entries that are
+ * not a collection or global (the Website overview) and the content kinds are named here.
  */
 export type NavKind = 'collection' | 'global' | 'view'
 
 export type NavEntity = { slug: string; kind: 'collection' | 'global'; label: string }
 
 export type NavItemData = {
-  /** Unique within the sidebar: `<kind>:<slug>`. */
+  /** Unique within the sidebar: `<kind>:<slug>` (`format:<key>` for a content kind). */
   key: string
-  /** Path under the admin route, e.g. `/collections/posts`. */
+  /** Path under the admin route, e.g. `/collections/posts`; may carry a query (a filtered list). */
   href: string
   label: string
-  /** Unread / waiting count shown as a gold pill; absent or 0 shows nothing. */
+  /** Unread / waiting count shown as a pill; absent or 0 shows nothing. */
   badge?: number
   slug: string
   kind: NavKind
-  /** Other paths that light this row up (the Site row covers every Site tab). */
+  /** Other paths that light this row up. */
   also?: string[]
+  /** Only this exact path lights the row up (an overview page with sub-pages of its own). */
+  exact?: boolean
+  /** Filtered views of this row (the content kinds under All content), shown while it is open. */
+  children?: NavItemData[]
 }
 
 export type NavGroupData = {
@@ -37,24 +43,23 @@ type LayoutEntry = {
   kind: NavKind
   slug: string
   label?: string
-  /** Entities reached through this row's own page (as tabs) instead of their own sidebar rows. */
-  covers?: ReadonlyArray<Pick<NavEntity, 'kind' | 'slug'>>
+  exact?: boolean
 }
 type LayoutGroup = { key: string; label: string; tucked?: boolean; items: LayoutEntry[] }
 
 /** Group names also live on each config's `admin.group`; tests keep the two in step. */
 export const NAV_GROUP_LABELS = {
   write: 'Content',
-  library: 'Media',
-  inbox: 'Communication',
-  site: 'Site',
+  library: 'Library',
+  inbox: 'Inbox',
+  site: 'Website',
   team: 'Team',
-  advanced: 'Advanced',
+  advanced: 'Tools',
 } as const
 
 /**
- * The Site area: an overview page plus one tab per site-wide setting, in this order. The sidebar
- * shows a single "Site" row for all of them (SiteTabs renders the tabs on each page).
+ * The Website area: an overview page plus one page per site-wide setting, in this order (also the
+ * order of the tabs SiteTabs renders on each of those pages).
  */
 export const SITE_GLOBALS = [
   'homepage',
@@ -90,8 +95,8 @@ const LAYOUT: LayoutGroup[] = [
     key: 'library',
     label: NAV_GROUP_LABELS.library,
     items: [
-      { kind: 'collection', slug: 'quotes' },
       { kind: 'collection', slug: 'media' },
+      { kind: 'collection', slug: 'quotes' },
     ],
   },
   {
@@ -106,12 +111,8 @@ const LAYOUT: LayoutGroup[] = [
     key: 'site',
     label: NAV_GROUP_LABELS.site,
     items: [
-      {
-        kind: 'view',
-        slug: 'website',
-        label: 'Site',
-        covers: SITE_GLOBALS.map((slug) => ({ kind: 'global' as const, slug })),
-      },
+      { kind: 'view', slug: 'website', label: 'Overview', exact: true },
+      ...SITE_GLOBALS.map((slug) => ({ kind: 'global' as const, slug })),
     ],
   },
   {
@@ -126,7 +127,7 @@ const LAYOUT: LayoutGroup[] = [
   {
     // Technical lists an everyday editor never needs: folded behind one row.
     key: 'advanced',
-    label: 'Advanced tools',
+    label: NAV_GROUP_LABELS.advanced,
     tucked: true,
     items: [
       { kind: 'collection', slug: 'redirects' },
@@ -147,6 +148,16 @@ const keyOf = (kind: NavKind, slug: string) => `${kind}:${slug}`
 
 export const navHref = (kind: NavKind, slug: string): string => `${PATH[kind]}/${slug}`
 
+/** The content kinds as filtered views of the Posts list, in the order of src/cms/content-types.ts. */
+export const contentKindItems = (): NavItemData[] =>
+  CONTENT_TYPES.map((type) => ({
+    key: `format:${type.key}`,
+    slug: 'posts',
+    kind: 'collection',
+    href: contentListPath(type.key),
+    label: type.plural,
+  }))
+
 /** Collection slug → the count shown on its sidebar row. */
 export type NavBadges = Partial<Record<string, number>>
 
@@ -154,7 +165,7 @@ export type NavBadges = Partial<Record<string, number>>
  * Groups the entities the signed-in user may open, in the sidebar's fixed order. `entities` must
  * already be filtered by visibility and read permission (AdminNav does that). Anything not listed
  * in the layout (a collection added later) still shows, under "More", so nothing silently vanishes.
- * `view` entries (Site) show when `websiteManager` is true.
+ * The Website overview (`view`) shows when `websiteManager` is true.
  */
 export function buildNavGroups({
   entities,
@@ -166,29 +177,21 @@ export function buildNavGroups({
   websiteManager?: boolean
 }): NavGroupData[] {
   const bySlug = new Map(entities.map((e) => [keyOf(e.kind, e.slug), e]))
-  // Covered (Site tabs) and omitted entities never fall through to "More".
-  const used = new Set<string>([
-    ...NAV_OMITTED.map((e) => keyOf(e.kind, e.slug)),
-    ...LAYOUT.flatMap((g) => g.items.flatMap((i) => i.covers ?? [])).map((e) =>
-      keyOf(e.kind, e.slug),
-    ),
-  ])
+  // Omitted entities never fall through to "More".
+  const used = new Set<string>(NAV_OMITTED.map((e) => keyOf(e.kind, e.slug)))
 
   const toItem = (entry: LayoutEntry): NavItemData | null => {
     const key = keyOf(entry.kind, entry.slug)
     if (entry.kind === 'view') {
       if (!websiteManager) return null
       used.add(key)
-      const also = (entry.covers ?? [])
-        .filter((c) => bySlug.has(keyOf(c.kind, c.slug)))
-        .map((c) => navHref(c.kind, c.slug))
       return {
         key,
         slug: entry.slug,
         kind: entry.kind,
         href: navHref(entry.kind, entry.slug),
         label: entry.label ?? entry.slug,
-        ...(also.length ? { also } : {}),
+        ...(entry.exact ? { exact: true } : {}),
       }
     }
     const entity = bySlug.get(key)
@@ -202,6 +205,7 @@ export function buildNavGroups({
       href: navHref(entry.kind, entry.slug),
       label: entry.label ?? entity.label,
       ...(badge && badge > 0 ? { badge } : {}),
+      ...(entry.slug === 'posts' ? { children: contentKindItems() } : {}),
     }
   }
 

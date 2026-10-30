@@ -61,3 +61,4 @@ npm-debug.log*
 
 # Design-tool notes (local only)
 .taste-skill/
+.next-local/
