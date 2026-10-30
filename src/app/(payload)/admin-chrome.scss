@@ -1,5 +1,5 @@
-// Header tools (search, inbox bell) and the dashboard's colour, quick actions, recent-posts table and
-// skyline. Loaded after admin-refresh.scss in custom.scss; uses the --im-* tokens defined there.
+// Header tools (search, inbox bell) and the dashboard's colour, quick actions and recent-posts table.
+// Loaded after admin-refresh.scss in custom.scss; uses the --im-* tokens defined there.
 
 // ---- Header: search (GlobalSearch.tsx) ---------------------------------------------------------
 // Payload caps the header actions at 150-500px by screen width; search, bell, theme and account are
@@ -88,8 +88,7 @@
   justify-content: center;
   align-items: flex-start;
   padding: 12vh 1rem 1rem;
-  background: rgb(15 27 46 / 0.35);
-  backdrop-filter: blur(2px);
+  background: rgb(17 20 24 / 0.32);
 }
 
 .im-search__dialog {
@@ -401,32 +400,6 @@ html[data-theme='dark'] {
   &:hover {
     border-color: var(--im-tone);
     background: var(--im-tone-soft);
-  }
-}
-
-// ---- Dashboard: greeting skyline --------------------------------------------------------------
-.im-dash__hero {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-}
-
-// Doubled class: the dashboard's own rule for icons in the greeting would shrink it to 1rem.
-.im-dash__hero .im-dash__skyline.im-dash__skyline {
-  position: absolute;
-  right: 18rem;
-  bottom: 0;
-  z-index: -1;
-  width: 20rem;
-  height: 6rem;
-  fill: var(--im-brand);
-  opacity: 0.09;
-  pointer-events: none;
-
-  @media (max-width: 1100px) {
-    right: 1rem;
-    width: 14rem;
-    height: 4.2rem;
   }
 }
 

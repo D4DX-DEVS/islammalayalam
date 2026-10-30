@@ -6,18 +6,26 @@
   // Payload sizes everything from a 13px root; 15px reads better for body text and Malayalam.
   // --base-body-size keeps Payload's own spacing steps (base(1) = 20px) unchanged.
   --base-body-size: 15;
-  --style-radius-s: 10px;
-  --style-radius-m: 10px;
-  --style-radius-l: 14px;
+  // Consistent radius: 8px cards, 6px controls, 4px chips (tight and consistent)
+  --style-radius-s: 6px; // controls
+  --style-radius-m: 8px; // cards, panels
+  --style-radius-l: 8px; // same as cards for consistency
   // Cards sit flat with a border; only things that float (menus, dialogs) get a shadow.
-  --im-shadow-sm: none;
-  --im-shadow-md: 0 12px 32px rgb(15 27 46 / 0.16);
-  --im-shadow-lg: 0 24px 48px -12px rgb(15 27 46 / 0.28);
-  --im-ring: 0 0 0 3px rgb(10 86 184 / 0.28);
+  --im-shadow-sm: none; // no shadows at rest
+  --im-shadow-md: 0 4px 12px rgb(0 0 0 / 0.12); // soft shadow for floating elements
+  --im-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.16); // stronger shadow for dialogs/modals
+  --im-ring: 0 0 0 3px rgb(10 86 184 / 0.28); // focus ring in brand blue
   --theme-bg: var(--im-canvas);
   --theme-input-bg: var(--im-surface);
   --theme-border-color: var(--im-border);
   --theme-text: var(--im-ink);
+}
+
+// Touch devices: 44px control minimum
+@media (pointer: coarse) {
+  :root {
+    --im-control-h: 2.75rem; // 44px at 15px root
+  }
 }
 
 html {
@@ -26,17 +34,14 @@ html {
 }
 
 html[data-theme='dark'] {
-  --im-surface: #111a2b;
-  --im-canvas: #0b1220;
-  --im-border: #1f2a3d;
-  --im-muted: #94a3b8;
-  --im-shadow-md: 0 12px 32px rgb(0 0 0 / 0.5);
-  --im-shadow-lg: 0 24px 48px -12px rgb(0 0 0 / 0.6);
-  --im-ring: 0 0 0 3px rgb(96 165 250 / 0.3);
+  // Dark mode overrides (additional shadow adjustments only; --im-* are defined in custom.scss)
+  --im-shadow-md: 0 4px 12px rgb(0 0 0 / 0.32);
+  --im-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.48);
+  --im-ring: 0 0 0 3px rgb(106 165 255 / 0.3); // brand blue on dark
   --theme-bg: var(--im-canvas);
   --theme-input-bg: var(--im-surface);
   --theme-border-color: var(--im-border);
-  --theme-text: var(--theme-elevation-1000);
+  --theme-text: var(--im-ink);
 }
 
 body {
@@ -177,8 +182,7 @@ body {
 }
 
 .doc-controls {
-  background: color-mix(in srgb, var(--im-canvas) 85%, transparent);
-  backdrop-filter: saturate(1.4) blur(10px);
+  background: var(--im-canvas);
   border-bottom: 1px solid var(--im-border);
 }
 
@@ -232,13 +236,10 @@ body {
 
   tbody tr {
     transition: background-color 0.12s;
-
-    &:nth-child(even) {
-      background: transparent;
-    }
+    background: transparent; // no zebra striping
 
     &:hover {
-      background: var(--im-brand-soft);
+      background: var(--im-sunken); // subtle neutral tint
     }
   }
 
@@ -261,10 +262,9 @@ body {
   margin-top: 1rem;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--im-border);
-  border-radius: var(--style-radius-l);
-  background: color-mix(in srgb, var(--im-surface) 92%, transparent);
-  backdrop-filter: blur(8px);
-  box-shadow: var(--im-shadow-md);
+  border-radius: var(--style-radius-m);
+  background: var(--im-surface); // no backdrop blur
+  box-shadow: none; // no shadow at rest
 }
 
 .paginator__page {
@@ -313,10 +313,7 @@ body {
 // ---- Login / TOTP / reset (minimal template) ---------------------------------------------------
 .template-minimal {
   min-height: 100vh;
-  background:
-    radial-gradient(1200px 600px at 10% -10%, var(--im-brand-soft), transparent 60%),
-    radial-gradient(900px 500px at 110% 110%, rgb(242 190 78 / 0.14), transparent 60%),
-    var(--im-canvas);
+  background: var(--im-canvas); // flat background, no gradients
 }
 
 .template-minimal__wrap {
@@ -362,7 +359,7 @@ body {
 }
 
 .payload__modal-item {
-  backdrop-filter: blur(4px);
+  backdrop-filter: none;
 }
 
 .payload-toast-item {
@@ -437,24 +434,24 @@ body {
 }
 
 // ---- Order hint above the Audios / Videos lists (ListOrderHint.tsx) -----------------------------
+// A quiet grey note: the list header's "Create New" stays the page's one blue button.
 .im-order-hint {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 0.75rem;
   margin-bottom: 0.9rem;
-  padding: 0.6rem 0.85rem;
-  border: 1px solid var(--im-border);
-  border-radius: var(--style-radius-m);
-  background: var(--im-brand-soft);
-  color: var(--theme-text);
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--style-radius-s);
+  background: var(--im-sunken);
+  color: var(--im-ink-2);
   font-size: 0.85rem;
 
   svg {
     flex: none;
-    width: 1.1rem;
-    height: 1.1rem;
-    color: var(--im-brand);
+    width: 1rem;
+    height: 1rem;
+    color: var(--im-muted);
   }
 
   p {
@@ -465,53 +462,23 @@ body {
   button {
     min-height: 2.25rem;
     padding: 0 0.85rem;
-    border: 1px solid var(--im-brand);
+    border: 1px solid var(--im-border-strong);
     border-radius: var(--style-radius-s);
-    background: var(--im-brand);
-    color: var(--im-on-brand);
+    background: var(--im-surface);
+    color: var(--im-ink);
     font: inherit;
     font-weight: 600;
     cursor: pointer;
 
     &:hover {
-      background: var(--im-brand-strong);
+      border-color: var(--im-brand);
+      color: var(--im-brand-strong);
     }
 
     &:focus-visible {
       outline: none;
       box-shadow: var(--im-ring);
     }
-  }
-}
-
-.im-order-hint__add {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 2.25rem;
-  margin-inline-start: auto;
-  padding: 0 0.95rem;
-  border-radius: var(--style-radius-s);
-  background: var(--im-brand);
-  color: var(--im-on-brand);
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-decoration: none;
-
-  svg {
-    width: 1rem;
-    height: 1rem;
-    color: inherit;
-  }
-
-  &:hover {
-    background: var(--im-brand-strong);
-    color: var(--im-on-brand);
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: var(--im-ring);
   }
 }
 

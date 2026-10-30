@@ -31,10 +31,6 @@ html[data-theme='dark'] {
     height: 1.1rem;
   }
 
-  // A filled pill with a gold edge instead of a boxed outline.
-  &[aria-current='page'] {
-    box-shadow: inset 3px 0 0 var(--im-accent);
-  }
 }
 
 .im-nav__group,

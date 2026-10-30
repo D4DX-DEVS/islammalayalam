@@ -19,7 +19,7 @@
   // would cover the sheet too.
   .template-default__wrap::before {
     position: fixed;
-    background: rgb(8 15 28 / 0.42);
+    background: rgb(17 20 24 / 0.36); // neutral dark scrim, not navy
     transition:
       opacity 0.3s,
       visibility 0s 0.3s;

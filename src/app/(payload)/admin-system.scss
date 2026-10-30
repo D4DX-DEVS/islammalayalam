@@ -1,0 +1,318 @@
+// The admin's finish, loaded last in custom.scss: one light ground, white sheets split by hairlines,
+// nothing at rest casts a shadow, and the brand blue only on small marks (the primary button, the
+// active nav item, chart data, focus). Earlier files keep structure; this file owns the look, so a
+// screen never falls back to the old warm-paper / navy styling. Only --im-* tokens are used here.
+
+$radius-panel: 8px;
+$radius-control: 6px;
+
+// ---- Page titles: app titles, not landing-page headlines ------------------------------------------
+.list-header__title,
+.doc-header__title,
+.im-dash__title {
+  font-size: 1.6rem; // 24px at the 15px root
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.im-dash__title {
+  font-weight: 600;
+}
+
+// ---- Lists ------------------------------------------------------------------------------------------
+// Sentence-case grey headers, no header band, rules between rows, the table on one white sheet.
+.collection-list .table,
+.im-lists .table {
+  border: 1px solid var(--im-border);
+  border-radius: $radius-panel;
+  background: var(--im-surface);
+  box-shadow: none;
+  // Scrolls sideways inside its own box on a phone, never the page.
+  overflow-x: auto;
+}
+
+.table thead th {
+  background: transparent;
+  color: var(--im-muted);
+  font-size: 0.8667rem; // 13px
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  border-bottom: 1px solid var(--im-border);
+}
+
+.table tbody tr {
+  background: transparent;
+
+  &:hover {
+    background: var(--im-sunken);
+  }
+}
+
+// Rows on a 48px pitch: enough for Malayalam titles, dense enough to scan.
+.table tbody td {
+  padding-block: 0.6rem;
+  border-bottom: 1px solid var(--im-border);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+// Payload stretches the list table to the screen edges on tablets and phones; as a bordered sheet it
+// stays inside the page margins (it already scrolls sideways within itself).
+@media (max-width: 1024px) {
+  .collection-list .table {
+    display: block;
+    left: 0;
+    width: 100%;
+    padding-left: 0;
+
+    &::after {
+      content: none;
+    }
+  }
+}
+
+// An empty list already has "Create New" in its header; the second one under "No results" is plain.
+.no-results__actions .btn.btn--style-primary:not(.btn--disabled) {
+  --bg-color: var(--im-surface);
+  --hover-bg: var(--im-sunken);
+  --color: var(--im-ink);
+  --hover-color: var(--im-ink);
+
+  box-shadow: inset 0 0 0 1px var(--im-border-strong);
+}
+
+// The search box is a control, not a grey band across the page.
+.search-bar {
+  background: transparent;
+  box-shadow: none;
+}
+
+.search-filter {
+  background: var(--im-surface);
+  box-shadow: none;
+  border: 1px solid var(--im-border-strong);
+  border-radius: $radius-control;
+
+  &:focus-within {
+    border-color: var(--im-brand);
+  }
+}
+
+// ---- Edit view: one white sheet, the sidebar split off by a hairline ---------------------------------
+.collection-edit,
+.global-edit {
+  background: var(--im-surface);
+}
+
+.doc-controls {
+  background: var(--im-surface);
+  border-bottom: 1px solid var(--im-border);
+  box-shadow: none;
+}
+
+.document-fields__sidebar {
+  background: var(--im-surface);
+  border-inline-start: 1px solid var(--im-border);
+}
+
+// Read-only fields (post number, reading minutes) read as values, not as boxes waiting for input.
+.field-type.read-only input,
+.field-type input:read-only:not([type='checkbox']):not([type='radio']),
+.field-type input:disabled {
+  background: var(--im-sunken);
+  border-color: transparent;
+  color: var(--im-ink-2);
+  box-shadow: none;
+  cursor: default;
+}
+
+// Groups in the sidebar (Flags) sit in the column under a hairline instead of a rounded slab.
+.document-fields__sidebar .group-field--top-level {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--im-border);
+  border-radius: 0;
+  box-shadow: none;
+  padding-inline: 0;
+}
+
+// Collapsible rows (homepage sections, array rows) rest flat: border only.
+.collapsible,
+.blocks-field__row,
+.array-field__row {
+  border-color: var(--im-border);
+  border-radius: $radius-panel;
+  box-shadow: none;
+}
+
+// The content box writes in the admin's own type (Figtree + Noto Sans Malayalam); Payload sets the
+// editor, its placeholder and its tables in Georgia (--font-serif).
+// Placeholders in the meta grey: Lexical's #808080 and react-select's #9a9a9a fall under 4.5:1.
+.ContentEditable__root,
+.LexicalEditorTheme__placeholder {
+  font-family: var(--font-body);
+  letter-spacing: 0;
+}
+
+.LexicalEditorTheme__placeholder {
+  color: var(--im-muted);
+}
+
+.rs__placeholder {
+  color: var(--im-muted);
+}
+
+[data-lexical-editor] {
+  .LexicalEditorTheme__tableCell {
+    font-family: inherit;
+    letter-spacing: 0;
+    border-color: var(--im-border-strong);
+  }
+
+  .LexicalEditorTheme__tableCellHeader {
+    background: var(--im-sunken);
+    font-weight: 600;
+  }
+}
+
+// ---- Dashboard ---------------------------------------------------------------------------------------
+// The totals are one strip split by hairlines: label and figure, no icon tiles.
+.im-dash__stats {
+  gap: 0;
+  border: 1px solid var(--im-border);
+  border-radius: $radius-panel;
+  background: var(--im-surface);
+  overflow: hidden;
+
+  > li + li {
+    border-inline-start: 1px solid var(--im-border);
+  }
+
+  // Two columns on a phone; an odd last total takes the full row instead of leaving a hole.
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+
+    > li + li {
+      border-inline-start: 0;
+    }
+
+    > li:nth-child(even) {
+      border-inline-start: 1px solid var(--im-border);
+    }
+
+    > li:nth-child(n + 3) {
+      border-top: 1px solid var(--im-border);
+    }
+
+    > li:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.im-dash__stat {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+
+  &:hover {
+    background: var(--im-sunken);
+    transform: none;
+  }
+}
+
+.im-dash__stat-icon {
+  display: none;
+}
+
+.im-dash__stat-value {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.im-dash__panel {
+  border: 1px solid var(--im-border);
+  border-radius: $radius-panel;
+  box-shadow: none;
+}
+
+.im-dash__panel-head h2 {
+  font-size: 1.0667rem; // 16px: card titles stay well under the page title
+  font-weight: 600;
+}
+
+.im-dash__panel-icon {
+  background: none;
+  color: var(--im-muted);
+}
+
+// Quick actions: plain rows, one grey icon, no colour per row.
+.im-links__row {
+  border: 1px solid var(--im-border);
+  border-radius: $radius-panel;
+  background: var(--im-surface);
+  box-shadow: none;
+
+  &:hover {
+    border-color: var(--im-border-strong);
+    background: var(--im-sunken);
+  }
+}
+
+.im-links__icon {
+  background: none;
+  border: 0;
+  color: var(--im-muted);
+}
+
+.im-links__go {
+  color: var(--im-muted);
+}
+
+// ---- Things that float: menus and pop-ups get the one soft shadow ------------------------------------
+.rs__menu,
+.popup__content,
+.popup-button-list {
+  border: 1px solid var(--im-border);
+  border-radius: $radius-panel;
+  background: var(--im-surface);
+  box-shadow: 0 8px 24px rgb(17 20 24 / 0.08);
+}
+
+// A button list inside a pop-up (the ⋮ menu) is the pop-up's content, not a second box.
+.popup__content .popup-button-list {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.rs__option {
+  border-radius: $radius-control;
+
+  &--is-focused {
+    background: var(--im-sunken);
+  }
+
+  &--is-selected {
+    background: var(--im-brand-soft);
+    color: var(--im-brand-strong);
+  }
+}
+
+html[data-theme='dark'] {
+  // The blue tint is for small areas; the sign-in panel is large, so on dark it is a neutral step.
+  .login .template-minimal__wrap::before {
+    background: var(--im-sunken);
+  }
+
+  .rs__menu,
+  .popup__content,
+  .popup-button-list {
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+  }
+}

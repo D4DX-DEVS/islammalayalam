@@ -1,20 +1,20 @@
-// Sidebar (payload/admin/nav/AdminNavClient.tsx): dark navy in both themes, gold marks the page you
-// are on. Payload's NavWrapper still provides `.nav`, `.nav__scroll` (scroll + padding) and the
-// open/close behaviour; this styles the contents.
+// Sidebar (payload/admin/nav/AdminNavClient.tsx): light background on page ground with 1px hairline,
+// royal blue marks the active page. Payload's NavWrapper still provides `.nav`, `.nav__scroll`
+// (scroll + padding) and the open/close behaviour; this styles the contents.
 
 .nav {
-  border-right: 0;
+  border-right: 1px solid var(--im-border);
   background: var(--im-nav);
   color: var(--im-nav-text);
 }
 
 .nav__scroll {
-  --nav-padding-inline-start: 0.9rem;
-  --nav-padding-inline-end: 0.9rem;
+  --nav-padding-inline-start: 1rem;
+  --nav-padding-inline-end: 1rem;
   --nav-padding-block-end: 1.1rem;
 }
 
-// Payload's collapse / close buttons sit in the absolute `.nav__header`; make them readable on navy.
+// Payload's collapse / close buttons sit in the absolute `.nav__header`; use ink color on light.
 .nav__header,
 .nav__mobile-close {
   color: var(--im-nav-text);
@@ -45,7 +45,7 @@
   min-height: var(--app-header-height);
   margin: calc(-1 * var(--app-header-height)) 0 0.9rem;
   padding-left: 2.6rem;
-  color: #fff;
+  color: var(--im-nav-text);
   text-decoration: none;
 
   img {
@@ -93,7 +93,7 @@
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  min-height: 2.65rem;
+  min-height: 2.2rem; // 34px pitch per spec
   padding: 0 0.75rem;
   border: 0;
   border-radius: var(--style-radius-s);
@@ -101,6 +101,7 @@
   color: var(--im-nav-text);
   font: inherit;
   font-weight: 500;
+  font-size: 0.9375rem; // 14-15px label
   line-height: 1.3;
   text-align: left;
   text-decoration: none;
@@ -112,31 +113,32 @@
   svg {
     color: var(--im-nav-muted);
     transition: color 0.15s;
+    width: 1rem; // 16px outline icons per spec
+    height: 1rem;
   }
 
   &:hover {
-    background: var(--im-nav-raised);
-    color: #fff;
+    background: var(--im-border); // subtle neutral tint on hover
     text-decoration: none;
 
     svg {
-      color: #fff;
+      color: var(--im-nav-text);
     }
   }
 
   &[aria-current='page'] {
-    background: var(--im-nav-active);
-    color: #fff;
+    background: var(--im-nav-active); // pale blue tint
+    color: var(--im-brand-strong); // dark blue ink
     font-weight: 600;
 
     svg {
-      color: var(--im-accent);
+      color: var(--im-brand); // full brand blue on icon
     }
   }
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgb(242 190 78 / 0.55);
+    box-shadow: 0 0 0 3px var(--im-ring);
   }
 }
 
@@ -148,8 +150,7 @@
   white-space: nowrap;
 }
 
-// Waiting count: gold fill with dark text, so it reads on navy without relying on colour alone
-// (the number is the signal, "waiting" is read out by screen readers).
+// Waiting count: pale blue tint with dark ink (the number is the signal, "waiting" is read out by screen readers).
 .im-nav__badge {
   display: inline-flex;
   align-items: center;
@@ -158,8 +159,8 @@
   height: 1.4rem;
   padding: 0 0.5rem;
   border-radius: 999px;
-  background: var(--im-accent);
-  color: #3a2500;
+  background: var(--im-nav-active); // pale tint
+  color: var(--im-brand-strong); // dark ink
   font-size: 0.8rem;
   font-weight: 700;
   line-height: 1;
@@ -180,13 +181,13 @@
 }
 
 .im-nav__group-label {
-  margin: 0 0 0.3rem;
+  margin: 1rem 0 0.5rem; // more space above group labels
   padding: 0 0.75rem;
   color: var(--im-nav-muted);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.8rem; // 12-13px per spec
+  font-weight: 600;
+  letter-spacing: 0; // no tracking
+  text-transform: none; // sentence case, not uppercase
 }
 
 // Migration tools: one quiet row that opens on demand.
@@ -218,7 +219,7 @@
   gap: 0.6rem;
   margin-top: auto;
   padding-top: 1.1rem;
-  border-top: 1px solid rgb(255 255 255 / 0.1);
+  border-top: 1px solid var(--im-border); // hairline border
 }
 
 .im-nav__user {
@@ -226,8 +227,8 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.5rem;
-  border-radius: 12px;
-  background: var(--im-nav-raised);
+  border-radius: var(--style-radius-m);
+  background: var(--im-sunken); // subtle raised background
 }
 
 .im-nav__user-link {
@@ -238,7 +239,7 @@
   min-width: 0;
   padding: 0.15rem;
   border-radius: var(--style-radius-s);
-  color: #fff;
+  color: var(--im-nav-text);
   text-decoration: none;
 
   &:hover {
@@ -247,7 +248,7 @@
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgb(242 190 78 / 0.55);
+    box-shadow: 0 0 0 3px var(--im-ring);
   }
 }
 
@@ -255,13 +256,13 @@
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 999px;
-  background: var(--im-accent);
-  color: #3a2500;
-  font-size: 0.93rem;
-  font-weight: 700;
+  background: var(--im-brand-soft); // pale blue tint
+  color: var(--im-brand-strong); // dark ink
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .im-nav__user-text {
@@ -272,14 +273,15 @@
 
 .im-nav__user-name {
   overflow: hidden;
-  font-size: 0.93rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--im-ink);
 }
 
 .im-nav__user-role {
-  font-size: 0.87rem;
+  font-size: 0.75rem;
   color: var(--im-nav-muted);
 }
 
@@ -287,18 +289,19 @@
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  width: var(--im-control-h);
-  height: var(--im-control-h);
+  width: 2rem;
+  height: 2rem;
   border-radius: var(--style-radius-s);
   color: var(--im-nav-text);
+  background: transparent;
 
   &:hover {
-    background: rgb(255 255 255 / 0.1);
-    color: #fff;
+    background: var(--im-border);
+    color: var(--im-ink);
   }
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgb(242 190 78 / 0.55);
+    box-shadow: 0 0 0 3px var(--im-ring);
   }
 }

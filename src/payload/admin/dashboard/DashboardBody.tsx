@@ -49,7 +49,6 @@ type Chip = {
   hint: string
   href: string
   icon: LucideIcon
-  tone: 'blue' | 'violet' | 'green' | 'rose'
   allowed: boolean
 }
 
@@ -101,7 +100,6 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
       hint: 'Order, icons and visibility of topics',
       href: col('categories'),
       icon: FolderTree,
-      tone: 'violet',
       allowed: Boolean(can.collections?.categories?.update),
     },
     {
@@ -109,7 +107,6 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
       hint: 'Posters and thoughts for the homepage slider',
       href: col('quotes'),
       icon: Quote,
-      tone: 'green',
       allowed: Boolean(can.collections?.quotes?.update),
     },
     {
@@ -117,7 +114,6 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
       hint: 'Homepage, menus, banners and settings',
       href: `${admin}/website`,
       icon: Globe,
-      tone: 'rose',
       allowed: Boolean(can.globals?.homepage?.update || can.globals?.header?.update),
     },
   ]
@@ -168,7 +164,6 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
   return (
     <div className="im-dash im-dash--view">
       <header className="im-dash__hero">
-        <Skyline />
         <div>
           <h1 className="im-dash__title">
             {greeting(now)}, {name}
@@ -243,9 +238,9 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
         {allowedChips.length ? (
           <Panel title="Quick actions">
             <ul className="im-links">
-              {allowedChips.map(({ label, hint, href, icon: Icon, tone }) => (
+              {allowedChips.map(({ label, hint, href, icon: Icon }) => (
                 <li key={href}>
-                  <Link href={href} className={`im-links__row im-links__row--${tone}`}>
+                  <Link href={href} className="im-links__row">
                     <span className="im-links__icon">
                       <Icon aria-hidden="true" />
                     </span>
@@ -300,15 +295,5 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
         ) : null}
       </div>
     </div>
-  )
-}
-
-/** A faint mosque skyline at the right of the greeting: decoration only. */
-function Skyline() {
-  return (
-    <svg className="im-dash__skyline" viewBox="0 0 320 96" aria-hidden="true" focusable="false">
-      <path d="M232 14a12 12 0 1 0 9 20 14 14 0 1 1-9-20Z" />
-      <path d="M0 96V80h28V58l6-10 6 10v22h14V64c0-14 12-22 22-30 10 8 22 16 22 30v16h18V44l5-12 5 12v36h22V70c0-22 18-34 34-42 16 8 34 20 34 42v10h22V44l5-12 5 12v36h16V62l6-10 6 10v18h28v16Z" />
-    </svg>
   )
 }

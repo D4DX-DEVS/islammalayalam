@@ -136,8 +136,8 @@
   width: 2.2rem;
   height: 2.2rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--im-brand), var(--im-brand-strong));
-  color: var(--im-on-brand);
+  background: var(--im-brand-soft); // flat pale tint
+  color: var(--im-brand-strong); // dark ink
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -218,11 +218,9 @@
   padding: 0.15rem 0.6rem;
   border-radius: 999px;
   background: var(--im-brand-soft);
-  color: var(--im-brand);
+  color: var(--im-brand-strong);
   font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .im-account__done {

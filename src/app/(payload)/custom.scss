@@ -14,44 +14,45 @@
 @use './admin-dock';
 @use './admin-menu-sheet';
 @use './admin-lists';
+@use './admin-system';
 
 :root {
-  // Warm paper, navy menu, royal blue actions (the redesign canvas, "Tokens" board).
+  // Modern minimal light system: royal blue accent on white, one step toward blue's palest tint for ground
   // Paper, surfaces and lines
-  --im-canvas: #f4f3ef;
-  --im-surface: #fff;
-  --im-border: #e3e1da;
-  --im-border-strong: #cfccc2;
-  --im-sunken: #ecebe4;
+  --im-canvas: #f9fafb; // ground one step toward blue's palest tint
+  --im-surface: #fff; // white surfaces
+  --im-border: #e6e9ef; // hairline borders (~1.2:1 contrast)
+  --im-border-strong: #d0d5dd; // control borders, one step darker
+  --im-sunken: #f3f4f6; // raised/sunken surfaces
   // Ink
-  --im-ink: #121c2b;
-  --im-ink-2: #3a4658;
-  --im-muted: #5c6777;
-  // Navy menu
-  --im-nav: #0f1b2e;
-  --im-nav-raised: #172640;
-  --im-nav-active: #1c2d4a;
-  --im-nav-text: #c9d3e3;
-  --im-nav-muted: #8fa0bc;
-  // Brand blue (actions) and the logo's gold (fills and icons on navy; text uses gold ink)
-  --im-brand: #0a56b8;
-  --im-brand-strong: #083f8a;
-  --im-brand-soft: #e5eefa;
-  --im-accent: #f2be4e;
-  --im-accent-ink: #8a5a00;
-  --im-on-brand: #fff;
+  --im-ink: #111418; // text, full strength
+  --im-ink-2: #4b5260; // secondary text
+  --im-muted: #5f6670; // meta text
+  // Sidebar and nav: LIGHT on page ground, never dark
+  --im-nav: #f9fafb; // same as canvas or white with 1px hairline
+  --im-nav-raised: #ffffff; // nav surface if separated
+  --im-nav-active: #e8f0fb; // active row: pale blue tint
+  --im-nav-text: #111418; // nav text in full ink
+  --im-nav-muted: #5f6670; // nav group labels in meta grey
+  // Brand blue (actions, active states, data) - full strength ONLY on small marks
+  --im-brand: #0a56b8; // royal blue light, full strength only on filled button, data series, active icon
+  --im-brand-strong: #083f8a; // dark ink for blue tints
+  --im-brand-soft: #e8f0fb; // pale tint for active nav row, badges, progress
+  --im-accent: #0a56b8; // use brand for accent (same hue)
+  --im-accent-ink: #083f8a; // text on brand tint
+  --im-on-brand: #fff; // text/icon on full-strength brand
   // Status: every one is also shown with a word, never colour alone
-  --im-ok: #14633f;
+  --im-ok: #14633f; // keep existing
   --im-ok-soft: #e3f3ea;
   --im-draft: #4a5565;
-  --im-draft-soft: #ecebe4;
+  --im-draft-soft: #f1f3f6; // neutral, not warm
   --im-warn: #8a5100;
   --im-warn-soft: #fcefd3;
   --im-danger: #8c1d18;
   --im-danger-soft: #fbe7e5;
   --im-danger-line: #e5b8b4;
-  // Shape: 10px controls, 14px cards, 44px control height
-  --im-control-h: 2.75rem; // 44px at the 15px root set in admin-theme.scss
+  // Shape: 36px controls on desktop, 44px on touch; 8px cards, 6px controls, 4px chips
+  --im-control-h: 2.4rem; // 36px at the 15px root (desktop)
   // Typefaces: Figtree for Latin, Noto Sans Malayalam for Malayalam (variables set on <html> by
   // app/(payload)/layout.tsx from src/lib/admin-fonts.ts).
   --font-body: var(--font-figtree), var(--font-noto-malayalam), system-ui, sans-serif;
@@ -65,19 +66,27 @@ h4 {
 }
 
 html[data-theme='dark'] {
-  --im-ink: #e8edf5;
-  --im-ink-2: #c3ccda;
-  --im-sunken: #162135;
-  --im-border-strong: #2c3a52;
-  --im-nav: #0a1424;
-  --im-nav-raised: #12203a;
-  --im-nav-active: #1a2c4b;
-  --im-brand: #60a5fa;
-  --im-brand-strong: #93c5fd;
-  --im-brand-soft: rgb(96 165 250 / 0.14);
-  --im-accent: #fbbf24;
-  --im-accent-ink: #fbbf24;
-  --im-on-brand: #06142b;
+  // True neutral darks, same rules as light mode
+  --im-canvas: #0b0b0c; // ground
+  --im-surface: #141416; // surface
+  --im-border: #26262a; // hairline borders
+  --im-border-strong: #35353d; // control borders
+  --im-sunken: #1c1c1f; // raised/sunken
+  --im-ink: #f3f4f6; // text, full strength
+  --im-ink-2: #b4b4bb; // secondary text
+  --im-muted: #9a9aa2; // meta text
+  --im-nav: #0b0b0c; // nav on ground
+  --im-nav-raised: #141416; // nav surface if separated
+  --im-nav-active: #1a2a3f; // active row: darker blue tint (adjusted for dark mode)
+  --im-nav-text: #f3f4f6; // nav text in light
+  --im-nav-muted: #9a9aa2; // nav group labels in meta grey
+  --im-brand: #6aa5ff; // blue on dark (lighter variant)
+  --im-brand-strong: #93c5fd; // lighter for dark text on tint
+  --im-brand-soft: #1a2a3f; // darker blue tint for areas
+  --im-accent: #6aa5ff;
+  --im-accent-ink: #93c5fd;
+  --im-on-brand: #000000; // text/icon on full-strength brand
+  // Status colors adjusted for dark mode
   --im-ok: #4ade80;
   --im-ok-soft: rgb(74 222 128 / 0.14);
   --im-draft: #b6c0d0;
