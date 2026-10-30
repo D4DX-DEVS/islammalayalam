@@ -5,21 +5,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 /** The note above the Audios / Videos lists: opens them in position order so dragging works. */
 const ui = vi.hoisted(() => ({
-  state: { sort: undefined as string | undefined, slug: 'videos' },
+  state: { sort: undefined as string | undefined, slug: 'videos', totalDocs: 3 },
   handleSortChange: vi.fn(),
 }))
 
-vi.mock('next/link', async () => {
-  const { createElement: h } = await import('react')
-  return {
-    default: (p: { href: string; className?: string; children?: unknown }) =>
-      h('a', { href: p.href, className: p.className }, p.children as string),
-  }
-})
 vi.mock('@payloadcms/ui', () => ({
-  useConfig: () => ({ config: { routes: { admin: '/admin' } } }),
   useListQuery: () => ({
     collectionSlug: ui.state.slug,
+    data: { totalDocs: ui.state.totalDocs },
     handleSortChange: ui.handleSortChange,
     orderableFieldName: '_order',
     query: { sort: ui.state.sort },
@@ -36,6 +29,7 @@ beforeEach(() => {
   ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
   ui.state.sort = undefined
   ui.state.slug = 'videos'
+  ui.state.totalDocs = 3
   ui.handleSortChange.mockReset()
   host = document.createElement('div')
   document.body.append(host)
@@ -51,7 +45,6 @@ afterEach(() => {
 const render = () => act(() => root.render(createElement(ListOrderHint)))
 const settle = () => act(() => void vi.advanceTimersByTime(300))
 const button = () => host.querySelector('button')
-const add = () => host.querySelector<HTMLAnchorElement>('a.im-order-hint__add')
 
 describe('ListOrderHint', () => {
   it.each([undefined, 'createdAt', '-createdAt', 'author'])(
@@ -96,15 +89,20 @@ describe('ListOrderHint', () => {
     expect(host.textContent).toContain('top row is shown first on the site')
   })
 
-  it.each([
-    ['videos', 'Add new video'],
-    ['audios', 'Add new audio'],
-    ['quotes', 'Add new poster'],
-  ])('offers "%s" an add button to the new-entry form', (slug, label) => {
-    ui.state.slug = slug
+  it.each(['videos', 'audios', 'quotes'])(
+    'leaves adding to the list header on %s (no second create button)',
+    (slug) => {
+      ui.state.slug = slug
+      ui.state.sort = '-_order'
+      render()
+      expect(host.querySelector('a')).toBeNull()
+    },
+  )
+
+  it('says nothing on an empty list', () => {
+    ui.state.totalDocs = 0
     ui.state.sort = '-_order'
     render()
-    expect(add()?.textContent).toBe(label)
-    expect(add()?.getAttribute('href')).toBe(`/admin/collections/${slug}/create`)
+    expect(host.textContent).toBe('')
   })
 })

@@ -10,6 +10,8 @@ interface BrandProps {
   /** Above the fold (header): fetch it early. */
   priority?: boolean
   className?: string
+  /** Smaller logo for the sticky desktop menu bar. */
+  compact?: boolean
 }
 
 const asMedia = (value: SiteSetting['logo']): Media | null =>
@@ -24,7 +26,13 @@ const LOGO = { src: '/brand/logo.png', width: 544, height: 180 }
 const LOGO_ON_DARK = { src: '/brand/logo-mobile.png', width: 280, height: 93 }
 const SIZE = 'h-11 w-auto sm:h-14'
 
-export function Brand({ settings, tone = 'default', priority, className = '' }: BrandProps) {
+export function Brand({
+  settings,
+  tone = 'default',
+  priority,
+  className = '',
+  compact = false,
+}: BrandProps) {
   const uploaded = asMedia(settings.logo)
   const uploadedSrc = uploaded ? mediaSrc(uploaded.url) : null
   const alt = settings.siteNameMl
@@ -38,7 +46,7 @@ export function Brand({ settings, tone = 'default', priority, className = '' }: 
       height={image.height}
       // Not `preload`: with the light/dark pair that would fetch the hidden one too (Next image docs).
       fetchPriority={priority ? 'high' : undefined}
-      className={`${SIZE} ${extra}`}
+      className={`${compact ? 'h-9 w-auto' : SIZE} ${extra}`}
       sizes="(min-width: 640px) 170px, 135px"
     />
   )

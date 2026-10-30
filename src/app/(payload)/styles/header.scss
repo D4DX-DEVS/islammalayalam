@@ -1,0 +1,632 @@
+// The top bar: breadcrumbs on the left; search (Ctrl+K), dark-mode switch, inbox bell and the
+// account button on the right (admin.components.actions). Phones: admin-dock.scss adjusts it.
+@use './ui';
+
+.app-header {
+  height: var(--app-header-height);
+  border-bottom: 1px solid var(--im-border);
+  background: color-mix(in srgb, var(--im-surface) 88%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.app-header__bg {
+  background: transparent;
+}
+
+// Payload's .app-header__content already holds the page gutter; the crumbs line up with the title.
+.app-header__wrapper {
+  gap: 1rem;
+}
+
+.app-header__controls-wrapper {
+  gap: 1rem;
+}
+
+// Payload's own account link: replaced by the AccountMenu action.
+.app-header .app-header__account {
+  display: none;
+}
+
+.app-header__actions-wrapper,
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: visible;
+}
+
+// The crumbs give way (ending in "…") so the buttons on the right always fit, phones included.
+.app-header__controls-wrapper,
+.app-header__step-nav-wrapper {
+  min-width: 0;
+}
+
+.app-header__step-nav-wrapper {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.app-header__actions-wrapper {
+  flex: none;
+}
+
+// ---- Breadcrumbs ----------------------------------------------------------------------------------
+.step-nav {
+  min-width: 0;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+  white-space: nowrap;
+
+  > * {
+    flex: none;
+  }
+
+  .step-nav__last {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // The brand mark is the sidebar's job; the crumbs start with the section name (so the "/" after
+  // the hidden home link goes too).
+  .step-nav__home,
+  .step-nav__home + span {
+    display: none;
+  }
+
+  a {
+    color: var(--im-muted);
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--im-brand);
+    }
+  }
+
+  .step-nav__last,
+  > span:last-child {
+    color: var(--im-ink);
+    font-weight: 600;
+  }
+
+  svg {
+    color: var(--im-faint);
+  }
+}
+
+// ---- Search (GlobalSearch.tsx) ---------------------------------------------------------------------
+.im-search__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 18rem;
+  max-width: 100%;
+  min-height: 2.4rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--im-border-strong);
+  border-radius: 999px;
+  background: var(--im-surface);
+  color: var(--im-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: text;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+  }
+
+  &:hover {
+    border-color: var(--im-brand);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--im-brand);
+    box-shadow: var(--im-ring);
+  }
+
+  .im-search__placeholder {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 1024px) {
+    width: auto;
+
+    .im-search__placeholder,
+    .im-search__kbd {
+      display: none;
+    }
+  }
+}
+
+.im-search__kbd {
+  @extend .im-kbd;
+}
+
+.im-search__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10vh 1rem 1rem;
+  background: rgb(15 23 42 / 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.im-search__dialog {
+  width: 100%;
+  max-width: 40rem;
+  overflow: hidden;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius-lg);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-lg);
+}
+
+.im-search__field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--im-border);
+
+  .im-search__icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--im-muted);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.5rem;
+    border: 0;
+    background: transparent;
+    color: var(--im-ink);
+    font: inherit;
+    font-size: 1.05rem;
+    outline: none;
+
+    &::placeholder {
+      color: var(--im-faint);
+    }
+  }
+}
+
+.im-search__list {
+  max-height: 55vh;
+  margin: 0;
+  padding: 0.4rem;
+  overflow: auto;
+  list-style: none;
+}
+
+.im-search__hit {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 0;
+  border-radius: var(--im-radius-sm);
+  background: transparent;
+  color: var(--im-ink);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    color: var(--im-muted);
+  }
+
+  &:hover,
+  &[aria-selected='true'],
+  &.is-active {
+    background: var(--im-brand-soft);
+    color: var(--im-brand-strong);
+
+    svg {
+      color: var(--im-brand);
+    }
+  }
+}
+
+.im-search__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-search__meta {
+  color: var(--im-muted);
+  font-size: 0.8rem;
+}
+
+.im-search__status {
+  margin: 0;
+  padding: 1.25rem 1rem;
+  color: var(--im-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+// ---- Dark-mode switch (ThemeSwitch.tsx) --------------------------------------------------------------
+.im-theme-switch {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  width: 3.4rem;
+  height: 1.9rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--im-border-strong);
+  border-radius: 999px;
+  background: var(--im-sunken);
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &__icon {
+    position: relative;
+    z-index: 1;
+    width: 1rem;
+    height: 1rem;
+    color: var(--im-muted);
+    transition: color 0.2s;
+
+    &--sun {
+      margin-right: auto;
+    }
+  }
+
+  &__thumb {
+    position: absolute;
+    top: 50%;
+    left: 0.2rem;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: var(--im-surface);
+    box-shadow: var(--im-shadow-xs);
+    transform: translateY(-50%);
+    transition: transform 0.2s;
+  }
+
+  &:not(.is-dark) .im-theme-switch__icon--sun {
+    color: var(--im-accent-ink);
+  }
+
+  &.is-dark {
+    background: var(--im-brand-soft-2);
+
+    .im-theme-switch__thumb {
+      transform: translate(1.5rem, -50%);
+    }
+
+    .im-theme-switch__icon--moon {
+      color: var(--im-brand-strong);
+    }
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+// ---- Inbox bell (InboxBell.tsx) -------------------------------------------------------------------------
+.im-bell {
+  position: relative;
+}
+
+.im-bell__trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid var(--im-border-strong);
+  border-radius: 50%;
+  background: var(--im-surface);
+  color: var(--im-ink-2);
+  cursor: pointer;
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  &:hover {
+    border-color: var(--im-brand);
+    color: var(--im-brand);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.im-bell__badge {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  min-width: 1.15rem;
+  padding: 0 0.3rem;
+  border: 2px solid var(--im-surface);
+  border-radius: 999px;
+  background: var(--im-accent);
+  color: #3b2600;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1rem;
+  text-align: center;
+}
+
+.im-bell__menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 60;
+  min-width: 17rem;
+  padding: 0.4rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-md);
+}
+
+.im-bell__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--im-radius-sm);
+  color: var(--im-ink);
+  font-size: 0.9rem;
+  text-decoration: none;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    color: var(--im-muted);
+  }
+
+  span:first-of-type {
+    flex: 1;
+  }
+
+  &:hover {
+    background: var(--im-brand-soft);
+    color: var(--im-brand-strong);
+    text-decoration: none;
+  }
+}
+
+.im-bell__count {
+  min-width: 1.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--im-sunken);
+  color: var(--im-ink-2);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+  text-align: center;
+}
+
+// ---- Account (AccountMenu.tsx / AccountCard.tsx) -------------------------------------------------------------
+.im-account {
+  position: relative;
+}
+
+.im-account__trigger {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--im-ring);
+  }
+}
+
+.im-account__avatar {
+  @extend .im-avatar;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 2px solid var(--im-surface);
+  box-shadow: 0 0 0 1px var(--im-border-strong);
+
+  // The bigger one at the top of the open card.
+  &--lg {
+    width: 2.9rem;
+    height: 2.9rem;
+    font-size: 1rem;
+  }
+}
+
+// The card's main action (e.g. "Your account").
+.im-account__btn--primary {
+  background: var(--im-brand-soft);
+  color: var(--im-brand-strong);
+
+  &:hover {
+    background: var(--im-brand-soft-2);
+  }
+}
+
+.im-account__card {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 60;
+  width: 20rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.5rem;
+  border: 1px solid var(--im-border);
+  border-radius: var(--im-radius-lg);
+  background: var(--im-surface);
+  box-shadow: var(--im-shadow-md);
+}
+
+.im-account__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--im-border);
+}
+
+.im-account__who {
+  min-width: 0;
+}
+
+.im-account__name {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-account__email {
+  overflow: hidden;
+  color: var(--im-muted);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-account__role,
+.im-account__badge {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background: var(--im-brand-soft);
+  color: var(--im-brand-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.im-account__list {
+  margin: 0;
+  padding: 0.35rem 0;
+  list-style: none;
+}
+
+.im-account__item,
+.im-account__btn,
+.im-account__signout {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border: 0;
+  border-radius: var(--im-radius-sm);
+  background: transparent;
+  color: var(--im-ink);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    color: var(--im-muted);
+  }
+
+  &:hover {
+    background: var(--im-sunken);
+    text-decoration: none;
+  }
+}
+
+.im-account__chev {
+  margin-left: auto;
+}
+
+.im-account__signout {
+  color: var(--im-danger);
+
+  svg {
+    color: inherit;
+  }
+
+  &:hover {
+    background: var(--im-danger-soft);
+  }
+}
+
+.im-account__form {
+  padding: 0.5rem 0.75rem 0.75rem;
+
+  input {
+    width: 100%;
+    min-height: var(--im-control-h);
+    padding: 0 0.75rem;
+    border: 1px solid var(--im-border-strong);
+    border-radius: var(--im-radius-sm);
+    background: var(--im-surface);
+    color: var(--im-ink);
+    font: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--im-brand);
+      box-shadow: var(--im-ring);
+    }
+  }
+}
+
+.im-account__row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.im-account__error {
+  margin: 0.5rem 0 0;
+  color: var(--im-danger);
+  font-size: 0.85rem;
+}
+
+.im-account__done {
+  margin: 0.5rem 0 0;
+  color: var(--im-ok);
+  font-size: 0.85rem;
+}
+
+.im-account__foot {
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--im-border);
+}

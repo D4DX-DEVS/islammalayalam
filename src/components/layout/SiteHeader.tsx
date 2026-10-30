@@ -1,11 +1,9 @@
 import Image from 'next/image'
-import Link from 'next/link'
-import { Search } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
 import { SmartLink } from '@/components/ui/SmartLink'
 import { Brand } from '@/components/layout/Brand'
 import { MobileNav } from '@/components/layout/MobileNav'
-import { SearchForm, SEARCH_PATH } from '@/components/layout/SearchForm'
+import { SearchForm } from '@/components/layout/SearchForm'
 import { SocialLinks } from '@/components/layout/SocialLinks'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { mediaSrc } from '@/lib/media'
@@ -109,13 +107,6 @@ export function SiteHeader({
           ) : null}
           <PartnerLogo settings={settings} />
           <SearchForm ai={aiSearch} className="hidden w-60 md:flex xl:w-80" />
-          <Link
-            href={SEARCH_PATH}
-            aria-label="Search"
-            className="inline-flex size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-surface hover:text-brand md:hidden"
-          >
-            <Search className="size-5" aria-hidden="true" />
-          </Link>
           <ThemeToggle className="-me-2 sm:me-0" />
         </div>
       </Container>

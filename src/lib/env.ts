@@ -5,7 +5,10 @@ import { cdnUrl, spacesEndpoint, spacesFolder } from '@/lib/spaces'
  * Server environment, validated once at startup. Never import this from client components.
  *
  * - The database is MONGODB_URI and media storage is DigitalOcean Spaces (DO_SPACES_*): the same
- *   names and values locally and in production, so local development works on the live data.
+ *   names in every environment. In production they point at the live data.
+ * - Development uses the LOCAL database and local media (`npm run dev` → scripts/dev/local.mjs).
+ *   A remote MongoDB or Spaces in development is refused unless ALLOW_LIVE_DATA=yes, which only
+ *   `npm run dev:live` and the deliberate live-data scripts (migrate, create-admin) set.
  * - NODE_ENV=test may only use a local MongoDB and never Spaces: tests cannot touch live data.
  * - TOTP (admin MFA) can only be disabled when NODE_ENV=test.
  */
@@ -35,6 +38,8 @@ const schema = z
     PAYLOAD_SECRET: z.string().min(32, 'PAYLOAD_SECRET must be at least 32 characters'),
     NEXT_PUBLIC_SERVER_URL: z.url().default('http://localhost:3444'),
     TOTP_DISABLED: z.enum(['true', 'false']).default('false'),
+    /** The one way to point a development server at the live data on purpose (`npm run dev:live`). */
+    ALLOW_LIVE_DATA: optional(z.enum(['yes'])),
     DO_SPACES_BUCKET: optional(z.string()),
     /** Regional endpoint (`blr1.digitaloceanspaces.com`) or bucket host; the region comes from it. */
     DO_SPACES_ENDPOINT: optional(z.string()),
@@ -96,6 +101,18 @@ const schema = z
     }
     if (env.TOTP_DISABLED === 'true' && env.NODE_ENV !== 'test')
       issue('TOTP_DISABLED', 'TOTP may only be disabled in NODE_ENV=test')
+    if (env.NODE_ENV === 'development' && env.ALLOW_LIVE_DATA !== 'yes') {
+      if (!isLocalMongo(env.MONGODB_URI))
+        issue(
+          'MONGODB_URI',
+          'Development uses the local database (npm run dev). To work on the live data on purpose, run npm run dev:live.',
+        )
+      if (present.length > 0)
+        issue(
+          'DO_SPACES_BUCKET',
+          'Development uses local media (npm run dev). To work on the live data on purpose, run npm run dev:live.',
+        )
+    }
   })
 
 function isLocalMongo(url: string): boolean {
@@ -108,6 +125,15 @@ function isLocalMongo(url: string): boolean {
 }
 
 export type ServerEnv = z.infer<typeof schema>
+
+/**
+ * True when this process reads or writes the real site's data (a remote MongoDB or DigitalOcean
+ * Spaces). Production always is; in development it only happens through `npm run dev:live`, and
+ * the admin shows a warning strip (src/payload/admin/LiveDataBanner.tsx) while it does.
+ */
+export function isLiveData(env: Pick<ServerEnv, 'MONGODB_URI' | 'DO_SPACES_BUCKET'>): boolean {
+  return !isLocalMongo(env.MONGODB_URI) || Boolean(env.DO_SPACES_BUCKET)
+}
 
 /** Validate an environment; the error names each setting and reason, never a value. */
 export function parseServerEnv(source: Readonly<Record<string, string | undefined>>): ServerEnv {

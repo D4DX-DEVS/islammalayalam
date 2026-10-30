@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  axisLabelIndexes,
+  bucketSums,
   compact,
   dailyCounts,
   dayKey,
   full,
   latestDate,
+  monotonePath,
   niceScale,
   shareLabel,
   yearCounts,
@@ -155,5 +158,68 @@ describe('niceScale', () => {
     for (const max of [1, 2, 7, 13, 99, 101, 489, 1000, 7312]) {
       expect(niceScale(max).max).toBeGreaterThanOrEqual(max)
     }
+  })
+})
+
+describe('monotonePath', () => {
+  it('starts at the first point and ends at the last', () => {
+    const d = monotonePath([
+      [0, 100],
+      [50, 0],
+      [100, 100],
+    ])
+    expect(d.startsWith('M 0 100')).toBe(true)
+    expect(d.endsWith('100 100')).toBe(true)
+  })
+
+  it('never overshoots: every control point stays inside the plot box', () => {
+    // 0, 1, 0, 1 posts per day in a 100-box whose y grows downwards.
+    const d = monotonePath([
+      [0, 100],
+      [33.33, 0],
+      [66.67, 100],
+      [100, 0],
+    ])
+    const ys = d
+      .match(/-?\d+(\.\d+)?/g)!
+      .map(Number)
+      .filter((_, i) => i % 2 === 1)
+    expect(Math.min(...ys)).toBeGreaterThanOrEqual(0)
+    expect(Math.max(...ys)).toBeLessThanOrEqual(100)
+  })
+
+  it('handles the degenerate cases', () => {
+    expect(monotonePath([])).toBe('')
+    expect(monotonePath([[5, 5]])).toBe('M 5 5')
+    expect(
+      monotonePath([
+        [0, 50],
+        [100, 50],
+      ]),
+    ).toBe('M 0 50 C 33.33 50 66.67 50 100 50')
+  })
+})
+
+describe('axisLabelIndexes', () => {
+  it('always prints the first and the last', () => {
+    expect([...axisLabelIndexes(1)]).toEqual([0])
+    expect([...axisLabelIndexes(2)]).toEqual([0, 1])
+  })
+
+  it('spaces about five labels and keeps the last clear of its neighbour', () => {
+    expect([...axisLabelIndexes(30)].sort((a, b) => a - b)).toEqual([0, 7, 14, 21, 29])
+    expect([...axisLabelIndexes(29)].sort((a, b) => a - b)).toEqual([0, 7, 14, 21, 28])
+  })
+})
+
+describe('bucketSums', () => {
+  it('sums consecutive runs into equal buckets', () => {
+    expect(bucketSums([1, 1, 1, 2, 2, 2], 2)).toEqual([3, 6])
+    expect(bucketSums([1, 2, 3, 4, 5], 2)).toEqual([6, 9])
+  })
+
+  it('never makes more buckets than values', () => {
+    expect(bucketSums([4], 10)).toEqual([4])
+    expect(bucketSums([], 3)).toEqual([])
   })
 })

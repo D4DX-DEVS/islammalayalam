@@ -114,7 +114,7 @@ export default async function FrontendLayout({ children }: { children: ReactNode
           pathname={pathname}
           aiSearch={aiSearchUiEnabled()}
         />
-        <MainNav items={navItems} pathname={pathname} />
+        <MainNav items={navItems} pathname={pathname} settings={settings} />
         <main id="main" className="flex-1">
           {children}
         </main>

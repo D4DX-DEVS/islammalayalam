@@ -25,6 +25,8 @@ export async function WebsiteView({ initPageResult, params, searchParams }: Admi
       permissions={permissions}
       searchParams={searchParams}
       user={user}
+      // Custom views pass the header's actions themselves (search, dark mode, inbox, account).
+      viewActions={payload.config.admin?.components?.actions}
       visibleEntities={visibleEntities}
     >
       <WebsiteManager

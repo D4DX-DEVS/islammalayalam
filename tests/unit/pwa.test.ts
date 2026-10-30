@@ -3,6 +3,7 @@ import {
   installDismissed,
   isIosSafari,
   nextScrollDir,
+  serviceWorkerRemovalSource,
   serviceWorkerSource,
   swBypass,
   swCacheFirst,
@@ -86,5 +87,27 @@ describe('service worker rules', () => {
   })
   it('keeps the start page at install, for opening offline', () => {
     expect(serviceWorkerSource('v')).toContain("caches.open(PAGES).then((c) => c.add('/'))")
+  })
+})
+
+describe('development service worker', () => {
+  // A worker left by a production run on localhost serves /_next/static/ cache-first, and dev file
+  // names never change, so the admin would keep its old styles and scripts. In dev /sw.js removes it.
+  const src = serviceWorkerRemovalSource()
+
+  it('takes over at once, then clears the caches and unregisters', () => {
+    expect(src).toContain('skipWaiting')
+    expect(src).toContain('caches.delete')
+    expect(src).toContain('registration.unregister')
+  })
+
+  it('reloads the open tabs once, and intercepts nothing', () => {
+    expect(src).toContain('navigate')
+    expect(src).not.toContain("addEventListener('fetch'")
+  })
+
+  it('parses as JS and differs from the real worker', () => {
+    expect(() => new Function(src)).not.toThrow()
+    expect(src).not.toBe(serviceWorkerSource('dev'))
   })
 })

@@ -2,7 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { isAdmin, isEditor, publicOrStaff, totpPublicRead } from '@/payload/access'
 import { legacyFields, slugField } from '@/payload/fields'
 import { contentHooks } from '@/payload/hooks'
-import { simpleEditor } from '@/payload/editor'
+import { simpleEditor, richTextHooks } from '@/payload/editor'
 
 /**
  * Public bylines, served at /author/<slug>/. Kept separate from `users` so no login account,
@@ -17,7 +17,7 @@ export const Authors: CollectionConfig = {
   fields: [
     { name: 'name', type: 'text', required: true, maxLength: 120 },
     slugField('name'),
-    { name: 'bio', type: 'richText', editor: simpleEditor },
+    { name: 'bio', type: 'richText', editor: simpleEditor, hooks: richTextHooks },
     {
       name: 'photo',
       type: 'upload',

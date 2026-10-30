@@ -58,6 +58,29 @@ export const swBypass = (pathname: string): boolean => startsWithAny(pathname, S
 export const swCacheFirst = (pathname: string): boolean => startsWithAny(pathname, SW_CACHE_FIRST)
 
 /**
+ * What /sw.js serves in development: a worker that replaces any installed one, deletes the site's
+ * caches, unregisters itself and reloads the open tabs once. A worker left by a production run on
+ * localhost would otherwise serve /_next/static/ cache-first, and dev file names never change, so
+ * pages (the admin included) would keep old styles and scripts. Browsers re-check /sw.js on every
+ * navigation (updateViaCache: 'none' + no-store), so this lands on the next page load.
+ */
+export function serviceWorkerRemovalSource(): string {
+  return `/* Islam Malayalam service worker — development: removes itself */
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => k.startsWith('im-')).map((k) => caches.delete(k)));
+    await self.clients.claim();
+    await self.registration.unregister();
+    const tabs = await self.clients.matchAll({ type: 'window' });
+    await Promise.all(tabs.map((tab) => tab.navigate(tab.url).catch(() => {})));
+  })());
+});
+`
+}
+
+/**
  * The worker script. Network-first pages (fresh content online, last copy offline), cache-first
  * static assets, nothing else intercepted. Installing also keeps the start page, so the installed
  * app opens offline from day one. No navigation preload: admin and preview navigations pass the

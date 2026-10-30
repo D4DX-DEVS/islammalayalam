@@ -4,29 +4,26 @@ import {
   ArrowRight,
   BookOpen,
   CheckCircle2,
-  ChevronRight,
   ExternalLink,
   FilePen,
   Flag,
-  FolderTree,
-  Globe,
   Inbox,
   Plus,
-  Quote,
   type LucideIcon,
 } from 'lucide-react'
 import type { DashboardData } from '../dashboardData'
+import { TZ } from '../dashboardStats'
 import { RecentPosts } from './RecentPosts'
-import { ActivityRows, Panel, StatusStrip, type StatusRow } from './parts'
+import { ActivityRows, LatestList, Panel, StatusStrip, type StatusRow } from './parts'
 import { buildQueue, queueSummary, type QueueIcon } from './queue'
-import { Pulse } from './charts'
-import { ReportCharts, ReportStats } from './stats'
+import { FormatMix, Pulse, RankBars, TrendLine } from './charts'
+import { StatCards } from './stats'
 
 /**
- * The Dashboard (admin home): site totals, what needs you, the state of the site, recent work and
- * the charts. Presentational (no data access), so it can
- * render from DashboardView's real data or from mock data. Every link and panel is filtered by the
- * signed-in user's permissions.
+ * The Dashboard (admin home): this month at a glance, the publishing trend and the latest posts,
+ * what needs you, the top categories and bylines, recent edits and the activity trail.
+ * Presentational (no data access), so it renders from DashboardView's real data or from mock data.
+ * Every link and panel is filtered by the signed-in user's permissions.
  */
 export type DashboardUser = {
   id: string | number
@@ -43,17 +40,6 @@ type BodyProps = {
   user: DashboardUser
   now?: Date
 }
-
-type Chip = {
-  label: string
-  hint: string
-  href: string
-  icon: LucideIcon
-  tone: 'blue' | 'violet' | 'green' | 'rose'
-  allowed: boolean
-}
-
-const TZ = 'Asia/Kolkata'
 
 const QUEUE_ICON: Record<QueueIcon, LucideIcon> = {
   review: Flag,
@@ -92,36 +78,6 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
     ownDraftsOnly: data.ownDraftsOnly,
     now: now.getTime(),
   })
-
-  // Quick actions, each in its own colour. New post and the media library are already one click away
-  // (the header button and the "Files and images" total), so they are not repeated here.
-  const chips: Chip[] = [
-    {
-      label: 'Manage categories',
-      hint: 'Order, icons and visibility of topics',
-      href: col('categories'),
-      icon: FolderTree,
-      tone: 'violet',
-      allowed: Boolean(can.collections?.categories?.update),
-    },
-    {
-      label: 'Insights',
-      hint: 'Posters and thoughts for the homepage slider',
-      href: col('quotes'),
-      icon: Quote,
-      tone: 'green',
-      allowed: Boolean(can.collections?.quotes?.update),
-    },
-    {
-      label: 'Site',
-      hint: 'Homepage, menus, banners and settings',
-      href: `${admin}/website`,
-      icon: Globe,
-      tone: 'rose',
-      allowed: Boolean(can.globals?.homepage?.update || can.globals?.header?.update),
-    },
-  ]
-  const allowedChips = chips.filter((c) => c.allowed)
 
   const site = data.site
   const statusRows: StatusRow[] = [
@@ -164,26 +120,28 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
   ]
 
   const canSeeActivity = canRead('audit-logs')
+  const canReadCategories = canRead('categories')
+  const canReadAuthors = canRead('authors')
 
   return (
-    <div className="im-dash im-dash--view">
-      <header className="im-dash__hero">
-        <Skyline />
+    <div className="im-dash im-page">
+      <header className="im-page__head">
         <div>
-          <h1 className="im-dash__title">
+          <p className="im-eyebrow">Last 30 days · {today}</p>
+          <h1 className="im-page__title">
             {greeting(now)}, {name}
           </h1>
-          <p className="im-dash__lead">
-            {today} · {queueSummary(queue.length)}
+          <p className="im-page__lead">
+            Publishing activity across the site · {queueSummary(queue.length)}
           </p>
         </div>
-        <div className="im-dash__hero-actions">
-          <a href="/" target="_blank" rel="noopener noreferrer" className="im-dash__btn">
+        <div className="im-page__actions">
+          <a href="/" target="_blank" rel="noopener noreferrer" className="im-btn">
             <ExternalLink aria-hidden="true" />
             View website
           </a>
           {can.collections?.posts?.create ? (
-            <Link href={`${posts}/create`} className="im-dash__btn im-dash__btn--primary">
+            <Link href={`${posts}/create`} className="im-btn im-btn--primary">
               <Plus aria-hidden="true" />
               New post
             </Link>
@@ -191,15 +149,36 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
         </div>
       </header>
 
-      <ReportStats data={data} admin={admin} permissions={permissions} />
+      <StatCards data={data} admin={admin} permissions={permissions} />
 
-      <div className="im-board">
+      {canRead('posts') ? (
+        <div className="im-dash__grid im-dash__grid--wide">
+          <Panel
+            title="Posts published"
+            sub="Per day, in the last 30 days."
+            className="im-dash__panel--trend"
+          >
+            <TrendLine days={data.daily30} noun="post" />
+          </Panel>
+          <Panel
+            title="Latest posts"
+            sub="Most recently published."
+            href={`${posts}?where[_status][equals]=published`}
+            hrefLabel="View all"
+            className="im-dash__panel--flush"
+          >
+            <LatestList rows={data.published} admin={admin} empty="Nothing published yet." />
+          </Panel>
+        </div>
+      ) : null}
+
+      <div className="im-dash__grid im-dash__grid--three">
         <Panel
           title="Needs your attention"
-          className="im-dash__panel--flush im-dash__panel--queue"
+          className="im-dash__panel--flush"
           aside={
             queue.length ? (
-              <span className="im-dash__count">
+              <span className="im-pill im-pill--warn">
                 {queue.length} {queue.length === 1 ? 'item' : 'items'}
               </span>
             ) : null
@@ -219,9 +198,6 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
                         <span className="im-queue__title">{row.title}</span>
                         <span className="im-queue__detail">{row.detail}</span>
                       </span>
-                      <span className="im-queue__count" aria-hidden="true">
-                        {row.count.toLocaleString('en-IN')}
-                      </span>
                       <span className="im-queue__action">
                         {row.action}
                         <ArrowRight aria-hidden="true" />
@@ -234,81 +210,92 @@ export function DashboardBody({ data, admin, permissions, user, now = new Date()
           ) : (
             <p className="im-dash__clear">
               <CheckCircle2 aria-hidden="true" />
-              You are all caught up. Nothing is waiting for review, no new messages and no postal
-              library requests.
+              You are all caught up: nothing waiting for review, no new messages, no postal library
+              requests.
             </p>
           )}
         </Panel>
 
-        {allowedChips.length ? (
-          <Panel title="Quick actions">
-            <ul className="im-links">
-              {allowedChips.map(({ label, hint, href, icon: Icon, tone }) => (
-                <li key={href}>
-                  <Link href={href} className={`im-links__row im-links__row--${tone}`}>
-                    <span className="im-links__icon">
-                      <Icon aria-hidden="true" />
-                    </span>
-                    <span className="im-links__text">
-                      <span className="im-links__label">{label}</span>
-                      <span className="im-links__hint">{hint}</span>
-                    </span>
-                    <ChevronRight className="im-links__go" aria-hidden="true" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
+        {canReadCategories ? (
+          <Panel title="Top categories" sub="Most published posts." href={col('categories')}>
+            <RankBars
+              rows={data.categories.map((c) => ({
+                id: c.id,
+                name: c.name,
+                count: c.posts,
+                href: `${posts}?where[primaryCategory][equals]=${c.id}`,
+              }))}
+              more="category"
+            />
+          </Panel>
+        ) : null}
+
+        {canReadAuthors ? (
+          <Panel
+            title="Top authors"
+            sub={
+              data.authorsWindow === 'month'
+                ? 'Most posts published in the last 30 days.'
+                : 'Most posts published, all time.'
+            }
+            href={col('authors')}
+          >
+            <RankBars
+              rows={data.topAuthors.map((a) => ({
+                id: a.id,
+                name: a.name,
+                count: a.posts,
+                href: `${posts}?where[author][equals]=${a.id}`,
+              }))}
+              more="author"
+              avatars
+            />
           </Panel>
         ) : null}
       </div>
+
+      {canRead('posts') ? (
+        <div className="im-dash__grid im-dash__grid--wide">
+          <Panel
+            title="Recent edits"
+            className="im-dash__panel--flush im-dash__panel--posts"
+            href={posts}
+            hrefLabel="All content"
+          >
+            <RecentPosts
+              admin={admin}
+              lists={{
+                all: data.recent,
+                published: data.published,
+                drafts: data.drafts,
+                review: data.review,
+              }}
+              counts={{
+                all: data.stats.all,
+                published: data.stats.published,
+                drafts: data.stats.drafts,
+                review: data.stats.needsReview,
+              }}
+            />
+          </Panel>
+
+          <div className="im-dash__stack">
+            <Panel title="Content mix" sub="Published posts by kind.">
+              <FormatMix formats={data.formats} admin={admin} />
+            </Panel>
+            {canSeeActivity ? (
+              <Panel title="Activity" href={col('audit-logs')} hrefLabel="Activity log">
+                <Pulse days={data.pulse} noun="action" />
+                <ActivityRows rows={data.activity} admin={admin} />
+              </Panel>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <Panel title="Site status" className="im-dash__panel--status">
         <StatusStrip rows={statusRows} />
       </Panel>
-
-      <ReportCharts data={data} admin={admin} permissions={permissions} />
-
-      <div className="im-dash__grid">
-        <Panel
-          title="Recent posts"
-          className="im-dash__panel--flush im-dash__panel--posts"
-          href={posts}
-          hrefLabel="View all posts"
-        >
-          <RecentPosts
-            admin={admin}
-            lists={{
-              all: data.recent,
-              published: data.published,
-              drafts: data.drafts,
-              review: data.review,
-            }}
-            counts={{
-              all: data.stats.all,
-              published: data.stats.published,
-              drafts: data.stats.drafts,
-              review: data.stats.needsReview,
-            }}
-          />
-        </Panel>
-
-        {canSeeActivity ? (
-          <Panel title="Activity" href={col('audit-logs')} hrefLabel="Activity log">
-            <Pulse days={data.pulse} noun="action" />
-            <ActivityRows rows={data.activity} admin={admin} />
-          </Panel>
-        ) : null}
-      </div>
     </div>
-  )
-}
-
-/** A faint mosque skyline at the right of the greeting: decoration only. */
-function Skyline() {
-  return (
-    <svg className="im-dash__skyline" viewBox="0 0 320 96" aria-hidden="true" focusable="false">
-      <path d="M232 14a12 12 0 1 0 9 20 14 14 0 1 1-9-20Z" />
-      <path d="M0 96V80h28V58l6-10 6 10v22h14V64c0-14 12-22 22-30 10 8 22 16 22 30v16h18V44l5-12 5 12v36h22V70c0-22 18-34 34-42 16 8 34 20 34 42v10h22V44l5-12 5 12v36h16V62l6-10 6 10v18h28v16Z" />
-    </svg>
   )
 }

@@ -58,3 +58,7 @@ npm-debug.log*
 
 # pdf.js worker + data, copied from node_modules by scripts/copy-pdfjs.mjs
 /public/pdfjs/
+
+# Design-tool notes (local only)
+.taste-skill/
+.next-local/

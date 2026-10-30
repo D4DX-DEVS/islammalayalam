@@ -20,6 +20,9 @@ const ALLOWED_NODE_TYPES = new Set([
   'autolink',
   'upload',
   'horizontalrule',
+  'table',
+  'tablerow',
+  'tablecell',
   'block',
 ])
 const ALLOWED_UPLOAD_COLLECTIONS = new Set(['media'])

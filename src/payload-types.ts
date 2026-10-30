@@ -235,51 +235,60 @@ export interface Post {
       }[]
     | null;
   /**
-   * Public URL: /<number>/. Assigned automatically.
+   * Set automatically when the post is first published.
    */
-  postNumber?: number | null;
   publishedAt?: string | null;
-  categories?: (string | Category)[] | null;
-  /**
-   * Defaults to the first category
-   */
-  primaryCategory?: (string | null) | Category;
   author?: (string | null) | Author;
   /**
-   * Show in the homepage slider
+   * Shows the post in the homepage slider.
    */
   featured?: boolean | null;
-  readingMinutes?: number | null;
+  /**
+   * The post’s address on the site is /<number>/. Set automatically.
+   */
+  postNumber?: number | null;
+  categories?: (string | Category)[] | null;
+  /**
+   * Shown on the post’s cards. Empty: the first category.
+   */
+  primaryCategory?: (string | null) | Category;
   flags?: {
     needsReview?: boolean | null;
     /**
-     * Title was generated from the text (WordPress title was empty)
+     * The title was made from the opening text. Untick once it reads well.
      */
     titleDerived?: boolean | null;
     /**
-     * Publish date looked tampered/invalid in WordPress
+     * The original publish date looked wrong. Untick once it is right.
      */
     dateSuspect?: boolean | null;
     reviewNote?: string | null;
   };
+  /**
+   * Worked out from the text.
+   */
+  readingMinutes?: number | null;
   createdBy?: (string | null) | User;
-  searchText?: string | null;
-  searchKey?: string | null;
   legacy?: {
     wpId?: number | null;
     legacySlugs?: string[] | null;
     legacyUrls?: string[] | null;
-    /**
-     * Hash of the sanitized source record (idempotent re-runs)
-     */
     sourceHash?: string | null;
     migratedAt?: string | null;
   };
+  searchText?: string | null;
+  searchKey?: string | null;
   meta?: {
+    /**
+     * Empty: the title is used.
+     */
     title?: string | null;
+    /**
+     * Empty: the excerpt is used.
+     */
     description?: string | null;
     /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     * Empty: the featured image is used (WhatsApp, Facebook, X).
      */
     image?: (string | null) | Media;
   };
@@ -313,14 +322,9 @@ export interface Media {
     wpId?: number | null;
     legacySlugs?: string[] | null;
     legacyUrls?: string[] | null;
-    /**
-     * Hash of the sanitized source record (idempotent re-runs)
-     */
     sourceHash?: string | null;
     migratedAt?: string | null;
   };
-  prefix?: string | null;
-  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -369,6 +373,42 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "authors".
+ */
+export interface Author {
+  id: string;
+  name: string;
+  /**
+   * URL segment. Normalised automatically (Malayalam-safe, no invisible characters).
+   */
+  slug: string;
+  bio?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  photo?: (string | null) | Media;
+  legacy?: {
+    wpId?: number | null;
+    legacySlugs?: string[] | null;
+    sourceHash?: string | null;
+    migratedAt?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories".
  */
 export interface Category {
@@ -413,59 +453,15 @@ export interface Category {
    * Placement-only category (e.g. the old "slider" flag): not listed publicly
    */
   hidden?: boolean | null;
-  legacy?: {
-    wpId?: number | null;
-    legacySlugs?: string[] | null;
-    /**
-     * Hash of the sanitized source record (idempotent re-runs)
-     */
-    sourceHash?: string | null;
-    migratedAt?: string | null;
-  };
   meta?: {
-    title?: string | null;
-    description?: string | null;
     /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     * Empty: the category description is used.
      */
-    image?: (string | null) | Media;
+    description?: string | null;
   };
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "authors".
- */
-export interface Author {
-  id: string;
-  name: string;
-  /**
-   * URL segment. Normalised automatically (Malayalam-safe, no invisible characters).
-   */
-  slug: string;
-  bio?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  photo?: (string | null) | Media;
   legacy?: {
     wpId?: number | null;
     legacySlugs?: string[] | null;
-    /**
-     * Hash of the sanitized source record (idempotent re-runs)
-     */
     sourceHash?: string | null;
     migratedAt?: string | null;
   };
@@ -586,11 +582,11 @@ export interface Page {
   flags?: {
     needsReview?: boolean | null;
     /**
-     * Title was generated from the text (WordPress title was empty)
+     * The title was made from the opening text. Untick once it reads well.
      */
     titleDerived?: boolean | null;
     /**
-     * Publish date looked tampered/invalid in WordPress
+     * The original publish date looked wrong. Untick once it is right.
      */
     dateSuspect?: boolean | null;
     reviewNote?: string | null;
@@ -598,23 +594,26 @@ export interface Page {
   createdBy?: (string | null) | User;
   searchText?: string | null;
   searchKey?: string | null;
+  meta?: {
+    /**
+     * Empty: the title is used.
+     */
+    title?: string | null;
+    /**
+     * Empty: the start of the content is used.
+     */
+    description?: string | null;
+    /**
+     * Empty: the featured image is used (WhatsApp, Facebook, X).
+     */
+    image?: (string | null) | Media;
+  };
   legacy?: {
     wpId?: number | null;
     legacySlugs?: string[] | null;
     legacyUrls?: string[] | null;
-    /**
-     * Hash of the sanitized source record (idempotent re-runs)
-     */
     sourceHash?: string | null;
     migratedAt?: string | null;
-  };
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (string | null) | Media;
   };
   updatedAt: string;
   createdAt: string;
@@ -994,13 +993,12 @@ export interface PostsSelect<T extends boolean = true> {
         label?: T;
         id?: T;
       };
-  postNumber?: T;
   publishedAt?: T;
-  categories?: T;
-  primaryCategory?: T;
   author?: T;
   featured?: T;
-  readingMinutes?: T;
+  postNumber?: T;
+  categories?: T;
+  primaryCategory?: T;
   flags?:
     | T
     | {
@@ -1009,9 +1007,8 @@ export interface PostsSelect<T extends boolean = true> {
         dateSuspect?: T;
         reviewNote?: T;
       };
+  readingMinutes?: T;
   createdBy?: T;
-  searchText?: T;
-  searchKey?: T;
   legacy?:
     | T
     | {
@@ -1021,6 +1018,8 @@ export interface PostsSelect<T extends boolean = true> {
         sourceHash?: T;
         migratedAt?: T;
       };
+  searchText?: T;
+  searchKey?: T;
   meta?:
     | T
     | {
@@ -1065,6 +1064,13 @@ export interface PagesSelect<T extends boolean = true> {
   createdBy?: T;
   searchText?: T;
   searchKey?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
   legacy?:
     | T
     | {
@@ -1073,13 +1079,6 @@ export interface PagesSelect<T extends boolean = true> {
         legacyUrls?: T;
         sourceHash?: T;
         migratedAt?: T;
-      };
-  meta?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1097,6 +1096,11 @@ export interface CategoriesSelect<T extends boolean = true> {
   showInStrip?: T;
   order?: T;
   hidden?: T;
+  meta?:
+    | T
+    | {
+        description?: T;
+      };
   legacy?:
     | T
     | {
@@ -1104,13 +1108,6 @@ export interface CategoriesSelect<T extends boolean = true> {
         legacySlugs?: T;
         sourceHash?: T;
         migratedAt?: T;
-      };
-  meta?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1204,8 +1201,6 @@ export interface MediaSelect<T extends boolean = true> {
         sourceHash?: T;
         migratedAt?: T;
       };
-  prefix?: T;
-  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1628,14 +1623,6 @@ export interface Homepage {
         | FaqBlock
       )[]
     | null;
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (string | null) | Media;
-  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2429,13 +2416,6 @@ export interface HomepageSelect<T extends boolean = true> {
         reels?: T | ReelsBlockSelect<T>;
         callToAction?: T | CallToActionBlockSelect<T>;
         faq?: T | FaqBlockSelect<T>;
-      };
-  meta?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        image?: T;
       };
   updatedAt?: T;
   createdAt?: T;

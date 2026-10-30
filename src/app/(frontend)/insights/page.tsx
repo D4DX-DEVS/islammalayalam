@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { QuotePoster } from '@/components/quotes/QuotePoster'
-import { ArchiveHeader } from '@/components/listing/ArchiveHeader'
 import { Container } from '@/components/ui/Container'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Pagination } from '@/components/ui/Pagination'
@@ -33,12 +32,7 @@ export default async function InsightsPage({ searchParams }: Props) {
   if (requested > 1 && requested > list.totalPages) notFound()
   return (
     <Container className="py-6 lg:py-10">
-      <ArchiveHeader
-        kicker="Insights"
-        title="Insights"
-        crumbs={[{ label: 'Insights' }]}
-        description="Posters and thoughts to read and share."
-      />
+      <h1 className="sr-only">Insights</h1>
       {list.docs.length ? (
         <>
           {list.totalPages > 1 ? (

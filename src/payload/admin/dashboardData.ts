@@ -1,23 +1,22 @@
 import 'server-only'
 import type { Payload, Where } from 'payload'
+import type { ContentFormat } from '@/cms/content-types'
 import { aiSearchConfigured } from '@/features/ai-search/service'
 import { whatsappLink } from '@/lib/whatsapp'
 import { hasRole } from '@/payload/access'
 import type { Homepage, SiteSetting } from '@/payload-types'
-import {
-  dailyCounts,
-  latestDate,
-  yearCounts,
-  type DayCount,
-  type YearCount,
-} from './dashboardStats'
+import { emptyRollup, loadRollup } from './dashboardRollup'
+import { dailyCounts, type DayCount, type YearCount } from './dashboardStats'
 
 /**
  * Data for the admin dashboard. Every query runs AS the signed-in user (`overrideAccess: false`)
  * so collection/field access and the TOTP wrapper apply exactly as they do in the REST API; a
  * session that may not read something gets zeros/empty lists (`disableErrors`), never a leak.
  */
-type DashboardUser = { id: string | number; role?: string | null } & Record<string, unknown>
+export type DashboardUser = { id: string | number; role?: string | null } & Record<
+  string,
+  unknown
+>
 
 export type DashboardRow = {
   id: string
@@ -29,7 +28,14 @@ export type DashboardRow = {
   needsReview: boolean
   /** Name of the post's main category, when it has one. */
   category: string | null
+  /** Small picture (the featured image's thumb rendition), when it has one. */
+  thumb: string | null
+  /** Byline, when it has one. */
+  author: string | null
+  publishedAt: string | null
 }
+
+export type AuthorCount = { id: string; name: string; posts: number }
 
 export type DashboardStats = {
   /** Every post this person can see (published and drafts). */
@@ -60,7 +66,7 @@ export type ActivityRow = {
   createdAt: string
 }
 
-export type FormatKey = 'standard' | 'video' | 'ebook' | 'audio'
+export type FormatKey = ContentFormat
 export type FormatCount = { key: FormatKey; label: string; count: number }
 
 /** Switches editors ask about most: is the homepage fully shown, is chat / AI search / two-step login on. */
@@ -109,6 +115,14 @@ export type DashboardData = {
   formats: FormatCount[]
   /** The newest `publishedAt` among published posts. */
   lastPublishedAt: string | null
+  /** Posts published in the last 30 days, and in the 30 days before that (the trend). */
+  published30: number
+  publishedPrev30: number
+  /** Posts published per India calendar day, last 30 days. */
+  daily30: DayCount[]
+  /** Bylines with the most published posts in the last 30 days (all time while the month is empty). */
+  topAuthors: AuthorCount[]
+  authorsWindow: 'month' | 'all'
   /** Audit-log entries per day for the last PULSE_DAYS days (empty when the role can't read them). */
   pulse: DayCount[]
   /** null when this role can read neither the homepage nor the site settings. */
@@ -119,30 +133,39 @@ export type DashboardData = {
 
 export const PULSE_DAYS = 14
 const LIST_LIMIT = 6
-/** Upper bound for the year / format roll-up (one lightweight two-field read of published posts). */
-const ROLLUP_LIMIT = 20_000
-const FORMAT_LABEL: Record<FormatKey, string> = {
-  standard: 'Articles',
-  video: 'Videos',
-  ebook: 'E-books',
-  audio: 'Audios',
-}
 const ROW_SELECT = {
   title: true,
   updatedAt: true,
+  publishedAt: true,
   postNumber: true,
   _status: true,
   flags: { needsReview: true },
   primaryCategory: true,
+  featuredImage: true,
+  author: true,
 } as const
-/** Rows show the category's name only; depth 1 then populates just that field. */
-const ROW_POPULATE = { categories: { name: true } } as const
+/** Rows show names and a small picture only; depth 1 then populates just those fields. */
+const ROW_POPULATE = {
+  categories: { name: true },
+  authors: { name: true },
+  media: { url: true, sizes: true },
+} as const
 
 const str = (value: unknown): string => (typeof value === 'string' ? value : '')
 
+type Named = { name?: unknown } | string | null | undefined
+const nameOf = (value: Named): string | null =>
+  typeof value === 'object' && value ? str(value.name) || null : null
+
 function toRow(doc: Record<string, unknown>): DashboardRow {
-  const category = doc.primaryCategory as { name?: unknown } | string | null | undefined
   const flags = doc.flags as { needsReview?: unknown } | null | undefined
+  const image = doc.featuredImage as
+    | { url?: unknown; sizes?: { thumb?: { url?: unknown } } }
+    | string
+    | null
+    | undefined
+  const thumb =
+    typeof image === 'object' && image ? str(image.sizes?.thumb?.url) || str(image.url) : ''
   return {
     id: String(doc.id),
     title: str(doc.title) || '(untitled)',
@@ -150,7 +173,10 @@ function toRow(doc: Record<string, unknown>): DashboardRow {
     postNumber: typeof doc.postNumber === 'number' ? doc.postNumber : null,
     status: doc._status === 'published' ? 'published' : 'draft',
     needsReview: flags?.needsReview === true,
-    category: typeof category === 'object' && category ? str(category.name) || null : null,
+    category: nameOf(doc.primaryCategory as Named),
+    thumb: thumb || null,
+    author: nameOf(doc.author as Named),
+    publishedAt: str(doc.publishedAt) || null,
   }
 }
 
@@ -197,47 +223,8 @@ async function loadCategories(
   return counted.sort((a, b) => b.posts - a.posts)
 }
 
-type As = { user: DashboardUser; overrideAccess: false; disableErrors: true }
-
-const formatCounts = (byFormat: Record<FormatKey, number>): FormatCount[] =>
-  (Object.keys(FORMAT_LABEL) as FormatKey[]).map((key) => ({
-    key,
-    label: FORMAT_LABEL[key],
-    count: byFormat[key],
-  }))
-
-const emptyRollup = () => ({
-  years: [] as YearCount[],
-  lastPublishedAt: null as string | null,
-  formats: formatCounts({ standard: 0, video: 0, ebook: 0, audio: 0 }),
-})
-
-/** One two-field read of the published posts feeds the by-year chart, the format mix and "last published". */
-async function loadRollup(payload: Payload, as: As) {
-  const res = await payload.find({
-    collection: 'posts',
-    where: { _status: { equals: 'published' } },
-    select: { publishedAt: true, format: true },
-    depth: 0,
-    pagination: false,
-    limit: ROLLUP_LIMIT,
-    ...as,
-  })
-  const docs = res.docs as Array<{ publishedAt?: string | null; format?: string | null }>
-  const dates = docs.map((d) => d.publishedAt)
-  const byFormat: Record<FormatKey, number> = { standard: 0, video: 0, ebook: 0, audio: 0 }
-  for (const d of docs) {
-    // Posts saved before the format field existed count as articles.
-    const key =
-      d.format === 'video' || d.format === 'ebook' || d.format === 'audio' ? d.format : 'standard'
-    byFormat[key] += 1
-  }
-  return {
-    years: yearCounts(dates),
-    lastPublishedAt: latestDate(dates),
-    formats: formatCounts(byFormat),
-  }
-}
+/** Every query runs as the signed-in user, and a refused one yields zeros instead of an error. */
+export type As = { user: DashboardUser; overrideAccess: false; disableErrors: true }
 
 async function loadPulse(payload: Payload, as: As): Promise<DayCount[]> {
   const now = new Date()

@@ -1,14 +1,14 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { AlertTriangle, Info, Pencil, type LucideIcon } from 'lucide-react'
-import { timeAgo } from '@/lib/format'
+import { ImageOff, Pencil, type LucideIcon } from 'lucide-react'
+import { formatDate, timeAgo } from '@/lib/format'
 import type { ActivityRow, DashboardRow } from '../dashboardData'
-import { compact, full } from '../dashboardStats'
 
-/** Building blocks of the admin dashboard (styles: app/(payload)/admin-dashboard.scss). */
+/** Building blocks of the admin dashboard (styles: app/(payload)/styles/dashboard.scss). */
 
 export function Panel({
   title,
+  sub,
   icon: Icon,
   href,
   hrefLabel = 'View all',
@@ -17,6 +17,8 @@ export function Panel({
   className,
 }: {
   title: string
+  /** One quiet line under the title: what the panel counts and over which period. */
+  sub?: string
   icon?: LucideIcon
   href?: string
   hrefLabel?: string
@@ -26,18 +28,25 @@ export function Panel({
   className?: string
 }) {
   return (
-    <section className={`im-dash__panel${className ? ` ${className}` : ''}`}>
+    <section className={`im-card im-dash__panel${className ? ` ${className}` : ''}`}>
       <header className="im-dash__panel-head">
-        <h2>
-          {Icon ? (
-            <span className="im-dash__panel-icon">
-              <Icon aria-hidden="true" />
-            </span>
-          ) : null}
-          {title}
-        </h2>
+        <div className="im-dash__panel-titles">
+          <h2>
+            {Icon ? (
+              <span className="im-dash__panel-icon">
+                <Icon aria-hidden="true" />
+              </span>
+            ) : null}
+            {title}
+          </h2>
+          {sub ? <p className="im-dash__panel-sub">{sub}</p> : null}
+        </div>
         {aside}
-        {href ? <Link href={href}>{hrefLabel}</Link> : null}
+        {href ? (
+          <Link href={href} className="im-btn im-btn--ghost im-btn--sm">
+            {hrefLabel}
+          </Link>
+        ) : null}
       </header>
       {children}
     </section>
@@ -54,10 +63,61 @@ export function StatusChip({ row }: { row: Pick<DashboardRow, 'status' | 'needsR
   const label =
     row.status === 'published' ? 'Published' : row.needsReview ? 'Needs review' : 'Draft'
   return (
-    <span className={`im-state im-state--${tone}`}>
-      <span className="im-state__dot" aria-hidden="true" />
+    <span className={`im-pill im-pill--${tone}`}>
+      <span className="im-pill__dot" aria-hidden="true" />
       {label}
     </span>
+  )
+}
+
+/** A lettered avatar for a byline. */
+export function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
+  return (
+    <span className={`im-avatar im-avatar--${size}`} aria-hidden="true">
+      {name.trim().charAt(0).toUpperCase() || '?'}
+    </span>
+  )
+}
+
+/** The newest published posts: picture, title, date and byline. */
+export function LatestList({
+  rows,
+  admin,
+  empty,
+}: {
+  rows: DashboardRow[]
+  admin: string
+  empty: string
+}) {
+  if (!rows.length) return <Empty>{empty}</Empty>
+  return (
+    <ol className="im-latest">
+      {rows.map((row) => {
+        const href = `${admin}/collections/posts/${row.id}`
+        return (
+          <li key={row.id}>
+            <Link href={href} className="im-latest__row">
+              {row.thumb ? (
+                // eslint-disable-next-line @next/next/no-img-element -- CMS media (any size, any host)
+                <img className="im-latest__thumb" src={row.thumb} alt="" loading="lazy" />
+              ) : (
+                <span className="im-latest__thumb im-latest__thumb--none" aria-hidden="true">
+                  <ImageOff />
+                </span>
+              )}
+              <span className="im-latest__text">
+                <span className="im-latest__title">{row.title}</span>
+                <span className="im-latest__meta">
+                  {row.publishedAt ? `Published ${formatDate(row.publishedAt)}` : 'Draft'}
+                  {row.author ? ` · ${row.author}` : ''}
+                </span>
+              </span>
+              {row.author ? <Avatar name={row.author} size="sm" /> : null}
+            </Link>
+          </li>
+        )
+      })}
+    </ol>
   )
 }
 
@@ -89,7 +149,7 @@ export function PostRows({
               Edited
             </th>
             <th scope="col">
-              <span className="im-nav__sr">Actions</span>
+              <span className="im-sr">Actions</span>
             </th>
           </tr>
         </thead>
@@ -110,7 +170,12 @@ export function PostRows({
                 </td>
                 <td className="im-ptable__when">{row.updatedAt ? timeAgo(row.updatedAt) : '—'}</td>
                 <td className="im-ptable__act">
-                  <Link href={href} className="im-ptable__edit" aria-label={`Edit ${row.title}`}>
+                  <Link
+                    href={href}
+                    className="im-icon-btn"
+                    aria-label={`Edit ${row.title}`}
+                    title="Edit"
+                  >
                     <Pencil aria-hidden="true" />
                   </Link>
                 </td>
@@ -123,47 +188,6 @@ export function PostRows({
   )
 }
 
-export type StatFlag = { tone: 'warn' | 'info'; label: string }
-
-/** A headline figure: label, value (compact above 10,000, full digits on hover), a context line, an optional flag. */
-export function StatTile({
-  label,
-  value,
-  hint,
-  href,
-  icon: Icon,
-  flag,
-}: {
-  label: string
-  value: number
-  hint?: string
-  href: string
-  icon: LucideIcon
-  flag?: StatFlag | null
-}) {
-  const FlagIcon = flag?.tone === 'warn' ? AlertTriangle : Info
-  return (
-    <Link href={href} className="im-dash__stat">
-      <span className="im-dash__stat-top">
-        <span className="im-dash__stat-icon">
-          <Icon aria-hidden="true" />
-        </span>
-        {flag ? (
-          <span className={`im-dash__flag im-dash__flag--${flag.tone}`}>
-            <FlagIcon aria-hidden="true" />
-            {flag.label}
-          </span>
-        ) : null}
-      </span>
-      <span className="im-dash__stat-value" title={full(value)}>
-        {compact(value)}
-      </span>
-      <span className="im-dash__stat-label">{label}</span>
-      {hint ? <span className="im-dash__stat-hint">{hint}</span> : null}
-    </Link>
-  )
-}
-
 export type StatusRow = {
   label: string
   /** "On" / "Off" — always spelled out; the dot only backs it up. */
@@ -172,7 +196,7 @@ export type StatusRow = {
   href?: string | null
 }
 
-/** The few switches editors ask about, as a strip of cards: dot + word, never colour alone. */
+/** The few switches editors ask about, as a strip: dot + word, never colour alone. */
 export function StatusStrip({ rows }: { rows: StatusRow[] }) {
   return (
     <ul className="im-status">

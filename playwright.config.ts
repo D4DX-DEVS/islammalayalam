@@ -1,20 +1,12 @@
 import { defineConfig } from '@playwright/test'
 
 /**
- * E2E against the local dev server (port 3444). Three viewports, Chromium.
- * Traces/videos stay OFF: the admin spec types credentials, which must never land in an artifact.
+ * E2E against its own dev server on port 3555 (so it can run beside `npm run dev` on 3444). Three
+ * viewports, Chromium. Traces/videos stay OFF: the admin spec types credentials, which must never
+ * land in an artifact.
  */
-const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3444'
-/** E2E never touches live data: the dev server it starts uses the local seed database + local media. */
-const LOCAL_SEED_ENV = {
-  MONGODB_URI: 'mongodb://127.0.0.1:27017/islammalayalam_dev',
-  DO_SPACES_BUCKET: '',
-  DO_SPACES_ENDPOINT: '',
-  DO_SPACES_KEY: '',
-  DO_SPACES_SECRET: '',
-  DO_SPACES_CDN_ENDPOINT: '',
-  DO_SPACES_FOLDER: '',
-}
+const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3555'
+const port = new URL(baseURL).port || '80'
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -27,15 +19,17 @@ export default defineConfig({
   outputDir: 'test-results',
   use: { baseURL, trace: 'off', video: 'off', screenshot: 'only-on-failure', locale: 'ml-IN' },
   webServer: {
-    command: 'npm run dev',
+    // scripts/dev/local.mjs pins the local seed database and local media, never the live data.
+    command: `node scripts/dev/local.mjs next dev -p ${port}`,
     url: baseURL,
-    // Never reuse a running `npm run dev`: that one reads the live MONGODB_URI from .env.
+    // Never reuse a server someone else started: it may be `npm run dev:live` on the live data.
     reuseExistingServer: false,
     timeout: 240_000,
     env: {
       ...(process.env as Record<string, string>),
-      ...LOCAL_SEED_ENV,
       NEXT_PUBLIC_SERVER_URL: baseURL,
+      // Its own build folder (next.config.ts), so it can run beside another dev server.
+      NEXT_DIST_DIR: '.next-e2e',
     },
   },
   // Layout specs run at every width; header/API/admin specs are viewport-independent and run once.

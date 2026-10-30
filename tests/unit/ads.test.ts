@@ -151,9 +151,9 @@ describe('the Ads banners global', () => {
     expect(names(1)).not.toContain('mobileImage')
   })
 
-  it('is public to read and editable by editors, in the Site group', () => {
+  it('is public to read and editable by editors, in the Website group', () => {
     expect(AdsBanners.slug).toBe('ads-banners')
-    expect(AdsBanners.admin?.group).toBe('Site')
+    expect(AdsBanners.admin?.group).toBe('Website')
     expect((AdsBanners.access?.read as () => boolean)()).toBe(true)
   })
 })

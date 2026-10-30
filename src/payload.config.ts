@@ -3,7 +3,6 @@ import { fileURLToPath } from 'url'
 import { buildConfig } from 'payload'
 import type { CollectionConfig, Field, Plugin } from 'payload'
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
-import { seoPlugin } from '@payloadcms/plugin-seo'
 import { s3Storage } from '@payloadcms/storage-s3'
 import sharp from 'sharp'
 import { payloadTotp } from 'payload-totp'
@@ -132,6 +131,8 @@ export default buildConfig({
   cors: [SITE_URL],
   telemetry: false,
   graphQL: { disable: true },
+  // Empty list cells read "—", not "<No Main category>".
+  i18n: { translations: { en: { general: { noLabel: '—' } } } },
   defaultDepth: 1,
   maxDepth: 4,
   upload: { limits: { fileSize: MAX_PDF_BYTES, files: 1, fields: 50 } },
@@ -139,6 +140,8 @@ export default buildConfig({
     user: Users.slug,
     // Payload defaults to Gravatar, which sends a hash of every staff email to a third party.
     avatar: 'default',
+    // "30 Oct 2026, 4:31 PM" in lists and the editor's header, instead of "October 30th 2026, 4:31 PM".
+    dateFormat: 'd MMM yyyy, h:mm a',
     importMap: { baseDir: path.resolve(dirname) },
     meta: {
       titleSuffix: ` — ${SITE_NAME} Admin`,
@@ -158,10 +161,14 @@ export default buildConfig({
         Icon: '/payload/admin/graphics#AdminIcon',
       },
       Nav: '/payload/admin/nav/AdminNav#AdminNav',
-      // Phones: the bottom bar (Home · Posts · New post · Inbox · Menu). Rendered once per signed-in
-      // screen, outside the menu drawer, so its fixed position holds.
-      header: ['/payload/admin/dock/AdminDock#AdminDock'],
-      // Sign-in screen: a welcome panel beside the form (styles: admin-refresh.scss).
+      // A warning strip while a development server works on the live data (npm run dev:live), and on
+      // phones the bottom bar (Home · Posts · New post · Inbox · Menu). Rendered once per signed-in
+      // screen, outside the menu drawer, so the bar's fixed position holds.
+      header: [
+        '/payload/admin/LiveDataBanner#LiveDataBanner',
+        '/payload/admin/dock/AdminDock#AdminDock',
+      ],
+      // Sign-in screen: a welcome panel beside the form (styles: styles/login.scss).
       beforeLogin: [
         '/payload/admin/login/LoginIntro#LoginIntro',
         '/payload/admin/login/LoginIntro#LoginHeading',
@@ -181,6 +188,8 @@ export default buildConfig({
           Component: '/payload/admin/website/WebsiteView#WebsiteView',
           path: '/website',
           exact: true,
+          // Without it the browser tab reads "Payload".
+          meta: { title: 'Website', description: 'Your website at a glance' },
         },
       },
       // Confirmations on Publish/Save/Force Unlock + show/hide on password fields.
@@ -229,15 +238,6 @@ export default buildConfig({
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   sharp,
   plugins: [
-    seoPlugin({
-      collections: ['posts', 'pages', 'categories'],
-      globals: ['homepage'],
-      uploadsCollection: 'media',
-      tabbedUI: false,
-      generateTitle: ({ doc }) => (doc?.title ? `${doc.title} | ${SITE_NAME}` : SITE_NAME),
-      generateDescription: ({ doc }) =>
-        typeof doc?.excerpt === 'string' ? doc.excerpt.slice(0, 160) : '',
-    }),
     ...storagePlugins(),
     // Must follow every plugin that adds collections/globals: it wraps the access of everything before it.
     payloadTotp({

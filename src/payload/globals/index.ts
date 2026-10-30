@@ -90,7 +90,7 @@ const socialGroup: Field = {
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Site settings',
-  admin: { group: 'Site', components: siteTabs },
+  admin: { group: 'Website', components: siteTabs },
   custom: totpPublicRead,
   access: { read: publicRead, update: isAdmin },
   hooks,
@@ -258,9 +258,9 @@ const adRows = (opts: {
 
 export const AdsBanners: GlobalConfig = {
   slug: 'ads-banners',
-  label: 'Ads banners',
+  label: 'Banners',
   admin: {
-    group: 'Site',
+    group: 'Website',
     components: siteTabs,
     description:
       'The advertisement banners of the homepage. Add as many as you need, delete the ones you no longer want, and choose for each one where it links and whether it opens in the same window or a new tab.',
@@ -307,7 +307,7 @@ export const AdsBanners: GlobalConfig = {
 export const Homepage: GlobalConfig = {
   slug: 'homepage',
   label: 'Homepage',
-  admin: { group: 'Site', components: siteTabs },
+  admin: { group: 'Website', components: siteTabs },
   custom: totpPublicRead,
   access: { read: publicRead, update: isEditor },
   hooks,
@@ -375,7 +375,7 @@ export const SecuritySettings: GlobalConfig = {
 export const InstagramConnection: GlobalConfig = {
   slug: 'instagram-connection',
   label: 'Instagram connection',
-  admin: { group: 'Site', hidden: true },
+  admin: { group: 'Website', hidden: true },
   access: { read: () => false, update: () => false },
   fields: [
     { name: 'token', type: 'text', maxLength: 2000 },

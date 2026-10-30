@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { CONTENT_TYPES } from '@/cms/content-types'
 import { buildNavGroups, NAV_GROUP_LABELS, type NavEntity } from '@/payload/admin/nav/navModel'
 import { Authors } from '@/payload/collections/Authors'
 import { Categories } from '@/payload/collections/Categories'
@@ -26,7 +27,7 @@ const everything: NavEntity[] = [
   col('users', 'Users'),
   col('media', 'Files and images'),
   col('migration-issues', 'Migration issues'),
-  col('posts', 'Posts'),
+  col('posts', 'All content'),
   glob('security-settings', 'Two-step login'),
   col('contact-messages', 'Messages'),
   col('audios', 'Audio'),
@@ -34,7 +35,7 @@ const everything: NavEntity[] = [
   col('quotes', 'Insights'),
   col('pages', 'Pages'),
   col('postal-requests', 'Postal library'),
-  glob('header', 'Header and menu'),
+  glob('header', 'Navigation'),
   col('categories', 'Categories'),
   col('authors', 'Authors'),
   col('videos', 'Videos'),
@@ -43,46 +44,51 @@ const everything: NavEntity[] = [
   col('redirects', 'Redirects'),
   col('audit-logs', 'Activity log'),
   col('migration-runs', 'Migration runs'),
-  glob('ads-banners', 'Ads banners'),
+  glob('ads-banners', 'Banners'),
 ]
 
 const labelsOf = (groups: ReturnType<typeof buildNavGroups>, key: string) =>
   groups.find((g) => g.key === key)?.items.map((i) => i.label)
 
 describe('buildNavGroups', () => {
-  it('groups by job, in a fixed order, with Advanced tools last', () => {
+  it('groups by job, in a fixed order, with Tools last', () => {
     const groups = buildNavGroups({ entities: everything })
     expect(groups.map((g) => g.label)).toEqual([
       'Content',
-      'Media',
-      'Communication',
-      'Site',
+      'Library',
+      'Inbox',
+      'Website',
       'Team',
-      'Advanced tools',
+      'Tools',
     ])
-    expect(labelsOf(groups, 'write')).toEqual(['Posts', 'Pages', 'Categories', 'Authors'])
-    expect(labelsOf(groups, 'library')).toEqual(['Insights', 'Files and images'])
+    expect(labelsOf(groups, 'write')).toEqual(['All content', 'Pages', 'Categories', 'Authors'])
+    expect(labelsOf(groups, 'library')).toEqual(['Files and images', 'Insights'])
     expect(labelsOf(groups, 'inbox')).toEqual(['Messages', 'Postal library'])
-    // One row for the whole Site area; its tabs (the site globals) never get rows of their own.
-    expect(labelsOf(groups, 'site')).toEqual(['Site'])
-    // Two-step login is a sign-in rule: it sits with the users, not among the Site tabs.
+    expect(labelsOf(groups, 'site')).toEqual([
+      'Overview',
+      'Homepage',
+      'Navigation',
+      'Footer',
+      'Banners',
+      'Site settings',
+    ])
+    // Two-step login is a sign-in rule: it sits with the users, not among the Website pages.
     expect(labelsOf(groups, 'team')).toEqual(['Users', 'Two-step login'])
     expect(groups.at(-1)?.tucked).toBe(true)
     expect(labelsOf(groups, 'advanced')).toEqual(['Redirects', 'Activity log'])
   })
 
-  it('lights the Site row on every Site tab the user can open', () => {
+  it('offers every content kind as a filtered view under All content', () => {
+    const posts = buildNavGroups({ entities: everything }).find((g) => g.key === 'write')!.items[0]!
+    expect(posts.children?.map((c) => c.label)).toEqual(CONTENT_TYPES.map((t) => t.plural))
+    expect(posts.children?.[1]?.href).toBe('/collections/posts?where[format][equals]=video')
+    expect(posts.children?.every((c) => c.slug === 'posts')).toBe(true)
+  })
+
+  it('the Website overview lights up only on its own page', () => {
     const site = buildNavGroups({ entities: everything }).find((g) => g.key === 'site')!.items[0]
     expect(site?.href).toBe('/website')
-    expect(site?.also).toEqual([
-      '/globals/homepage',
-      '/globals/header',
-      '/globals/footer',
-      '/globals/ads-banners',
-      '/globals/site-settings',
-    ])
-    const limited = buildNavGroups({ entities: [glob('homepage', 'Homepage')] })
-    expect(limited.find((g) => g.key === 'site')!.items[0]?.also).toEqual(['/globals/homepage'])
+    expect(site?.exact).toBe(true)
   })
 
   it('leaves quick audio/video and the migration records out, without a More group', () => {
@@ -99,18 +105,19 @@ describe('buildNavGroups', () => {
     expect(href('collection:posts')).toBe('/collections/posts')
     expect(href('collection:quotes')).toBe('/collections/quotes')
     expect(href('collection:media')).toBe('/collections/media')
+    expect(href('global:homepage')).toBe('/globals/homepage')
     expect(href('view:website')).toBe('/website')
   })
 
   it('shows only what the role may open, and drops a group that ends up empty', () => {
-    const author: NavEntity[] = [col('posts', 'Posts'), col('media', 'Files and images')]
+    const author: NavEntity[] = [col('posts', 'All content'), col('media', 'Files and images')]
     const groups = buildNavGroups({ entities: author })
     expect(groups.map((g) => g.key)).toEqual(['write', 'library', 'site'])
-    expect(labelsOf(groups, 'site')).toEqual(['Site'])
+    expect(labelsOf(groups, 'site')).toEqual(['Overview'])
     expect(groups.some((g) => g.tucked)).toBe(false)
   })
 
-  it('hides the Website manager when asked to', () => {
+  it('hides the Website overview when asked to', () => {
     const groups = buildNavGroups({ entities: [col('posts')], websiteManager: false })
     expect(groups.map((g) => g.key)).toEqual(['write'])
   })
@@ -127,7 +134,7 @@ describe('buildNavGroups', () => {
     expect(groups.find((g) => g.key === 'write')!.items[0]?.badge).toBe(9)
   })
 
-  it('keeps an entity the layout does not know about, under More, before Advanced tools', () => {
+  it('keeps an entity the layout does not know about, under More, before Tools', () => {
     const groups = buildNavGroups({ entities: [...everything, col('newsletters', 'Newsletters')] })
     expect(groups.at(-2)?.label).toBe('More')
     expect(labelsOf(groups, 'more')).toEqual(['Newsletters'])
@@ -174,12 +181,13 @@ describe('admin names and groups', () => {
     }
   })
 
-  it('uses one name per thing: Insights, Audio, Files and images', () => {
+  it('uses one name per thing: All content, Insights, Audio, Files and images', () => {
     const plural = (slug: string) => {
       const c = collections.find((x) => x.slug === slug)
       const l = c?.labels?.plural
       return typeof l === 'string' ? l : undefined
     }
+    expect(plural('posts')).toBe('All content')
     expect(plural('quotes')).toBe('Insights')
     expect(plural('audios')).toBe('Audio')
     expect(plural('media')).toBe('Files and images')
@@ -187,7 +195,8 @@ describe('admin names and groups', () => {
     expect(plural('postal-requests')).toBe('Postal library')
     expect(plural('audit-logs')).toBe('Activity log')
     const label = (slug: string) => globals.find((g) => g.slug === slug)?.label
-    expect(label('header')).toBe('Header and menu')
+    expect(label('header')).toBe('Navigation')
+    expect(label('ads-banners')).toBe('Banners')
     expect(label('security-settings')).toBe('Two-step login')
   })
 })

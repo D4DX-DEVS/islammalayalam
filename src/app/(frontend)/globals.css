@@ -241,6 +241,19 @@
   .prose-ml li + li {
     margin-top: 0.3em;
   }
+  /* Checklists: the checkbox replaces the bullet. */
+  .prose-ml ul.list-check {
+    @apply list-none ps-1;
+  }
+  .prose-ml .list-item-checkbox {
+    @apply flex items-baseline gap-2.5;
+  }
+  .prose-ml .list-item-checkbox input {
+    @apply size-4 shrink-0 translate-y-0.5 accent-brand;
+  }
+  .prose-ml .list-item-checkbox br {
+    display: none;
+  }
   .prose-ml blockquote {
     @apply relative rounded-2xl bg-brand-soft/70 py-5 ps-7 pe-6 text-ink;
   }

@@ -13,8 +13,8 @@ const LINK_ROW_LABEL = '/payload/admin/site/LinkRowLabel#LinkRowLabel'
 
 export const Header: GlobalConfig = {
   slug: 'header',
-  label: 'Header and menu',
-  admin: { group: 'Site', components: siteTabs },
+  label: 'Navigation',
+  admin: { group: 'Website', components: siteTabs },
   custom: totpPublicRead,
   access: { read: publicRead, update: isEditor },
   hooks,
@@ -89,7 +89,7 @@ export const Header: GlobalConfig = {
 export const Footer: GlobalConfig = {
   slug: 'footer',
   label: 'Footer',
-  admin: { group: 'Site', components: siteTabs },
+  admin: { group: 'Website', components: siteTabs },
   custom: totpPublicRead,
   access: { read: publicRead, update: isEditor },
   hooks,

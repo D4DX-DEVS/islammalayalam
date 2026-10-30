@@ -139,9 +139,9 @@ describe('filterable fields', () => {
     expect(byPath.format!.options!.map((o) => o.value)).toEqual(['standard', 'video', 'audio', 'ebook'])
     expect(byPath.categories).toMatchObject({ kind: 'relation', relationTo: 'categories' })
     expect(byPath.featured).toMatchObject({ kind: 'boolean' })
-    expect(byPath.publishedAt).toMatchObject({ kind: 'date', label: 'Published at' })
+    expect(byPath.publishedAt).toMatchObject({ kind: 'date', label: 'Publish date' })
     expect(byPath.featuredImage).toMatchObject({ kind: 'presence' })
-    expect(byPath['flags.needsReview']).toMatchObject({ kind: 'boolean', group: 'Flags' })
+    expect(byPath['flags.needsReview']).toMatchObject({ kind: 'boolean', group: 'Review' })
     expect(byPath['video.url']).toMatchObject({ kind: 'text', group: 'Video' })
   })
 
@@ -182,7 +182,8 @@ describe('filterable fields', () => {
     const configured = quickFilters(defs, ['categories', 'nope', 'featured'], [])
     expect(configured.map((d) => d.path)).toEqual(['categories', 'featured'])
     const auto = quickFilters(defs, undefined, ['_status', 'flags.needsReview'])
-    expect(auto.map((d) => d.path)).toEqual(['format', 'categories', 'primaryCategory', 'author'])
+    // Form order: Author sits in the editor's Publishing card, above the Categories card.
+    expect(auto.map((d) => d.path)).toEqual(['format', 'author', 'categories', 'primaryCategory'])
   })
 
   it('humanizes field names', () => {

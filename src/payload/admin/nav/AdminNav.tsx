@@ -1,16 +1,17 @@
-import { NavHamburger, NavWrapper } from '@payloadcms/next/client'
+import { NavHamburger } from '@payloadcms/next/client'
 import { getTranslation } from '@payloadcms/translations'
 import type { I18nClient } from '@payloadcms/translations'
 import type { Payload, SanitizedPermissions, VisibleEntities } from 'payload'
 import { AdminNavClient } from './AdminNavClient'
 import { loadNavBadges, type NavUser } from './navData'
 import { buildNavGroups, type NavEntity } from './navModel'
+import { NavShell } from './NavShell'
 
 /**
  * Replaces Payload's sidebar (admin.components.Nav). Same entities and permission filtering as the
  * default nav (visibleEntities + each entity's read permission), grouped by job (navModel.ts) with
- * waiting-item counts on the Inbox, and rendered as a dark navy sidebar (AdminNavClient). NavWrapper
- * / NavHamburger keep Payload's open/close behaviour on mobile and desktop.
+ * waiting-item counts on the Inbox, and rendered by AdminNavClient. NavShell keeps Payload's
+ * open/close state for the drawer on small screens while the sidebar is always open on wide ones.
  */
 type Props = {
   payload: Payload
@@ -48,7 +49,7 @@ export async function AdminNav({ payload, permissions, i18n, visibleEntities, us
   const badges = user ? await loadNavBadges(payload, user, permissions) : {}
 
   return (
-    <NavWrapper baseClass="nav">
+    <NavShell>
       <AdminNavClient
         groups={buildNavGroups({ entities, badges })}
         user={{
@@ -62,6 +63,6 @@ export async function AdminNav({ payload, permissions, i18n, visibleEntities, us
           <NavHamburger baseClass="nav" />
         </div>
       </div>
-    </NavWrapper>
+    </NavShell>
   )
 }

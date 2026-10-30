@@ -104,12 +104,12 @@
 // Backdrop for every confirmation dialog: a light scrim (~80% see-through) with a soft blur, so
 // the page stays readable behind it. Payload's default is a 75% opaque wash + 8px blur.
 .confirmation-modal::before {
-  background: rgb(15 23 42);
-  opacity: 0.2;
+  background: rgb(17 20 24);
+  opacity: 0.32;
 }
 
 .confirmation-modal::after {
-  backdrop-filter: blur(2px);
+  backdrop-filter: none;
 }
 
 @keyframes im-dialog-in {
