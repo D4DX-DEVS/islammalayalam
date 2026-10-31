@@ -7,6 +7,7 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import sharp from 'sharp'
 import { payloadTotp } from 'payload-totp'
 import { mfaPolicy } from '@/payload/plugins/mfaPolicy'
+import { publicApiLimits } from '@/payload/plugins/publicApiLimits'
 import { totpGuard } from '@/payload/plugins/totpGuard'
 import { getEnv, spacesConfig } from '@/lib/env'
 import { SITE_URL } from '@/lib/site-url'
@@ -254,5 +255,7 @@ export default buildConfig({
     // attempt limit + replay protection for the code check.
     mfaPolicy(),
     totpGuard(),
+    // Last: caps signed-out REST reads on every collection, including those the plugins above add.
+    publicApiLimits(),
   ],
 })
