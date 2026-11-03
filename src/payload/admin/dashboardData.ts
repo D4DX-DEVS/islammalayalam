@@ -148,7 +148,8 @@ const ROW_SELECT = {
 const ROW_POPULATE = {
   categories: { name: true },
   authors: { name: true },
-  media: { url: true, sizes: true },
+  // The storage adapter rebuilds each URL from the folder fields; without them it drops the folder.
+  media: { url: true, sizes: true, prefix: true, _objectKey: true },
 } as const
 
 const str = (value: unknown): string => (typeof value === 'string' ? value : '')
