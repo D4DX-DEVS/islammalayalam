@@ -86,7 +86,27 @@ describe('media guard', () => {
   })
 
   it.each([
-    ['extension that does not match the content', 'photo.jpg', 'png'],
+    ['a PNG screenshot saved as .jpg', 'Screenshot.jpg', 'png', /^screenshot(-\d+)?\.png$/],
+    [
+      'a WebP download saved as .jpg',
+      'WhatsApp Image.jpg',
+      'webp',
+      /^whatsapp-image(-\d+)?\.webp$/,
+    ],
+    ['a JPEG saved by a Windows browser as .jfif', 'banner.jfif', 'jpeg', /^banner(-\d+)?\.jpg$/],
+  ])('accepts %s and stores it under its real extension', async (_, name, kind, stored) => {
+    const img = sharp({ create: { width: 800, height: 500, channels: 3, background: '#1e73be' } })
+    const data = await (
+      kind === 'png' ? img.png() : kind === 'webp' ? img.webp() : img.jpeg()
+    ).toBuffer()
+    const doc = await upload(name, data, 'image/jpeg')
+    expect(doc.filename).toMatch(stored)
+    expect(doc.mimeType).toBe(`image/${kind}`)
+    expect(doc.sizes?.thumb?.mimeType).toBe('image/webp')
+  })
+
+  it.each([
+    ['an image named as a PDF', 'book.pdf', 'png'],
     ['SVG (scriptable image format)', 'logo.svg', 'svg'],
     ['text renamed to .png', 'notes.png', 'text'],
     ['PHP disguised as an image', 'shell.php.jpg', 'php'],

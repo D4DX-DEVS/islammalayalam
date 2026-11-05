@@ -20,6 +20,11 @@ export const MAX_PDF_BYTES = 40 * 1024 * 1024
 const EXT_ALIASES: Record<string, AllowedKind> = {
   jpg: 'jpeg',
   jpeg: 'jpeg',
+  // Windows browsers save JPEGs as .jfif by default; .jpe/.pjpeg/.pjp are older JPEG spellings.
+  jfif: 'jpeg',
+  jpe: 'jpeg',
+  pjpeg: 'jpeg',
+  pjp: 'jpeg',
   png: 'png',
   gif: 'gif',
   webp: 'webp',
@@ -63,13 +68,21 @@ export function kindFromFilename(name: string): AllowedKind | null {
 
 export type PolicyResult = { ok: true; kind: AllowedKind } | { ok: false; reason: string }
 
-/** Magic bytes must be allowlisted AND agree with the extension; size limits per kind. */
+const hasExtension = (name: string): boolean => /\.[^./\\]+$/.test(name)
+
+/**
+ * Magic bytes must be allowlisted; size limits per kind. The extension only has to be a known one
+ * (or absent) and name the same family — image or PDF. An image whose name names another image
+ * format is accepted: a WebP or PNG saved as "photo.jpg" (WhatsApp, browser downloads, screenshots)
+ * is common, and it is safe because the bytes decide the type, images are re-encoded, and
+ * `safeFilename` stores the file under the extension of what it really is.
+ */
 export function checkFilePolicy(buf: Uint8Array, filename: string): PolicyResult {
   const kind = sniffKind(buf)
   if (!kind) return { ok: false, reason: 'file type not allowed (only JPEG, PNG, GIF, WebP, PDF)' }
   const extKind = kindFromFilename(filename)
-  if (!extKind) return { ok: false, reason: 'file extension not allowed' }
-  if (extKind !== kind)
+  if (!extKind && hasExtension(filename)) return { ok: false, reason: 'file extension not allowed' }
+  if (extKind && KIND_INFO[extKind].image !== KIND_INFO[kind].image)
     return {
       ok: false,
       reason: `extension .${filename.split('.').pop()} does not match file content (${kind})`,

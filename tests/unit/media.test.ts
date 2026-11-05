@@ -42,9 +42,21 @@ describe('file policy', () => {
     expect(sniffKind(Buffer.from('MZ\x90\x00 fake windows executable'))).toBeNull()
   })
 
-  it('requires the extension to agree with the content', async () => {
+  it('lets the content decide between image formats, whatever the image extension says', async () => {
     expect(checkFilePolicy(await png(), 'a.png')).toEqual({ ok: true, kind: 'png' })
-    expect(checkFilePolicy(await png(), 'a.jpg').ok).toBe(false)
+    // Screenshots and WhatsApp/browser downloads often carry the wrong image extension.
+    expect(checkFilePolicy(await png(), 'a.jpg')).toEqual({ ok: true, kind: 'png' })
+    expect(checkFilePolicy(await jpeg(), 'a.png')).toEqual({ ok: true, kind: 'jpeg' })
+    // Windows browsers save JPEGs as .jfif; older JPEG spellings; no extension at all.
+    for (const name of ['a.jfif', 'a.JFIF', 'a.jpe', 'a.pjpeg', 'a.pjp', 'photo'])
+      expect(checkFilePolicy(await jpeg(), name)).toEqual({ ok: true, kind: 'jpeg' })
+  })
+
+  it('rejects unknown extensions and image/PDF mix-ups', async () => {
+    const doc = pdf(['<< /Type /Catalog >>'])
+    expect(checkFilePolicy(doc, 'book.jpg').ok).toBe(false)
+    expect(checkFilePolicy(await png(), 'poster.pdf').ok).toBe(false)
+    expect(checkFilePolicy(await jpeg(), 'a.exe').ok).toBe(false)
     expect(checkFilePolicy(Buffer.from('<?php echo 1; ?>........'), 'shell.php').ok).toBe(false)
     expect(checkFilePolicy(await png(), 'a.png.php').ok).toBe(false)
     expect(checkFilePolicy(Buffer.from('<svg></svg>.......'), 'x.svg').ok).toBe(false)
